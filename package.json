@@ -6,8 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "biome check",
-    "format": "biome format --write"
+    "check": "biome check . && pnpm typecheck && pnpm test",
+    "typecheck": "next typegen && tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "test": "vitest run --project unit",
+    "test:db": "vitest run --project db --passWithNoTests",
+    "e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/cli.ts migrate",
+    "db:seed": "tsx src/db/cli.ts seed",
+    "db:reset": "tsx src/db/cli.ts reset",
+    "seed:files": "tsx src/db/cli.ts seed-files",
+    "db:migrate:prod": "tsx src/db/cli.ts migrate --env .env.production.local",
+    "db:seed:prod": "tsx src/db/cli.ts seed --env .env.production.local"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
