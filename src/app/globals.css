@@ -4,127 +4,258 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
+/*
+ * Clearline design tokens, transcribed once from design/handoff/tokens.md via the
+ * design-system skill. `:root` is light, `.dark` is dark; `@theme inline` maps every
+ * token to a Tailwind utility. Components never use a raw colour: dark mode is a token
+ * swap, not a second stylesheet. Tints are derived from the tokens with color-mix so
+ * they follow the theme automatically.
+ */
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #f7f7f8;
+  --foreground: #18181b;
+  --muted: #efeff1;
+  --muted-foreground: #64687a;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --border: #e4e4e7;
+  --primary: #0f766e;
+  --primary-foreground: #ffffff;
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --ring: #0f766e;
+  --chart-1: #b3c2bf;
+  --chart-2: #8fd3c9;
+  --chart-3: #4fb8ab;
+  --chart-4: #2a9d90;
+  --chart-5: #0f766e;
+  --chart-6: #0b5049;
+  --banner: #fcd34d;
+  --banner-foreground: #1c1400;
+  --radius: 6px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #141518;
+  --foreground: #ececee;
+  --muted: #24262b;
+  --muted-foreground: #9b9fa8;
+  --card: #1c1d21;
+  --card-foreground: #ececee;
+  --border: #2e3036;
+  --primary: #2aa393;
+  --primary-foreground: #07201d;
+  --success: #4ade80;
+  --success-foreground: #052e16;
+  --warning: #fbbf24;
+  --warning-foreground: #1c1400;
+  --destructive: #f87171;
+  --destructive-foreground: #2a0a0a;
+  --ring: #2dd4bf;
+  --chart-1: #5b6664;
+  --chart-2: #3f8f85;
+  --chart-3: #4fb8ab;
+  --chart-4: #66cbbf;
+  --chart-5: #8fd3c9;
+  --chart-6: #b9e8e1;
+  --banner: #fcd34d;
+  --banner-foreground: #1c1400;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Derived values: the recipes from the design-system skill, valid in both themes. */
+:root,
+.dark {
+  /* shadcn aliases, so its primitives render on Clearline tokens without forking. */
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --secondary: var(--muted);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--muted);
+  --accent-foreground: var(--foreground);
+  --input: var(--border);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--card-foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  /* Hover: primary darkens 12 % toward foreground. */
+  --primary-hover: color-mix(in oklab, var(--primary), var(--foreground) 12%);
+  /* Active nav item and selected chips: 10 % primary on card. */
+  --primary-soft: color-mix(in oklab, var(--primary) 10%, var(--card));
+  /* Initials avatars: 16 % primary on card. */
+  --primary-avatar: color-mix(in oklab, var(--primary) 16%, var(--card));
+  /* Semantic pills: text in the token on a 12 % tint. Destructive hover uses the same tint. */
+  --success-soft: color-mix(in oklab, var(--success) 12%, var(--card));
+  --warning-soft: color-mix(in oklab, var(--warning) 12%, var(--card));
+  --destructive-soft: color-mix(in oklab, var(--destructive) 12%, var(--card));
+  /* Stage pills: 22 % of the stage's chart colour on card. */
+  --stage-1: color-mix(in oklab, var(--chart-1) 22%, var(--card));
+  --stage-2: color-mix(in oklab, var(--chart-2) 22%, var(--card));
+  --stage-3: color-mix(in oklab, var(--chart-3) 22%, var(--card));
+  --stage-4: color-mix(in oklab, var(--chart-4) 22%, var(--card));
+  --stage-5: color-mix(in oklab, var(--chart-5) 22%, var(--card));
+  --stage-6: color-mix(in oklab, var(--chart-6) 22%, var(--card));
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-avatar: var(--primary-avatar);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-stage-1: var(--stage-1);
+  --color-stage-2: var(--stage-2);
+  --color-stage-3: var(--stage-3);
+  --color-stage-4: var(--stage-4);
+  --color-stage-5: var(--stage-5);
+  --color-stage-6: var(--stage-6);
+  --color-banner: var(--banner);
+  --color-banner-foreground: var(--banner-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* One radius. Every shadcn size maps to it. */
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-popover: var(--shadow-popover);
+
+  /* Type: Inter for everything, Geist 600 for display (wordmark, h1, KPI, greeting). */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-geist), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-display);
+
+  /* Type scale (size / line-height / weight), from tokens.md. */
+  --text-tag: 11px;
+  --text-tag--line-height: 14px;
+  --text-tag--font-weight: 500;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-control: 13px;
+  --text-control--line-height: 18px;
+  --text-control--font-weight: 500;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body-lg: 15px;
+  --text-body-lg--line-height: 22px;
+  --text-section: 15px;
+  --text-section--line-height: 22px;
+  --text-section--font-weight: 600;
+  --text-dialog: 17px;
+  --text-dialog--line-height: 24px;
+  --text-dialog--font-weight: 600;
+  --text-h1: 20px;
+  --text-h1--line-height: 28px;
+  --text-h1--font-weight: 600;
+  --text-greeting: 24px;
+  --text-greeting--line-height: 30px;
+  --text-greeting--font-weight: 600;
+  --text-kpi: 28px;
+  --text-kpi--line-height: 32px;
+  --text-kpi--font-weight: 600;
+  --text-wordmark: 28px;
+  --text-wordmark--line-height: 32px;
+  --text-wordmark--font-weight: 600;
+
+  /* Named sizes beyond the 4 px scale. */
+  --spacing-sidebar: 240px;
+  --spacing-pill: 22px;
+  --spacing-tag: 20px;
+  --spacing-touch: 44px;
+  --spacing-banner: 40px;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground text-body;
+  }
+  /* The focus ring recipe, on anything focusable that has no component ring of its own. */
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]
+  ):focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--card),
+      0 0 0 4px var(--ring);
+  }
+  /* Motion: 150 ms fades and short slides only; none under reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
