@@ -97,7 +97,9 @@ export const POLICY: Record<Role, Record<Action, Permission>> = {
     "admin.manage_users": false,
     "admin.read_activity": false,
     "admin.reset_demo": false,
-    "analytics.view": "own",
+    // "own" in PLAN.md §2 means the numbers are scoped to the officer's loans; there is
+    // no loan to resolve ownership against, so the query applies the scope (§7).
+    "analytics.view": "any",
   },
   processor: {
     "loan.read": "any",

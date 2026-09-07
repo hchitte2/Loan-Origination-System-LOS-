@@ -30,7 +30,12 @@ export async function getActor(): Promise<Actor | null> {
   });
   if (!session) return null;
   const { user } = session;
-  if (!isRole(user.role)) return null;
+  if (!isRole(user.role)) {
+    // The column is constrained to three values; anything else is corruption, not "no session".
+    throw new Error(
+      `User ${user.id} has an unknown role: ${String(user.role)}`,
+    );
+  }
   const impersonatedBy = session.session.impersonatedBy ?? null;
   return {
     userId: user.id,
