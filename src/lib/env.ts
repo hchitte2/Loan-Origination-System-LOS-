@@ -14,7 +14,12 @@ export const envSchema = z.object({
   /** Neon Postgres. `dev` branch locally, `main` in production. */
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   BETTER_AUTH_SECRET: z.string().min(32),
-  BETTER_AUTH_URL: z.url(),
+  /**
+   * Public origin of the app. Required in production (the Vercel alias, so sign-in
+   * origins match); optional elsewhere, where it falls back to the Vercel deployment
+   * URL or localhost. See `src/server/auth.ts`.
+   */
+  BETTER_AUTH_URL: z.url().optional(),
   /** Private Vercel Blob store. */
   BLOB_READ_WRITE_TOKEN: z.string().min(1),
   /** Bearer token the Vercel cron sends to /api/cron/reset. */
@@ -25,6 +30,10 @@ export const envSchema = z.object({
   DEMO_SHOWCASE_TOKEN: z.string().min(16),
   /** Set by Vercel at build and run time; selects the serverless database driver. */
   VERCEL: z.string().optional(),
+  /** Vercel deployment hostnames (no scheme); trusted as sign-in origins on previews. */
+  VERCEL_URL: z.string().optional(),
+  VERCEL_BRANCH_URL: z.string().optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
