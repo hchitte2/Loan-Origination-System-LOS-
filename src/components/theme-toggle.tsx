@@ -2,14 +2,14 @@
 
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import { useId, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 
 /**
  * Light / Dark / System segmented control (design-system skill: theme `sun` / `moon` /
- * `monitor`). next-themes persists the choice per browser and applies the class before
- * paint, so there is no flash on reload. Rendered as a radio group so the selection is
- * announced and arrow keys move between options.
+ * `monitor`). Real radio inputs, so the group is announced and arrow keys move the
+ * selection. next-themes persists the choice per browser and applies the class before
+ * paint, so there is no flash on reload.
  */
 
 const OPTIONS = [
@@ -32,58 +32,39 @@ function useMounted(): boolean {
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
-  const current = mounted ? (theme ?? "system") : null;
+  const name = useId();
+  const current = mounted ? (theme ?? "system") : "system";
 
   return (
-    <div
-      role="radiogroup"
-      aria-label="Theme"
+    <fieldset
       className={cn(
         "inline-flex h-8 items-center gap-0.5 rounded-lg border border-border bg-card p-0.5",
         className,
       )}
     >
-      {OPTIONS.map(({ value, label, Icon }) => {
-        const selected = current === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            tabIndex={
-              selected || (current === null && value === "system") ? 0 : -1
-            }
-            onClick={() => setTheme(value)}
-            onKeyDown={(event) => {
-              const index = OPTIONS.findIndex((o) => o.value === value);
-              let next: number | null = null;
-              if (event.key === "ArrowRight" || event.key === "ArrowDown")
-                next = (index + 1) % OPTIONS.length;
-              if (event.key === "ArrowLeft" || event.key === "ArrowUp")
-                next = (index - 1 + OPTIONS.length) % OPTIONS.length;
-              if (next === null) return;
-              event.preventDefault();
-              setTheme(OPTIONS[next].value);
-              const buttons =
-                event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
-                  "button",
-                );
-              buttons?.[next]?.focus();
-            }}
-            className={cn(
-              "inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-control transition-colors duration-150 ease-out",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
-              selected
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <Icon aria-hidden="true" className="size-4" />
-            {label}
-          </button>
-        );
-      })}
-    </div>
+      <legend className="sr-only">Theme</legend>
+      {OPTIONS.map(({ value, label, Icon }) => (
+        <label
+          key={value}
+          className={cn(
+            "inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-control transition-colors duration-150 ease-out motion-reduce:transition-none",
+            "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-card",
+            "has-[:checked]:bg-muted has-[:checked]:text-foreground",
+            "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          <input
+            type="radio"
+            name={name}
+            value={value}
+            checked={current === value}
+            onChange={() => setTheme(value)}
+            className="sr-only"
+          />
+          <Icon aria-hidden="true" className="size-4" />
+          {label}
+        </label>
+      ))}
+    </fieldset>
   );
 }
