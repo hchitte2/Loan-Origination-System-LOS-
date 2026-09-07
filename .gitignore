@@ -7,17 +7,33 @@
 .env.*
 !.env.example
 
-# Node / Next (create-next-app will extend this in Phase 0)
+# Node / Next
 node_modules/
+/.pnp
+.pnp.*
 .next/
+/out/
+/build
 .turbo/
 coverage/
 playwright-report/
 test-results/
 .scaffold-tmp/
+*.tsbuildinfo
+next-env.d.ts
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vercel
+.vercel
 
 # Design exports: keep the unzipped PNG/HTML, not the zip archives
 design/exports/**/*.zip
 
 # OS
 .DS_Store
+*.pem
