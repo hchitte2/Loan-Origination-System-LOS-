@@ -15,20 +15,34 @@ import * as schema from "./schema";
  */
 export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 
+/** The transaction handle `db().transaction()` passes to its callback. */
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+let instance: Db | undefined;
+let pool: { end(): Promise<void> } | undefined;
+
 function createDb(): Db {
   const env = getEnv();
   if (env.VERCEL) {
-    const pool = new NeonPool({ connectionString: env.DATABASE_URL });
-    return drizzleNeon({ client: pool, schema });
+    const neonPool = new NeonPool({ connectionString: env.DATABASE_URL });
+    pool = neonPool;
+    return drizzleNeon({ client: neonPool, schema });
   }
-  const pool = new PgPool({ connectionString: env.DATABASE_URL });
-  return drizzlePg({ client: pool, schema });
+  const pgPool = new PgPool({ connectionString: env.DATABASE_URL });
+  pool = pgPool;
+  return drizzlePg({ client: pgPool, schema });
 }
-
-let instance: Db | undefined;
 
 /** Lazily created so importing a query module never opens a connection by itself. */
 export function db(): Db {
   instance ??= createDb();
   return instance;
+}
+
+/** Ends the pool so a CLI process (seed, reset) can exit; the app never calls this. */
+export async function closeDb(): Promise<void> {
+  const current = pool;
+  instance = undefined;
+  pool = undefined;
+  await current?.end();
 }

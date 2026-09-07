@@ -1,0 +1,2 @@
+ALTER TABLE "documents" DROP CONSTRAINT "documents_blob_pathname_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "documents_blob_pathname_uploads_uidx" ON "documents" USING btree ("blob_pathname") WHERE "documents"."blob_pathname" like 'uploads/%';

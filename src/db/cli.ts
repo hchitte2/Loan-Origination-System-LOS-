@@ -14,7 +14,10 @@ import { config as loadDotenv } from "dotenv";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { getEnv } from "@/lib/env";
 import { isProductionHost, parseProdHostFile } from "./guard";
+import { closeDb, db } from "./index";
+import { type SeedSummary, seedFixture } from "./seed";
 
 const COMMANDS = ["migrate", "seed", "reset", "seed-files"] as const;
 type Command = (typeof COMMANDS)[number];
@@ -84,6 +87,37 @@ async function runMigrate(databaseUrl: string): Promise<void> {
   }
 }
 
+async function runSeed(mode: "seed" | "reset"): Promise<void> {
+  // getEnv() validates the whole environment here, on purpose: the seed needs the demo
+  // password and the showcase token, and a half-configured .env.local should fail loudly.
+  const env = getEnv();
+  const summary = await seedFixture(db(), {
+    now: new Date(),
+    demoPassword: env.DEMO_PASSWORD,
+    showcaseToken: env.DEMO_SHOWCASE_TOKEN,
+    mode,
+  });
+  printSummary(mode, summary);
+  await closeDb();
+}
+
+function printSummary(mode: "seed" | "reset", s: SeedSummary): void {
+  const byStage = Object.entries(s.loansByStage)
+    .map(([stage, n]) => `${stage} ${n}`)
+    .join(", ");
+  console.log(
+    [
+      `${mode === "reset" ? "Reset" : "Seed"} complete.`,
+      `  users      ${s.users}`,
+      `  loans      ${s.loans} (${byStage})`,
+      `  conditions ${s.conditions}`,
+      `  documents  ${s.documents}`,
+      `  activity   ${s.activity}`,
+      "  showcase   /u/<DEMO_SHOWCASE_TOKEN>",
+    ].join("\n"),
+  );
+}
+
 async function main(): Promise<void> {
   const { command, envFile } = parseArgs(process.argv.slice(2));
   // A missing file is fine: CI and Vercel provide the environment directly.
@@ -111,9 +145,13 @@ async function main(): Promise<void> {
       await runMigrate(databaseUrl);
       return;
     case "seed":
+      await runSeed("seed");
+      return;
     case "reset":
-      fail(`"${command}" arrives with the schema and seed fixture in Phase 1.`);
-      break;
+      getEnv(); // validate everything before touching the database
+      await runMigrate(databaseUrl);
+      await runSeed("reset");
+      return;
     case "seed-files":
       fail('"seed-files" arrives with document storage in Phase 3.');
       break;
