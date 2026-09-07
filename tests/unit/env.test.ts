@@ -37,4 +37,14 @@ describe("parseEnv", () => {
   it("keeps the VERCEL marker when the platform sets it", () => {
     expect(parseEnv({ ...valid, VERCEL: "1" }).VERCEL).toBe("1");
   });
+
+  it("lets BETTER_AUTH_URL be absent (previews derive it from VERCEL_URL)", () => {
+    const env = parseEnv({
+      ...valid,
+      BETTER_AUTH_URL: undefined,
+      VERCEL_URL: "clearline-abc123.vercel.app",
+    });
+    expect(env.BETTER_AUTH_URL).toBeUndefined();
+    expect(env.VERCEL_URL).toBe("clearline-abc123.vercel.app");
+  });
 });
