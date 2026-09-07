@@ -8,7 +8,7 @@ export default function HomePage() {
     <>
       <a
         href="#main"
-        className="sr-only rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50"
+        className="sr-only rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         Skip to content
       </a>
@@ -22,7 +22,7 @@ export default function HomePage() {
             Under construction. The login page and the first screens arrive
             next.
           </p>
-          <p className="mt-8 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          <p className="mt-8 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
             <Sparkles aria-hidden="true" className="size-3.5" />
             Demo · synthetic data
           </p>
