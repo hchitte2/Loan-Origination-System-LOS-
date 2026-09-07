@@ -11,7 +11,7 @@ A demo loan origination system ("CRM for LOS") for the US mortgage industry. Por
 6. End with `/verify`, then a summary: what changed, what was verified, and any drift between the code and `PLAN.md` or a skill.
 
 ## Git workflow
-- `main` is always deployable; Vercel production builds from it. After Phase 0, nothing is committed to `main` directly.
+- `main` is always deployable; Vercel production builds from it. After Phase 0, code never lands on `main` without a PR (branch protection enforces it). The planning chat may push docs-only changes to `PLAN.md`, `CLAUDE.md`, `.claude/`, `design/` and `docs/` directly.
 - One branch per phase, cut from `main`: `phase-N-<slug>` (for example `phase-1-foundation`). Create it when the phase starts; push it after the first commit so CI and the Vercel preview run.
 - Commit per finished, verified step: conventional prefix and scope (`feat(pipeline): move-to menu`), imperative subject under 72 characters, a body that says why when it is not obvious. Never bundle unrelated changes. Never commit secrets, `.env*`, caches or build output.
 - Open the PR early as a draft (`gh pr create --draft --fill`), fill in `.github/PULL_REQUEST_TEMPLATE.md`, and mark it ready when the phase's done-when list is green.
@@ -20,13 +20,13 @@ A demo loan origination system ("CRM for LOS") for the US mortgage industry. Por
 - Commits and PRs carry the harness attribution trailer and footer.
 
 ## Commands (pnpm)
-`dev` · `check` (biome + tsc + unit tests) · `typecheck` · `test` (unit only, fast) · `test:db` · `e2e` · `db:generate` · `db:migrate` · `db:seed` · `db:reset` · `seed:files` · `db:migrate:prod` and `db:seed:prod` (only via `/release`)
+`dev` · `check` (biome + typecheck + unit tests) · `typecheck` (`next typegen` then `tsc`; always this, never bare `tsc`) · `lint` · `format` · `test` (unit only, fast) · `test:db` · `e2e` · `db:generate` · `db:migrate` · `db:seed` · `db:reset` · `seed:files` · `db:migrate:prod` and `db:seed:prod` (only via `/release`). Biome ignores `design/`, `drizzle/` and `.claude/`.
 
 ## Stack facts
 Next.js 16 App Router (Server Components + Server Actions, `proxy.ts`), React 19, TypeScript 5.9, Tailwind 4 + shadcn/ui + Recharts 3, next-themes, Drizzle + Neon Postgres (`neon-serverless` on Vercel, `pg` locally), Better Auth 1.7 with the admin plugin (impersonation), Vercel Blob private store, zod 4, pnpm, Biome, vitest, Playwright + axe. Hosting: Vercel Hobby + Neon Free + Blob. Local DB: the Neon `dev` branch. Not used on purpose: TanStack Query, RLS, websockets, LLM calls, dnd-kit, Docker.
 
 ## Module map (dependencies flow one way)
-`src/app` (routes only) → `src/server/actions` (thin) → `src/server/queries` and `src/server/{authz,transitions,activity,limits,storage}` → `src/db`, `src/lib`. `src/lib` imports nothing from `src/server`. Full tree: PLAN.md §5.
+`src/app` (routes only) → `src/server/actions` (thin) → `src/server/queries` and `src/server/{authz,transitions,activity,limits,storage}` → `src/db`, `src/lib`. `src/lib` imports nothing from `src/server`. Full tree: PLAN.md §5. The database client is `db()` from `src/db/index.ts` and the environment is `getEnv()` from `src/lib/env.ts`; both are lazy and are called at use time, never at module top level, so `next build` and unit tests never need secrets.
 
 ## Hard rules
 - Authorize in every Server Action, route handler, page and layout: `requireActor()` then `can()`. Server Actions accept direct POSTs; a hidden button is never the control. The role × action table in `src/server/authz.ts` is transcribed from PLAN.md §2 and drives `authz.test.ts`.
@@ -49,7 +49,7 @@ Next.js 16 App Router (Server Components + Server Actions, `proxy.ts`), React 19
 - Agents: `authz-reviewer`, `ui-reviewer`, `schema-guard` (all read-only), `demo-walker` (Phase 5, drives the browser).
 
 ## Hooks you will feel
-- Stop: `tsc`, `biome check` and unit tests must pass before a turn can end.
+- Stop: `pnpm typecheck`, `biome check` and unit tests must pass before a turn can end.
 - PreToolUse: destructive git and rm commands, `.env` reads, `drizzle-kit push`, and any command naming the production database host are denied. Edits to committed migrations and `.env*` are denied.
 - PostToolUse: Biome formats every file you edit.
 - Emergency bypass belongs to the user, in `.claude/settings.local.json`. Do not add one yourself.

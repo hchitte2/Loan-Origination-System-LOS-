@@ -14,7 +14,7 @@ export async function clearCondition(input: unknown) {
   const actor = await requireActor();                      // 2. who is acting (effective user + real human)
   const loan = await getLoanForActor(actor, data.loanId);  // 3. load through loanScope(actor); 404 if not visible
   assertCan(actor, "condition.clear", loan);               // 4. matrix row from authz.ts; throws Forbidden
-  await db.transaction(async (tx) => {                     // 5. write + activity row atomically
+  await db().transaction(async (tx) => {                   // 5. write + activity row atomically (db() is the lazy client)
     await conditionsService.clear(tx, loan, data);
     await logActivity(tx, { loanId: loan.id, actor, action: "condition.cleared", detail: { conditionId: data.conditionId } });
   });
@@ -23,6 +23,7 @@ export async function clearCondition(input: unknown) {
 }
 ```
 - Expected failures (validation, gate not met, cap reached) return `{ ok: false, error }` with a user-readable message. Bugs throw.
+- `db()` and `getEnv()` are functions, called inside the action or query at use time. Never create a module-level client or read `process.env` at import; `next build` and unit tests import these modules without secrets.
 - Client-supplied ids are looked up, then scoped; never used to build a query without `loanScope(actor)`.
 - No business logic in `src/app`. Pages call queries; forms call actions.
 

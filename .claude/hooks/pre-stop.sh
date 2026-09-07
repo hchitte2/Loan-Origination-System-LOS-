@@ -20,7 +20,11 @@ fail() {
   exit 2
 }
 
-if [ -f tsconfig.json ]; then
+# Prefer the project's typecheck script: it runs `next typegen` first so Next's generated
+# PageProps/LayoutProps globals exist on a fresh clone. Bare tsc is only the fallback.
+if grep -q '"typecheck"[[:space:]]*:' package.json 2>/dev/null; then
+  out=$(pnpm typecheck 2>&1) || fail "TypeScript errors. Fix them before ending the turn (never silence with 'as any' or @ts-ignore):" "$out"
+elif [ -f tsconfig.json ]; then
   out=$(pnpm exec tsc --noEmit 2>&1) || fail "TypeScript errors. Fix them before ending the turn (never silence with 'as any' or @ts-ignore):" "$out"
 fi
 

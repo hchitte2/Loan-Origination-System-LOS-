@@ -167,14 +167,14 @@ src/
     actions/                      loans.ts, conditions.ts, documents.ts, admin.ts, public.ts — thin: zod → requireActor → can → tx(write + logActivity) → revalidatePath
   db/
     schema.ts                     Drizzle schema (Better Auth tables + four app tables)
-    index.ts                      client: neon-serverless on Vercel, pg elsewhere
+    index.ts                      exposes db() — a lazily created client: neon-serverless on Vercel, pg elsewhere; never a module-level instance
     seed.ts                       deterministic fixture relative to today; also the reset routine
     specimens/                    three PDFs watermarked "SPECIMEN — SYNTHETIC"
   lib/
     stages.ts                     enum, order, staff labels, borrower labels — the single source of labels
     doc-types.ts                  document type catalog
     analytics-math.ts             pure KPI formulas (tested)
-    format.ts, env.ts             money and dates; zod-validated process.env
+    format.ts, env.ts             money and dates; getEnv() validates process.env with zod at use time, never at import (next build and unit tests must not demand secrets)
   components/
     ui/                           shadcn primitives
     Pill, KpiTile, EmptyState, ConfirmDialog, ImpersonationBanner, DemoBadge, ThemeToggle, UploadZone,
@@ -293,10 +293,10 @@ Design happens before product UI is coded. The prompt lives in `design/DESIGN-PR
 
 ## 9. Build phases
 
-Each phase is one branch `phase-N-<slug>` and one pull request into `main` (CLAUDE.md, Git workflow): small conventional commits per step, CI green, `/verify` green, a rebase merge so the step commits survive, a `phase-N` tag, then a 10-minute hand verification by the user on the production URL. Phase 0 was committed directly on `main` before this rule existed. Branch protection on `main` (a PR and the `biome · tsc · vitest` check required) is switched on by the planning chat when Phase 0 closes. A session is one Claude Code coding session of one to three hours. Phase headings carry a status line the SessionStart hook reads; the planning chat flips `not started → active → done`.
+Each phase is one branch `phase-N-<slug>` and one pull request into `main` (CLAUDE.md, Git workflow): small conventional commits per step, CI green, `/verify` green, a rebase merge so the step commits survive, a `phase-N` tag, then a 10-minute hand verification by the user on the production URL. Phase 0 was committed directly on `main` before this rule existed. Branch protection on `main` requires a PR and the `biome · tsc · vitest` check (enabled 2026-09-07); the repo owner can bypass it, which the planning chat uses only for docs-only commits to `PLAN.md`, `CLAUDE.md`, `.claude/`, `design/` and `docs/`. Code always goes through a PR. A session is one Claude Code coding session of one to three hours. Phase headings carry a status line the SessionStart hook reads; the planning chat flips `not started → active → done`.
 
 ### Phase 0 — Repo, tooling, guardrails, placeholder deploy
-Status: active · 1 session · runs in parallel with Claude Design
+Status: done · closed 2026-09-07 at `876c6dd`; production placeholder at `clearline-gilt.vercel.app`
 
 **User does first:** create the Vercel project from the personal GitHub repo · create the Neon project with `main` and `dev` branches (Vercel Marketplace integration or neon.com) · create one private Blob store · install `jq`, `pnpm` and Node 22 on the Mac.
 
@@ -307,11 +307,11 @@ Status: active · 1 session · runs in parallel with Claude Design
 **Verify (10 min):** open the Vercel URL; run `pnpm check`; in a Claude session, introduce a type error, end the turn, watch the block, revert.
 
 ### Phase 1 — Schema, auth, roles, impersonation, audit, deploy
-Status: not started · 2–3 sessions · non-UI half may start before the green signal; the login page, shell and tokens wait for it
+Status: active · 2–3 sessions · design green-lit 2026-09-07, both halves unblocked · branch `phase-1-foundation`
 
 **Tasks (no design needed):** `db/schema.ts` per Section 6 → `pnpm db:generate` → `drizzle/0000_init.sql` → `pnpm db:generate --custom --name activity_triggers` → hand-write `activity_no_update` / `activity_no_delete` (`BEFORE UPDATE OR DELETE`, raise) in `drizzle/0001_activity_triggers.sql` → `schema-guard` → `pnpm db:migrate` on `dev` and `main` · Better Auth config (email + password, admin plugin, `impersonationSessionDuration: 14400`, `nextCookies()` last) and `app/api/auth/[...all]/route.ts` · `proxy.ts` · `requireActor`, `authz.ts` transcribed from the Section 2 matrix, `transitions.ts`, `lib/stages.ts`, with vitest tables · `seed.ts` (users with `DEMO_PASSWORD`, the fixture) and `pnpm db:seed` · impersonation actions writing activity rows · unstyled `/admin/users` and `/admin/activity` behind authorization · deploy, migrate and seed `main`.
-**Tasks (after the green signal):** tokens from the design-system skill into `globals.css` for both themes · `ThemeProvider` and `ThemeToggle` · login page from `design/handoff/reference/01-login-*.png` · staff shell with home-route redirects · `ImpersonationBanner` · styled Users and Activity pages · Playwright scaffold (persona-card login helper) with `login.spec.ts` and `a11y.spec.ts` covering `/login` and `/admin/users` in light and dark.
-**Done when:** all three personas log in on the **production URL** and land on their empty-but-styled home; Priya views as Sam, sees the banner on every page, cannot reach `/admin/users` while impersonating, exits; `/admin/activity` shows both impersonation rows; `authz.test.ts` covers every matrix cell; an `UPDATE activity` throws (pglite test if it takes under 30 minutes to set up, otherwise verified by hand); the theme toggle persists across reloads with no flash.
+**Tasks (after the green signal):** the complete token set from the design-system skill into `globals.css` for both themes (the Phase 0 placeholder lacks `success`, `warning`, `destructive-foreground`, `chart-6`, `banner`, `banner-foreground` and the two shadows; `Pill` and the banner need them) · `ThemeProvider` and `ThemeToggle` · login page from `design/handoff/reference/01-login-*.png` · staff shell with home-route redirects · `ImpersonationBanner` · styled Users and Activity pages · Playwright scaffold (persona-card login helper) with `login.spec.ts` and `a11y.spec.ts` covering `/login` and `/admin/users` in light and dark.
+**Done when:** all three personas log in on the **production URL** and land on their empty-but-styled home; Priya views as Sam, sees the banner on every page, cannot reach `/admin/users` while impersonating, exits; `/admin/activity` shows both impersonation rows; `authz.test.ts` covers every matrix cell; an `UPDATE activity` throws (pglite test if it takes under 30 minutes to set up, otherwise verified by hand); the theme toggle persists across reloads with no flash; the `phase-1-foundation` PR is merged with CI green and `main` is tagged `phase-1`.
 **Verify:** three cards on the prod URL; impersonate and exit; keyboard-only from login to Exit view; switch to dark and reload; `pnpm test`.
 **.claude additions:** `authz-reviewer` and `schema-guard` checklists finalised against the real schema.
 
@@ -355,7 +355,7 @@ Status: not started · 2 sessions
 CLAUDE.md                          ~120 lines: product paragraph, commands, module map, hard rules, session ritual
 PLAN.md                            this file; phase status lines drive the SessionStart hook
 .mcp.json                          playwright (stdio, npx -y @playwright/mcp@latest) for browser verification
-vercel.json                        crons: [{ path: /api/cron/reset, schedule: 0 8 * * * }]
+vercel.json                        framework: nextjs (so builds never depend on dashboard state) + crons: [{ path: /api/cron/reset, schedule: 0 8 * * * }]
 .github/workflows/ci.yml           biome check · tsc --noEmit · vitest, on every push and pull request
 .github/PULL_REQUEST_TEMPLATE.md   phase, changes, done-when checklist, verification, screenshots, drift
 .claude/
@@ -388,7 +388,7 @@ vercel.json                        crons: [{ path: /api/cron/reset, schedule: 0 
     block-unsafe.sh                PreToolUse (Bash): deny recursive deletes (except build caches), history-destroying git, reads/writes of .env files (.env.example exempt), env dumps, drizzle-kit push, any db:*:prod not written exactly as the /release command, shell writes to migrations, and any command naming the host in .claude/prod-db-host; commit messages are blanked before scanning
     protect-files.sh               PreToolUse (Edit|Write): deny edits to existing drizzle/*.sql and to .env*
     format.sh                      PostToolUse (Edit|Write): biome format --write on the touched file
-    pre-stop.sh                    Stop: tsc --noEmit + biome check + vitest run (unit only); exit 2 with the first 40 lines on failure; exits 0 when stop_hook_active is set
+    pre-stop.sh                    Stop: pnpm typecheck (next typegen + tsc) + biome check + vitest run (unit only); exit 2 with the first 40 lines on failure; exits 0 when stop_hook_active is set
     tests/                         fixtures.txt (one command per line, D = must deny, A = must allow) + run.sh; run after any hook change: bash .claude/hooks/tests/run.sh "$PWD"
 ```
 
@@ -462,5 +462,5 @@ Minimal but real, one layer per concern.
 | 10 | Drag-and-drop | Stretch; "Move to…" menu is the shipped path |
 | 11 | Live updates | 30 s visible-tab polling as Should; no websockets |
 | 12 | Reset schedule | Daily 08:00 UTC plus the superadmin button |
-| 13 | URL | `*.vercel.app` for now |
+| 13 | URL | `clearline-gilt.vercel.app` (Vercel project `clearline`) |
 | 14 | `demo-los-kit/` | Archived under `docs/archive/demo-los-kit/` (done 2026-09-06; files renamed so no nested `CLAUDE.md` or `.claude/` loads) |
