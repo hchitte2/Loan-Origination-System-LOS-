@@ -13,6 +13,7 @@
  *
  * No SSN, date of birth, income, credit or protected-class column exists anywhere.
  */
+import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -26,6 +27,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { ACTOR_KINDS } from "../lib/activity";
@@ -237,8 +239,11 @@ export const documents = pgTable(
     uploadedBy: text("uploaded_by").references(() => user.id),
     uploadedVia: uploadedViaEnum("uploaded_via").notNull(),
     fileName: text("file_name").notNull(),
-    /** `uploads/<loanId>/...` for user uploads, `seed/...` for the specimens. */
-    blobPathname: text("blob_pathname").notNull().unique(),
+    /**
+     * `uploads/<loanId>/...` for user uploads (unique, see the partial index below);
+     * `seed/...` for the three specimen PDFs, which many seeded rows share.
+     */
+    blobPathname: text("blob_pathname").notNull(),
     contentType: text("content_type").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
     docType: docTypeEnum("doc_type"),
@@ -251,6 +256,9 @@ export const documents = pgTable(
     createdAt: timestamptz("created_at").notNull().defaultNow(),
   },
   (t) => [
+    uniqueIndex("documents_blob_pathname_uploads_uidx")
+      .on(t.blobPathname)
+      .where(sql`${t.blobPathname} like 'uploads/%'`),
     index("documents_loan_id_idx").on(t.loanId),
     index("documents_condition_id_idx").on(t.conditionId),
     index("documents_review_status_created_at_idx").on(
