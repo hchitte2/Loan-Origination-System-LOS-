@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e6e7ea;font-family:Inter,system-ui,sans-serif}a{color:#0f766e}a:hover{color:#0b5049}</style>
+</helmet>
+<div style="display:flex;gap:64px;padding:48px;align-items:flex-start;width:max-content">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">08-components-light · 1440 wide</div>
+    <div id="components-light" data-screen-label="08 Components light" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Components Sheet" theme="light" hint-size="1440px,2400px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">08-components-dark · 1440 wide</div>
+    <div id="components-dark" data-screen-label="08 Components dark" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Components Sheet" theme="dark" hint-size="1440px,2400px"></dc-import></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

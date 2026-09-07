@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e6e7ea;font-family:Inter,system-ui,sans-serif}a{color:#0f766e}a:hover{color:#0b5049}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:1440px 1440px;gap:64px;padding:48px;width:max-content">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">02-pipeline-light · 1440 × 900 · Alex · All · "Move to…" open on Chen</div>
+    <div id="pipeline-light" data-screen-label="02 Pipeline light" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Pipeline Board" theme="light" menu-open="{{ true }}" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">02-pipeline-dark · 1440 × 900</div>
+    <div id="pipeline-dark" data-screen-label="02 Pipeline dark" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Pipeline Board" theme="dark" menu-open="{{ true }}" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">02-pipeline-list · List view with Closed section</div>
+    <div id="pipeline-list" data-screen-label="02 Pipeline list" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Pipeline Board" theme="light" view="list" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">02-new-loan · New loan dialog with validation error</div>
+    <div id="new-loan" data-screen-label="02 New loan" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Pipeline Board" theme="light" dialog="newLoan" hint-size="1440px,900px"></dc-import></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

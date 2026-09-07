@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:{{ frameW }};height:{{ frameH }};overflow:hidden;display:flex;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px">
+  <sc-if value="{{ isFragment }}" hint-placeholder-val="{{ false }}">
+    <div style="width:100%;padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:14px;box-sizing:border-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600">Pipeline by stage<span style="font-size:12px;font-weight:400;color:var(--muted-foreground)">{{ fragmentCaption }}</span></div>
+      <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+        <div aria-busy="true" aria-label="Loading chart" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:end;height:180px">
+          <div style="height:40%;border-radius:4px 4px 0 0;background:var(--muted)"></div><div style="height:30%;border-radius:4px 4px 0 0;background:var(--muted)"></div><div style="height:55%;border-radius:4px 4px 0 0;background:var(--muted)"></div><div style="height:20%;border-radius:4px 4px 0 0;background:var(--muted)"></div><div style="height:45%;border-radius:4px 4px 0 0;background:var(--muted)"></div><div style="height:35%;border-radius:4px 4px 0 0;background:var(--muted)"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px"><div style="height:10px;border-radius:4px;background:var(--muted)"></div><div style="height:10px;border-radius:4px;background:var(--muted)"></div><div style="height:10px;border-radius:4px;background:var(--muted)"></div><div style="height:10px;border-radius:4px;background:var(--muted)"></div><div style="height:10px;border-radius:4px;background:var(--muted)"></div><div style="height:10px;border-radius:4px;background:var(--muted)"></div></div>
+      </sc-if>
+      <sc-if value="{{ isEmptyChart }}" hint-placeholder-val="{{ false }}">
+        <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center;padding:0 24px">
+          <span style="color:var(--muted-foreground)">{{ ic20.kanban }}</span>
+          <div style="font-size:13px;font-weight:500">No active loans yet.</div>
+          <div style="font-size:12px;color:var(--muted-foreground)">Create a loan from the Pipeline and it shows up here by stage.</div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPage }}" hint-placeholder-val="{{ true }}">
+    <dc-import name="Sidebar" persona="{{ persona }}" active="Dashboard" theme="{{ theme }}" hint-size="240px,100%"></dc-import>
+    <main id="main" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;flex:none">
+        <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ title }}</h1>
+        <span style="font-size:12px;color:var(--muted-foreground)">As of Sat, Sep 6</span>
+      </header>
+      <div style="flex:1;min-height:0;padding:0 24px 24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:grid;grid-template-columns:{{ kpiCols }};gap:16px;align-items:start">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+            <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted-foreground)">{{ k.label }}<button aria-label="Definition" aria-expanded="{{ k.open }}" style="display:flex;border:0;background:transparent;padding:0;cursor:pointer;color:{{ k.infoColor }}">{{ ic.info }}</button></div>
+              <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em">{{ k.value }}</span><span style="font-size:13px;color:var(--muted-foreground)">{{ k.unit }}</span></div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:{{ k.subColor }}">{{ k.subIcon }}{{ k.sub }}</div>
+              <sc-if value="{{ k.open }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:4px;padding:8px 10px;border-radius:4px;background:var(--muted);font-size:12px;line-height:16px">{{ k.definition }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:{{ chartCols }};gap:16px">
+          <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600">{{ stageChartTitle }}<span style="font-size:12px;font-weight:400;color:var(--muted-foreground)">{{ stageChartSub }}</span></div>
+            <div role="img" aria-label="{{ stageChartAria }}" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:end;height:180px">
+              <sc-for list="{{ stageBars }}" as="b" hint-placeholder-count="6">
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%">
+                  <span style="font-size:12px;font-weight:500;font-variant-numeric:tabular-nums">{{ b.n }}</span>
+                  <div title="{{ b.total }}" style="width:100%;height:{{ b.h }};min-height:2px;border-radius:4px 4px 0 0;background:{{ b.color }}"></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;font-size:11px;line-height:14px;color:var(--muted-foreground);text-align:center">
+              <sc-for list="{{ stageBars }}" as="b" hint-placeholder-count="6"><span>{{ b.label }}</span></sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ showAging }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600">Conditions aging<span style="font-size:12px;font-weight:400;color:var(--muted-foreground)">23 open conditions</span></div>
+              <div role="img" aria-label="Conditions aging: 0 to 3 days 9, 4 to 7 days 7, 8 to 14 days 5, 15 plus days 2" style="display:flex;flex-direction:column;gap:14px;justify-content:center;flex:1">
+                <sc-for list="{{ aging }}" as="b" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:52px 1fr 24px;align-items:center;gap:10px;font-size:12px">
+                    <span style="color:var(--muted-foreground);font-variant-numeric:tabular-nums">{{ b.bucket }}</span>
+                    <span style="height:18px;border-radius:4px;background:var(--muted);overflow:hidden"><span style="display:block;height:100%;width:{{ b.pctW }};background:{{ b.color }};border-radius:4px"></span></span>
+                    <span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ b.n }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Needs attention <span style="font-weight:400;color:var(--muted-foreground)">· {{ attentionCount }}</span></h2>
+          <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+            <div style="display:grid;grid-template-columns:1.2fr 190px 110px 110px 1.4fr;align-items:center;height:36px;padding:0 12px;font-size:12px;font-weight:500;color:var(--muted-foreground);background:var(--muted);border-bottom:1px solid var(--border)"><span>Loan</span><span>Stage</span><span style="text-align:right">Days in stage</span><span style="text-align:right">Target close</span><span style="padding-left:24px">Reason</span></div>
+            <sc-for list="{{ attention }}" as="a" hint-placeholder-count="3">
+              <a href="#" style="display:grid;grid-template-columns:1.2fr 190px 110px 110px 1.4fr;align-items:center;height:40px;padding:0 12px;border-bottom:1px solid var(--border);color:inherit;text-decoration:none" style-hover="background:var(--muted)">
+                <span><span style="font-weight:500">{{ a.loan }}</span> <span style="color:var(--muted-foreground)">· {{ a.street }}</span></span>
+                <span><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ a.stageBg }}">{{ a.stageIconEl }}{{ a.stage }}</span></span>
+                <span style="text-align:right;font-variant-numeric:tabular-nums">{{ a.days }}</span>
+                <span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted-foreground)">{{ a.target }}</span>
+                <span style="padding-left:24px"><span style="display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap;background:{{ a.bg }};color:{{ a.fg }}">{{ a.iconEl }}{{ a.reason }}</span></span>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </main>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;persona&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;priya&quot;,&quot;alex&quot;],&quot;default&quot;:&quot;priya&quot;,&quot;tsType&quot;:&quot;'priya'|'alex'&quot;},&quot;fragment&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;loading&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;'none'|'loading'|'empty'&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, ic20: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => { const m = I.makeIcons(React); this.setState({ ic: m.i16, ic20: m.i20, d }); });
+  }
+  renderVals() {
+    const { ic, ic20, d } = this.state;
+    const persona = this.props.persona ?? 'priya';
+    const frag = this.props.fragment ?? 'none';
+    const alex = persona === 'alex';
+    const base = {
+      theme: this.props.theme ?? 'light', ic, ic20, persona,
+      isFragment: frag !== 'none', isPage: frag === 'none', isLoading: frag === 'loading', isEmptyChart: frag === 'empty',
+      fragmentCaption: frag === 'loading' ? 'Loading…' : '0 loans',
+      frameW: frag === 'none' ? '1440px' : '460px', frameH: frag === 'none' ? '900px' : 'auto',
+      title: alex ? 'My dashboard' : 'Dashboard',
+      kpiCols: alex ? '1fr 1fr 1fr' : '1fr 1fr 1fr 1fr', chartCols: alex ? '1fr' : '1.4fr 1fr', showAging: !alex,
+      stageChartTitle: alex ? 'My pipeline by stage' : 'Pipeline by stage', stageChartSub: alex ? '6 loans · $3,021,400' : '13 loans · $6,200,400',
+      kpis: [], stageBars: [], aging: [], attention: [], attentionCount: alex ? 2 : 3, stageChartAria: '',
+    };
+    if (!d) return base;
+    const up = ic.arrowUpRight, info = ic.info;
+    base.kpis = alex ? [
+      { label: 'My active pipeline', value: '$3.02M', unit: '6 loans', sub: 'Lead through Clear to close', subColor: 'var(--muted-foreground)', infoColor: 'var(--muted-foreground)' },
+      { label: 'My funded this month', value: '$0.9M', unit: '2 loans', sub: 'Rivera · Sandoval', subColor: 'var(--muted-foreground)', infoColor: 'var(--muted-foreground)' },
+      { label: 'Closing in 14 days', value: '1', unit: 'loan', sub: 'Kim · Sep 15 · not yet clear to close', subColor: 'var(--warning)', subIcon: ic.calendar, infoColor: 'var(--muted-foreground)' },
+    ] : [
+      { label: 'Active pipeline', value: '$6.2M', unit: '13 loans', sub: 'Lead through Clear to close', subColor: 'var(--muted-foreground)', infoColor: 'var(--muted-foreground)' },
+      { label: 'Funded this month', value: '$1.9M', unit: '4 loans', sub: 'from 2 last month', subIcon: up, subColor: 'var(--success)', infoColor: 'var(--muted-foreground)' },
+      { label: 'Pull-through', value: '73%', unit: '', sub: 'industry ~70–78%', subColor: 'var(--muted-foreground)', open: true, infoColor: 'var(--primary)', definition: 'Funded loans ÷ applications started 60–180 days ago' },
+      { label: 'Avg cycle time', value: '38', unit: 'days', sub: 'ICE avg ~37', subColor: 'var(--muted-foreground)', infoColor: 'var(--muted-foreground)' },
+    ];
+    const cols = d.columns(alex ? 'mine' : 'all');
+    const max = Math.max(...cols.map(c => c.count), 1);
+    base.stageBars = cols.map(c => ({ label: c.label, n: c.count, total: c.total, h: Math.round(c.count / max * 100) + '%', color: `var(--chart-${c.chart})` }));
+    base.stageChartAria = 'Pipeline by stage: ' + cols.map(c => `${c.label} ${c.count}`).join(', ');
+    const agColors = ['var(--chart-2)', 'var(--chart-4)', 'var(--warning)', 'var(--destructive)'];
+    base.aging = d.aging.map((b, i) => ({ ...b, pctW: b.pct + '%', color: agColors[i] }));
+    base.attention = d.attention.filter(a => !alex || a.mine).map(a => ({ ...a, stageIconEl: ic[a.stageIcon], stageBg: `color-mix(in oklab,var(--chart-${a.chart}) 22%,var(--card))`, iconEl: ic[a.icon], bg: `color-mix(in oklab,var(--${a.tone}) 12%,var(--card))`, fg: `var(--${a.tone})` }));
+    return base;
+  }
+}
+</script>
+</body>
+</html>

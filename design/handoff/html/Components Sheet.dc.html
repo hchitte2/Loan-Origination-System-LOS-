@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:1440px;box-sizing:border-box;padding:40px 48px 56px;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;display:flex;flex-direction:column;gap:40px">
+
+  <header style="display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:20px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 14h8l3 4 9-12" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-family:Geist,Inter,sans-serif;font-weight:600;font-size:17px">Clearline</span></div>
+      <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;letter-spacing:-0.01em">Component sheet · {{ themeTitle }}</h1>
+    </div>
+    <div style="font-size:12px;color:var(--muted-foreground);text-align:right;line-height:18px">shadcn/ui + Tailwind + Lucide<br>Inter body · Geist display · 4 px spacing · radius 6 px</div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Tokens</h2>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">
+      <sc-for list="{{ tokenList }}" as="t" hint-placeholder-count="12">
+        <div style="display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+          <div style="height:36px;border-radius:4px;border:1px solid var(--border);background:{{ t.value }}"></div>
+          <div style="font-size:12px;font-weight:500;line-height:16px">{{ t.name }}</div>
+          <div style="font-size:11px;color:var(--muted-foreground);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:14px">{{ t.value }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+    <section style="display:flex;flex-direction:column;gap:12px">
+      <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Type scale</h2>
+      <div style="display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span style="font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;letter-spacing:-0.01em;font-variant-numeric:tabular-nums">$6,200,400</span><span style="font-size:12px;color:var(--muted-foreground)">KPI value · Geist 600 · 28/32 · tabular</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span style="font-family:Geist,Inter,sans-serif;font-size:24px;line-height:30px;font-weight:600;letter-spacing:-0.01em">Hi Maria, here's where your loan stands.</span><span style="font-size:12px;color:var(--muted-foreground);flex:none">Borrower greeting · Geist 600 · 24/30</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span style="font-family:Geist,Inter,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.01em">Chen · 412 Maple Ave</span><span style="font-size:12px;color:var(--muted-foreground)">Page title · Geist 600 · 20/28</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span style="font-size:15px;line-height:22px;font-weight:600">Needs list</span><span style="font-size:12px;color:var(--muted-foreground)">Section title · Inter 600 · 15/22</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span style="font-size:14px;line-height:20px">Alex Rivera moved the loan from Application to Processing</span><span style="font-size:12px;color:var(--muted-foreground)">Body · Inter 400 · 14/20</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span style="font-size:13px;line-height:18px;font-weight:500">Move to Processing</span><span style="font-size:12px;color:var(--muted-foreground)">Control · Inter 500 · 13/18</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span style="font-size:12px;line-height:16px;color:var(--muted-foreground)">uploaded via Maria's link · 2 d ago</span><span style="font-size:12px;color:var(--muted-foreground)">Caption · Inter 400 · 12/16</span></div>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:12px">
+      <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Buttons</h2>
+      <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+        <div style="display:grid;grid-template-columns:88px repeat(5,auto);gap:8px 12px;justify-content:start;font-size:11px;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.04em;font-weight:500"><span></span><span>Default</span><span>Hover</span><span>Focus ring</span><span>Disabled</span><span>Pending</span></div>
+        <sc-for list="{{ buttons }}" as="b" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:88px repeat(5,auto);gap:8px 12px;justify-content:start;align-items:center">
+            <span style="font-size:12px;color:var(--muted-foreground)">{{ b.name }}</span>
+            <button style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer;background:{{ b.bg }};color:{{ b.fg }};border:1px solid {{ b.border }}">{{ b.label }}</button>
+            <button style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer;background:{{ b.hoverBg }};color:{{ b.fg }};border:1px solid {{ b.border }}">{{ b.label }}</button>
+            <button style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer;background:{{ b.bg }};color:{{ b.fg }};border:1px solid {{ b.border }};box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ring)">{{ b.label }}</button>
+            <button disabled style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);font:500 13px Inter,sans-serif;white-space:nowrap;background:{{ b.bg }};color:{{ b.fg }};border:1px solid {{ b.border }};opacity:.5">{{ b.label }}</button>
+            <button aria-busy="true" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);font:500 13px Inter,sans-serif;white-space:nowrap;background:{{ b.bg }};color:{{ b.fg }};border:1px solid {{ b.border }}">{{ spinner }}{{ b.pending }}</button>
+          </div>
+        </sc-for>
+        <div style="font-size:12px;color:var(--muted-foreground);border-top:1px solid var(--border);padding-top:10px">Focus ring: 2 px <code style="font-family:ui-monospace,Menlo,monospace">ring</code> offset by 2 px of the surface, on every interactive element. Buttons say what happens: "Copy Maria's link", never "Submit".</div>
+      </div>
+    </section>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Status pills · icon + text, colour is never the only signal</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+        <div style="font-size:12px;font-weight:500;color:var(--muted-foreground)">Loan stages · staff</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ stagePills }}" as="p" hint-placeholder-count="9">
+            <span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ p.bg }};color:{{ p.fg }}">{{ p.icon }}{{ p.label }}</span>
+          </sc-for>
+        </div>
+        <div style="font-size:12px;font-weight:500;color:var(--muted-foreground)">Loan stages · borrower page</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ stagePills }}" as="p" hint-placeholder-count="9">
+            <span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ p.bg }};color:{{ p.fg }}">{{ p.icon }}{{ p.borrower }}</span>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+        <div style="font-size:12px;font-weight:500;color:var(--muted-foreground)">Condition statuses · staff</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ condPills }}" as="p" hint-placeholder-count="4">
+            <span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ p.bg }};color:{{ p.fg }}">{{ p.icon }}{{ p.label }}</span>
+          </sc-for>
+        </div>
+        <div style="font-size:12px;font-weight:500;color:var(--muted-foreground)">Condition statuses · borrower page</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ condPillsBorrower }}" as="p" hint-placeholder-count="5">
+            <span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ p.bg }};color:{{ p.fg }}">{{ p.icon }}{{ p.label }}</span>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:12px;font-weight:500;color:var(--muted-foreground)">Document review · staff</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ reviewPills }}" as="p" hint-placeholder-count="3">
+                <span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ p.bg }};color:{{ p.fg }}">{{ p.icon }}{{ p.label }}</span>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:12px;font-weight:500;color:var(--muted-foreground)">Prior-to tags</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span style="display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;border:1px solid var(--border);font-size:11px;font-weight:500;color:var(--muted-foreground);white-space:nowrap">before approval</span>
+              <span style="display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;border:1px solid var(--border);font-size:11px;font-weight:500;color:var(--muted-foreground);white-space:nowrap">before docs</span>
+              <span style="display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;border:1px solid var(--border);font-size:11px;font-weight:500;color:var(--muted-foreground);white-space:nowrap">before funding</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:12px;font-weight:500;color:var(--muted-foreground)">Attention tags (loan card)</div>
+          <div style="display:flex;gap:8px">
+            <span style="display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:4px;font-size:11px;font-weight:500;background:color-mix(in oklab,var(--warning) 12%,var(--card));color:var(--warning)">{{ ic.fileText }}Needs review</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:4px;font-size:11px;font-weight:500;background:color-mix(in oklab,var(--warning) 12%,var(--card));color:var(--warning)">{{ ic.flag }}Stalled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px">
+    <section style="display:flex;flex-direction:column;gap:12px">
+      <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Form fields</h2>
+      <div style="display:flex;flex-direction:column;gap:16px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:500">Borrower name</span>
+          <input value="Maria Chen" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none">
+          <span style="font-size:12px;color:var(--muted-foreground)">As it appears on the purchase contract.</span>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:500">Email</span>
+          <input value="maria.chen@example" aria-invalid="true" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--destructive);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none;box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--destructive)">
+          <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--destructive)">{{ ic.circleAlert }}Enter a full email address, like maria@example.com.</span>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:500">Program</span>
+          <span style="display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);font-size:14px">Conventional<span style="color:var(--muted-foreground)">{{ ic.chevronsUpDown }}</span></span>
+        </label>
+        <div style="display:flex;flex-direction:column;gap:6px;position:relative">
+          <span style="font-size:13px;font-weight:500">Target close date</span>
+          <span style="display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);font-size:14px;box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ring)">Oct 3, 2026<span style="color:var(--muted-foreground)">{{ ic.calendar }}</span></span>
+          <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--pop);padding:10px;display:flex;flex-direction:column;gap:6px;width:240px">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:500;padding:0 4px"><span style="color:var(--muted-foreground)">{{ ic.arrowLeft }}</span>October 2026<span style="color:var(--muted-foreground)">{{ ic.arrowRight }}</span></div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;color:var(--muted-foreground);text-align:center"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:12px;text-align:center;font-variant-numeric:tabular-nums">
+              <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="35">
+                <span style="height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:{{ d.bg }};color:{{ d.fg }};font-weight:{{ d.weight }}">{{ d.n }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <span style="width:18px;height:18px;flex:none;border-radius:4px;background:var(--primary);color:var(--primary-foreground);display:flex;align-items:center;justify-content:center;margin-top:1px">{{ ic.check }}</span>
+          <span style="font-size:14px">I agree to receive loan updates electronically</span>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:500">Reason <span style="color:var(--muted-foreground);font-weight:400">· required</span></span>
+          <textarea style="height:72px;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px/20px Inter,sans-serif;resize:vertical;outline:none">Pages are cut off</textarea>
+        </label>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:12px">
+      <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Surfaces and lists</h2>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:600">Chen</span><span style="font-variant-numeric:tabular-nums;font-weight:500">$485,000</span></div>
+          <div style="font-size:12px;color:var(--muted-foreground)">Austin, TX · Conventional</div>
+          <div style="font-size:11px;color:var(--muted-foreground)">Card · 12 px padding · hairline border · shadow 0 1 2</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+          <div style="display:grid;grid-template-columns:1fr 100px 72px;align-items:center;height:36px;padding:0 12px;font-size:12px;font-weight:500;color:var(--muted-foreground);border-bottom:1px solid var(--border);background:var(--muted)"><span>Loan</span><span style="text-align:right">Amount</span><span style="text-align:right">Age</span></div>
+          <div style="display:grid;grid-template-columns:1fr 100px 72px;align-items:center;height:40px;padding:0 12px;border-bottom:1px solid var(--border)"><span>Haddad · Columbus, OH</span><span style="text-align:right;font-variant-numeric:tabular-nums">$560,000</span><span style="text-align:right;color:var(--muted-foreground)">1 d</span></div>
+          <div style="display:grid;grid-template-columns:1fr 100px 72px;align-items:center;height:40px;padding:0 12px;border-bottom:1px solid var(--border);background:var(--muted)"><span>Alvarez · Phoenix, AZ <span style="font-size:11px;color:var(--muted-foreground)">· hover</span></span><span style="text-align:right;font-variant-numeric:tabular-nums">$529,900</span><span style="text-align:right;color:var(--muted-foreground)">1 d</span></div>
+          <div aria-selected="true" style="display:grid;grid-template-columns:1fr 100px 72px;align-items:center;height:40px;padding:0 12px;background:color-mix(in oklab,var(--primary) 8%,var(--card));box-shadow:inset 2px 0 0 var(--primary)"><span>Chen · Austin, TX <span style="font-size:11px;color:var(--muted-foreground)">· selected</span></span><span style="text-align:right;font-variant-numeric:tabular-nums">$485,000</span><span style="text-align:right;color:var(--muted-foreground)">6 d</span></div>
+        </div>
+        <div role="tablist" style="display:flex;gap:4px;border-bottom:1px solid var(--border)">
+          <span role="tab" style="padding:8px 12px;font-size:13px;font-weight:500;color:var(--muted-foreground)">Overview</span>
+          <span role="tab" aria-selected="true" style="padding:8px 12px;font-size:13px;font-weight:500;color:var(--foreground);box-shadow:inset 0 -2px 0 var(--primary)">Needs list</span>
+          <span role="tab" style="padding:8px 12px;font-size:13px;font-weight:500;color:var(--muted-foreground)">Activity</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div role="menu" style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--pop);padding:6px;display:flex;flex-direction:column;gap:2px;font-size:13px">
+            <div style="padding:6px 8px 4px;font-size:11px;font-weight:500;color:var(--muted-foreground)">Move to…</div>
+            <div role="menuitem" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:var(--radius);background:var(--muted)">{{ ic.arrowLeft }}Move back to Application</div>
+            <div style="height:1px;background:var(--border);margin:4px -6px"></div>
+            <div role="menuitem" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:var(--radius);color:var(--destructive)">{{ ic.circleMinus }}Withdraw…</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;flex-direction:column;gap:2px;padding:6px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+              <a href="#" style="display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:var(--radius);font-size:14px;font-weight:500;text-decoration:none;color:var(--foreground)">{{ ic20.kanban }}Pipeline</a>
+              <a href="#" aria-current="page" style="display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:var(--radius);font-size:14px;font-weight:500;text-decoration:none;color:var(--primary);background:color-mix(in oklab,var(--primary) 10%,var(--card))">{{ ic20.layoutDashboard }}Dashboard</a>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">
+              <span role="tooltip" style="background:var(--foreground);color:var(--background);font-size:12px;padding:5px 8px;border-radius:4px">In production an underwriter performs this step.</span>
+              <span style="font-size:11px;color:var(--muted-foreground)">Tooltip</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted-foreground)">Pull-through<span aria-expanded="true" style="color:var(--primary)">{{ ic.info }}</span></div>
+            <div style="font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;font-variant-numeric:tabular-nums">73%</div>
+            <div style="font-size:12px;color:var(--muted-foreground)">industry ~70–78%</div>
+            <div style="margin-top:4px;padding:8px 10px;border-radius:4px;background:var(--muted);font-size:12px;line-height:16px">Funded loans ÷ applications started 60–180 days ago</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="padding:20px 16px;border:1px dashed var(--border);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+              <span style="color:var(--muted-foreground)">{{ ic20.inbox }}</span>
+              <span style="font-size:13px;font-weight:500">Nothing to review. Enjoy the quiet.</span>
+              <span style="font-size:11px;color:var(--muted-foreground)">Empty state</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+              <div style="height:12px;width:60%;border-radius:4px;background:var(--muted)"></div>
+              <div style="height:12px;width:90%;border-radius:4px;background:var(--muted)"></div>
+              <div style="height:12px;width:40%;border-radius:4px;background:var(--muted)"></div>
+              <span style="font-size:11px;color:var(--muted-foreground)">Skeleton block · shimmer only without reduced motion</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:12px">
+      <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Overlays and shell parts</h2>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div role="alertdialog" style="width:100%;box-sizing:border-box;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--pop);display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:15px;font-weight:600">Clear this condition?</div>
+          <div style="font-size:13px;color:var(--muted-foreground)">W-2s, last 2 years has one accepted document. Maria will see it as Accepted.</div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+            <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;white-space:nowrap;flex:none">Keep open</button>
+            <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;white-space:nowrap;flex:none">Clear condition</button>
+          </div>
+        </div>
+        <div role="status" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--pop);font-size:13px"><span style="color:var(--success)">{{ ic.circleCheck }}</span><span style="flex:1">Maria's link copied</span><span style="color:var(--muted-foreground)">{{ ic.x }}</span></div>
+        <div role="status" style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px;padding:0 16px;background:var(--banner);color:var(--banner-fg);font-size:13px;font-weight:500;border-radius:var(--radius)">
+          <span style="display:flex;align-items:center;gap:8px">{{ ic.eye }}Viewing as Alex Rivera · Loan officer</span>
+          <button style="height:28px;padding:0 10px;border-radius:var(--radius);border:1px solid rgba(28,20,0,.35);background:transparent;color:var(--banner-fg);font:500 12px Inter,sans-serif;white-space:nowrap;flex:none">Exit view</button>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:var(--radius);border:1px dashed var(--border);color:var(--muted-foreground);font-size:11px;font-weight:500">{{ ic.info }}Demo · synthetic data</span>
+          <div role="radiogroup" style="display:inline-grid;grid-template-columns:1fr 1fr 1fr;gap:2px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+            <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:4px;background:var(--muted);font-size:12px;font-weight:500">{{ ic.sun }}Light</span>
+            <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:4px;font-size:12px;font-weight:500">{{ ic.moon }}Dark</span>
+            <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:4px;font-size:12px;font-weight:500">{{ ic.monitor }}System</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:88px;padding:12px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center;font-size:13px"><span style="color:var(--primary)">{{ ic20.upload }}</span><span style="font-weight:500">Tap to upload</span><span style="font-size:11px;color:var(--muted-foreground)">PDF, JPG or PNG · up to 10 MB</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:88px;padding:12px;border:2px dashed var(--primary);border-radius:var(--radius);background:color-mix(in oklab,var(--primary) 8%,var(--card));text-align:center;font-size:13px"><span style="color:var(--primary)">{{ ic20.download }}</span><span style="font-weight:500;color:var(--primary)">Drop to upload</span><span style="font-size:11px;color:var(--muted-foreground)">Drag-over</span></div>
+          <div style="display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:88px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);font-size:13px"><div style="display:flex;justify-content:space-between"><span style="font-weight:500">bank-stmt-aug.pdf</span><span style="color:var(--muted-foreground);font-variant-numeric:tabular-nums">62%</span></div><div style="height:6px;border-radius:3px;background:var(--muted);overflow:hidden"><div style="width:62%;height:100%;background:var(--primary)"></div></div><span style="font-size:11px;color:var(--muted-foreground)">Uploading · 2.1 of 3.4 MB</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:88px;padding:12px;border:1px solid var(--destructive);border-radius:var(--radius);text-align:center;font-size:13px"><span style="color:var(--destructive)">{{ ic20.circleAlert }}</span><span style="font-weight:500;color:var(--destructive)">That file is too large</span><span style="font-size:11px;color:var(--muted-foreground)">Keep it under 10 MB and try again.</span></div>
+        </div>
+        <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center">
+            <sc-for list="{{ milestones }}" as="m" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;flex:1;min-width:0">
+                <span style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;background:{{ m.bg }};color:{{ m.fg }};border:2px solid {{ m.border }};box-sizing:border-box">{{ m.icon }}</span>
+                <span style="flex:1;height:2px;background:{{ m.line }}"></span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;font-size:11px;line-height:14px;color:var(--muted-foreground)">
+            <sc-for list="{{ milestones }}" as="m" hint-placeholder-count="6"><span style="color:{{ m.labelColor }};font-weight:{{ m.weight }}">{{ m.label }}</span></sc-for>
+          </div>
+          <div style="font-size:11px;color:var(--muted-foreground)">Milestone tracker · done, current, upcoming</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--muted);font-size:12px;line-height:18px">
+          <div style="display:flex;gap:8px"><span style="color:var(--muted-foreground);flex:none">{{ ic.info }}</span><span><strong>Reduced motion.</strong> Motion is limited to 150 ms fades and 8 px slides. Under <code style="font-family:ui-monospace,Menlo,monospace">prefers-reduced-motion</code>, transitions are removed, the skeleton stops shimmering and the pending spinner becomes a static icon.</span></div>
+          <div style="display:flex;gap:8px"><span style="color:var(--muted-foreground);flex:none">{{ ic.info }}</span><span><strong>Skip to content.</strong> First tab stop on every staff page, visually hidden until focused, then shown top-left over the sidebar as a primary button with the focus ring. On the impersonation banner, "Exit view" is the next stop.</span></div>
+          <a href="#main" style="align-self:flex-start;display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:var(--radius);background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;text-decoration:none;box-shadow:0 0 0 2px var(--muted),0 0 0 4px var(--ring)">Skip to content</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, ic20: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => {
+      const m = I.makeIcons(React);
+      this.setState({ ic: m.i16, ic20: m.i20, icon: m.icon, d });
+    });
+  }
+  tone(t) {
+    if (t === 'muted') return { bg: 'var(--muted)', fg: 'var(--muted-foreground)' };
+    return { bg: `color-mix(in oklab,var(--${t}) 12%,var(--card))`, fg: `var(--${t})` };
+  }
+  renderVals() {
+    const { ic, ic20, d, icon } = this.state;
+    const theme = this.props.theme ?? 'light';
+    const spinner = icon ? icon('loader', 16, { animation: 'spin 1s linear infinite' }) : null;
+    const buttons = [
+      { name: 'Primary', label: 'New loan', pending: 'Creating…', bg: 'var(--primary)', fg: 'var(--primary-foreground)', border: 'var(--primary)', hoverBg: 'color-mix(in oklab,var(--primary) 88%,var(--foreground))' },
+      { name: 'Secondary', label: "Copy Maria's link", pending: 'Copying…', bg: 'var(--card)', fg: 'var(--foreground)', border: 'var(--border)', hoverBg: 'var(--muted)' },
+      { name: 'Ghost', label: 'Exit view', pending: 'Exiting…', bg: 'transparent', fg: 'var(--foreground)', border: 'transparent', hoverBg: 'var(--muted)' },
+      { name: 'Destructive', label: 'Reset demo data', pending: 'Resetting…', bg: 'transparent', fg: 'var(--destructive)', border: 'color-mix(in oklab,var(--destructive) 40%,var(--border))', hoverBg: 'color-mix(in oklab,var(--destructive) 10%,var(--card))' },
+    ];
+    if (!d) return { theme, themeTitle: theme === 'dark' ? 'Dark' : 'Light', tokenList: [], buttons, spinner, ic, ic20, stagePills: [], condPills: [], condPillsBorrower: [], reviewPills: [], calDays: [], milestones: [] };
+    const tk = d.tokens[theme];
+    const tokenList = d.tokenNames.filter(n => n !== 'radius').map(name => ({ name, value: tk[name] }));
+    const stagePills = d.stages.map(s => ({ label: s.label, borrower: s.borrower, icon: ic[s.icon], bg: `color-mix(in oklab,var(--chart-${s.chart}) 22%,var(--card))`, fg: 'var(--foreground)' }))
+      .concat(d.terminalStages.map(s => ({ label: s.label, borrower: s.borrower, icon: ic[s.icon], ...this.tone(s.tone) })));
+    const condPills = d.conditionStatuses.map(s => ({ label: s.label, icon: ic[s.icon], ...this.tone(s.tone) }));
+    const condPillsBorrower = d.conditionStatuses.map(s => ({ label: s.borrower, icon: ic[s.icon], ...this.tone(s.tone) }))
+      .concat([{ label: d.needsAnother.label, icon: ic[d.needsAnother.icon], ...this.tone('destructive') }]);
+    const reviewPills = d.reviewStatuses.map(s => ({ label: s.label, icon: ic[s.icon], ...this.tone(s.tone) }));
+    const calDays = [];
+    for (let i = 0; i < 4; i++) calDays.push({ n: 27 + i, fg: 'var(--muted-foreground)', bg: 'transparent', weight: 400 });
+    for (let n = 1; n <= 31; n++) calDays.push({ n, fg: n === 3 ? 'var(--primary-foreground)' : 'var(--foreground)', bg: n === 3 ? 'var(--primary)' : 'transparent', weight: n === 3 ? 600 : 400 });
+    const cur = 2;
+    const milestones = d.stages.map((s, i) => {
+      const done = i < cur, now = i === cur;
+      return {
+        label: s.borrower, icon: done ? ic.check : now ? ic.circleDot : null,
+        bg: done ? 'var(--primary)' : 'var(--card)', fg: done ? 'var(--primary-foreground)' : now ? 'var(--primary)' : 'var(--muted-foreground)',
+        border: done || now ? 'var(--primary)' : 'var(--border)', line: i < cur ? 'var(--primary)' : i === 5 ? 'transparent' : 'var(--border)',
+        labelColor: now ? 'var(--foreground)' : 'var(--muted-foreground)', weight: now ? 600 : 400,
+      };
+    });
+    return { theme, themeTitle: theme === 'dark' ? 'Dark' : 'Light', tokenList, buttons, spinner, ic, ic20, stagePills, condPills, condPillsBorrower, reviewPills, calDays, milestones };
+  }
+}
+</script>
+</body>
+</html>

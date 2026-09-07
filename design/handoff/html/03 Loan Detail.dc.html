@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e6e7ea;font-family:Inter,system-ui,sans-serif}a{color:#0f766e}a:hover{color:#0b5049}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:1440px 1440px;gap:64px;padding:48px;width:max-content">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">03-loan-detail · Needs list · W-2s expanded, reject reason open</div>
+    <div id="loan-detail" data-screen-label="03 Loan detail" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Loan Detail" tab="needs" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">03-loan-detail-confirm · "Clear this condition?" dialog</div>
+    <div id="loan-detail-confirm" data-screen-label="03 Loan detail confirm" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Loan Detail" tab="needs" confirm="{{ true }}" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">03-loan-activity · Activity tab</div>
+    <div id="loan-activity" data-screen-label="03 Loan activity" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Loan Detail" tab="activity" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">03-loan-overview · Overview tab</div>
+    <div id="loan-overview" data-screen-label="03 Loan overview" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Loan Detail" tab="overview" hint-size="1440px,900px"></dc-import></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

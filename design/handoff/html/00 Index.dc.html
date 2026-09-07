@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f7f7f8;font-family:Inter,system-ui,sans-serif;color:#18181b}a{color:#0f766e}a:hover{color:#0b5049}</style>
+</helmet>
+<div style="max-width:720px;margin:0 auto;padding:48px 24px;display:flex;flex-direction:column;gap:24px;font-size:14px;line-height:20px">
+  <div style="display:flex;align-items:center;gap:8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 14h8l3 4 9-12" stroke="#0f766e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-family:Geist,Inter,sans-serif;font-weight:600;font-size:17px">Clearline</span></div>
+  <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;letter-spacing:-0.01em">Design artboards</h1>
+  <p style="margin:0;color:#64687a">Eight artboards, one system. Open an artboard to pan and zoom its frames. Each frame is a live component; PNG exports live in <code>exports/</code>, tokens in <code>tokens.md</code>.</p>
+  <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;border:1px solid #e4e4e7;border-radius:6px;background:#fff">
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #e4e4e7"><a href="01 Login.dc.html" style="font-weight:500;text-decoration:none">01 · Login</a><span style="color:#64687a">light, dark</span></li>
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #e4e4e7"><a href="02 Pipeline.dc.html" style="font-weight:500;text-decoration:none">02 · Pipeline board</a><span style="color:#64687a">light, dark, list, new loan</span></li>
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #e4e4e7"><a href="03 Loan Detail.dc.html" style="font-weight:500;text-decoration:none">03 · Loan detail</a><span style="color:#64687a">needs list, confirm, activity, overview</span></li>
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #e4e4e7"><a href="04 Queue.dc.html" style="font-weight:500;text-decoration:none">04 · Processor queue</a><span style="color:#64687a">queue, empty</span></li>
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #e4e4e7"><a href="05 Public Upload.dc.html" style="font-weight:500;text-decoration:none">05 · Public upload page</a><span style="color:#64687a">mobile light, mobile dark, done, expired, desktop</span></li>
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #e4e4e7"><a href="06 Dashboard.dc.html" style="font-weight:500;text-decoration:none">06 · Dashboard</a><span style="color:#64687a">superadmin, loan officer, chart loading, chart empty</span></li>
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #e4e4e7"><a href="07 Admin.dc.html" style="font-weight:500;text-decoration:none">07 · Users and Activity</a><span style="color:#64687a">users, impersonating, activity, reset confirm</span></li>
+    <li style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px"><a href="08 Components.dc.html" style="font-weight:500;text-decoration:none">08 · Component sheet</a><span style="color:#64687a">light, dark</span></li>
+  </ol>
+  <p style="margin:0;color:#64687a;font-size:13px">Shared pieces: <code>Sidebar.dc.html</code>, <code>data.js</code> (sample data), <code>icons.js</code> (Lucide paths).</p>
+</div>
+</x-dc>
+</body>
+</html>

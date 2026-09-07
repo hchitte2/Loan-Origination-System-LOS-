@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:1440px;height:900px;overflow:hidden;display:flex;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;position:relative">
+  <dc-import name="Sidebar" persona="priya" active="Activity" theme="{{ theme }}" hint-size="240px,100%"></dc-import>
+  <main id="main" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;flex:none">
+      <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.01em">Activity log</h1>
+      <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid color-mix(in oklab,var(--destructive) 40%,var(--border));background:transparent;color:var(--destructive);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap">{{ ic.rotateCcw }}Reset demo data</button>
+    </header>
+    <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:12px">
+      <div role="radiogroup" aria-label="Filter by action type" style="display:flex;gap:6px;flex-wrap:wrap">
+        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="7">
+          <button aria-checked="{{ f.on }}" style="height:28px;padding:0 10px;border-radius:var(--radius);border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.fg }};font:500 12px Inter,sans-serif;cursor:pointer;white-space:nowrap">{{ f.label }}</button>
+        </sc-for>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+        <div style="display:grid;grid-template-columns:24px 1fr 120px 140px 120px;align-items:center;height:36px;padding:0 12px;gap:12px;font-size:12px;font-weight:500;color:var(--muted-foreground);background:var(--muted);border-bottom:1px solid var(--border)"><span></span><span>Event</span><span>Loan</span><span>Type</span><span style="text-align:right">When</span></div>
+        <sc-for list="{{ events }}" as="e" hint-placeholder-count="10">
+          <div style="display:grid;grid-template-columns:24px 1fr 120px 140px 120px;align-items:center;height:40px;padding:0 12px;gap:12px;border-bottom:1px solid var(--border)" style-hover="background:var(--muted)">
+            <span style="display:flex;color:var(--muted-foreground)">{{ e.iconEl }}</span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:500">{{ e.actor }}</span> {{ e.action }}</span>
+            <span style="color:var(--muted-foreground)">{{ e.loan }}</span>
+            <span style="color:var(--muted-foreground)">{{ e.type }}</span>
+            <span style="text-align:right;color:var(--muted-foreground);white-space:nowrap">{{ e.time }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:0;font-size:12px;color:var(--muted-foreground)">Append-only. Rows cannot be edited or deleted; the daily reset clears them with the rest of the demo data.</p>
+    </div>
+  </main>
+
+  <sc-if value="{{ resetOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:10">
+      <div role="alertdialog" style="width:440px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--pop);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600"><span style="color:var(--destructive)">{{ ic.triangleAlert }}</span>Reset demo data?</div>
+        <div style="font-size:13px;color:var(--muted-foreground)">This restores the sample data and removes uploaded files. Visitors' changes from today are lost.</div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Keep current data</button>
+          <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--destructive);color:var(--destructive-foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Reset demo data</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;filter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;All&quot;,&quot;Stage changes&quot;,&quot;Documents&quot;,&quot;Conditions&quot;,&quot;Users&quot;,&quot;Impersonation&quot;,&quot;Resets&quot;],&quot;default&quot;:&quot;All&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;resetOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => { const m = I.makeIcons(React); this.setState({ ic: m.i16, d }); });
+  }
+  renderVals() {
+    const { ic, d } = this.state;
+    const filter = this.props.filter ?? 'All';
+    const base = { theme: this.props.theme ?? 'light', ic, resetOpen: !!this.props.resetOpen, filters: [], events: [] };
+    if (!d) return base;
+    base.filters = d.activityFilters.map(label => { const on = label === filter; return { label, on, border: on ? 'var(--primary)' : 'var(--border)', bg: on ? 'color-mix(in oklab,var(--primary) 10%,var(--card))' : 'var(--card)', fg: on ? 'var(--primary)' : 'var(--foreground)' }; });
+    base.events = d.globalActivity.filter(e => filter === 'All' || e.type === filter).map(e => ({ ...e, iconEl: ic[e.icon] }));
+    return base;
+  }
+}
+</script>
+</body>
+</html>

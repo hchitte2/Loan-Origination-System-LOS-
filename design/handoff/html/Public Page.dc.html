@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:{{ frameW }};min-height:{{ frameH }};box-sizing:border-box;display:flex;flex-direction:column;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:22px">
+  <header style="display:flex;flex-direction:{{ barDir }};align-items:{{ barAlign }};justify-content:space-between;gap:6px;padding:{{ barPad }};background:var(--card);border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:8px;height:28px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 14h8l3 4 9-12" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-family:Geist,Inter,sans-serif;font-weight:600;font-size:17px">Clearline</span></div>
+    <a href="tel:+15125550134" style="display:inline-flex;align-items:center;gap:6px;min-height:28px;font-size:13px;color:var(--muted-foreground);text-decoration:none">{{ ic.phone }}Your loan officer: <span style="color:var(--foreground);font-weight:500">Alex Rivera</span> · (512) 555-0134</a>
+  </header>
+
+  <main id="main" style="flex:1;width:100%;max-width:640px;margin:0 auto;box-sizing:border-box;padding:{{ pagePad }};display:flex;flex-direction:column;gap:24px">
+    <sc-if value="{{ isExpired }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:40px;padding:28px 20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+        <span style="color:var(--muted-foreground)">{{ ic24.linkOff }}</span>
+        <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">This link is no longer active.</h1>
+        <p style="margin:0;color:var(--muted-foreground)">Ask your loan officer for a new one.</p>
+        <a href="tel:+15125550134" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:var(--radius);background:var(--primary);color:var(--primary-foreground);font-weight:500;text-decoration:none;margin-top:4px">{{ ic.phone }}Call Alex Rivera · (512) 555-0134</a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ notExpired }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:24px;line-height:30px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">Hi Maria, here's where your loan stands.</h1>
+        <p style="margin:0;font-size:13px;line-height:18px;color:var(--muted-foreground)">412 Maple Ave, Austin TX · $485,000 · Conventional purchase · Target close Oct 3</p>
+      </div>
+
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ true }}">
+        <ol aria-label="Loan progress" style="margin:0;padding:16px;list-style:none;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+          <sc-for list="{{ milestones }}" as="m" hint-placeholder-count="6">
+            <li aria-current="{{ m.current }}" style="display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start">
+              <div style="display:flex;flex-direction:column;align-items:center;height:{{ m.rowH }}">
+                <span style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;background:{{ m.bg }};color:{{ m.fg }};border:2px solid {{ m.border }};box-sizing:border-box">{{ m.icon }}</span>
+                <span style="flex:1;width:2px;background:{{ m.line }}"></span>
+              </div>
+              <span style="font-size:14px;line-height:24px;color:{{ m.labelColor }};font-weight:{{ m.weight }}">{{ m.label }}<sc-if value="{{ m.now }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-size:12px;line-height:16px;color:var(--muted-foreground);font-weight:400;padding-bottom:4px">You are here · Alex and Sam are collecting your documents</span></sc-if></span>
+            </li>
+          </sc-for>
+        </ol>
+      </sc-if>
+      <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ false }}">
+        <div aria-label="Loan progress" style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center">
+            <sc-for list="{{ milestones }}" as="m" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;flex:1;min-width:0">
+                <span style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;background:{{ m.bg }};color:{{ m.fg }};border:2px solid {{ m.border }};box-sizing:border-box">{{ m.icon }}</span>
+                <span style="flex:1;height:2px;background:{{ m.line }}"></span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;font-size:12px;line-height:16px">
+            <sc-for list="{{ milestones }}" as="m" hint-placeholder-count="6"><span style="color:{{ m.labelColor }};font-weight:{{ m.weight }}">{{ m.label }}</span></sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px 20px;border:1px solid color-mix(in oklab,var(--success) 40%,var(--border));border-radius:var(--radius);background:color-mix(in oklab,var(--success) 8%,var(--card));display:flex;flex-direction:column;gap:8px">
+          <span style="color:var(--success)">{{ ic24.checkCheck }}</span>
+          <h2 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:20px;line-height:26px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">Nice, that's everything for now.</h2>
+          <p style="margin:0;color:var(--muted-foreground)">We'll let you know if we need anything else.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--muted-foreground)">What you've sent</h2>
+          <ul style="margin:0;padding:0;list-style:none;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+            <sc-for list="{{ doneItems }}" as="c" hint-placeholder-count="5">
+              <li style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:0 16px;border-bottom:1px solid var(--border);font-size:14px"><span>{{ c.title }}</span><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ c.bg }};color:{{ c.fg }}">{{ c.iconEl }}{{ c.borrower }}</span></li>
+            </sc-for>
+          </ul>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isActive }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">Alex needs 3 things from you.</h2>
+          <label style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);cursor:pointer;min-height:44px;box-sizing:border-box">
+            <span style="width:20px;height:20px;flex:none;border-radius:4px;background:var(--primary);color:var(--primary-foreground);display:flex;align-items:center;justify-content:center;margin-top:1px">{{ ic.check }}</span>
+            <span style="font-size:14px;line-height:20px">I agree to receive loan updates electronically</span>
+          </label>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ needs }}" as="c" hint-placeholder-count="6">
+            <article style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <h3 style="margin:0;font-size:16px;line-height:22px;font-weight:600">{{ c.title }}</h3>
+                <span style="display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:2px 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:16px;background:{{ c.bg }};color:{{ c.fg }}">{{ c.iconEl }}{{ c.borrower }}</span>
+              </div>
+              <sc-if value="{{ c.showInstructions }}" hint-placeholder-val="{{ true }}">
+                <p style="margin:0;font-size:14px;line-height:20px;color:var(--muted-foreground)">{{ c.instructions }}</p>
+              </sc-if>
+              <sc-if value="{{ c.zoneIdle }}" hint-placeholder-val="{{ false }}">
+                <button style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:72px;padding:12px;border:1px dashed var(--primary);border-radius:var(--radius);background:color-mix(in oklab,var(--primary) 4%,var(--card));color:var(--foreground);font-family:Inter,sans-serif;cursor:pointer;width:100%">
+                  <span style="color:var(--primary)">{{ ic20.upload }}</span>
+                  <span style="font-size:14px;font-weight:500">Tap to upload</span>
+                  <span style="font-size:12px;color:var(--muted-foreground)">PDF, JPG or PNG · up to 10 MB</span>
+                </button>
+              </sc-if>
+              <sc-if value="{{ c.zoneUploading }}" hint-placeholder-val="{{ false }}">
+                <div role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--muted);font-size:14px">
+                  <div style="display:flex;justify-content:space-between;gap:12px"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">bank-stmt-aug.pdf</span><span style="color:var(--muted-foreground);font-variant-numeric:tabular-nums">62%</span></div>
+                  <div style="height:6px;border-radius:3px;background:var(--border);overflow:hidden"><div style="width:62%;height:100%;background:var(--primary)"></div></div>
+                  <span style="font-size:12px;color:var(--muted-foreground)">Uploading · 2.1 of 3.4 MB</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ c.zoneReceived }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px"><span style="color:var(--muted-foreground)">{{ ic.fileText }}</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">w2-2025.pdf</span><span style="font-size:12px;color:var(--muted-foreground);white-space:nowrap">sent Sep 4</span></div>
+              </sc-if>
+            </article>
+          </sc-for>
+        </div>
+      </sc-if>
+    </sc-if>
+  </main>
+  <footer style="padding:20px {{ gutter }} 28px;text-align:center;font-size:12px;line-height:16px;color:var(--muted-foreground)">Demo system with synthetic data. Do not upload real personal documents.</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;width&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mobile&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;mobile&quot;,&quot;tsType&quot;:&quot;'mobile'|'desktop'&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;active&quot;,&quot;done&quot;,&quot;expired&quot;],&quot;default&quot;:&quot;active&quot;,&quot;tsType&quot;:&quot;'active'|'done'|'expired'&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, ic20: {}, ic24: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => { const m = I.makeIcons(React); this.setState({ ic: m.i16, ic20: m.i20, ic24: m.i24, d }); });
+  }
+  tone(t) { return t === 'muted' ? { bg: 'var(--muted)', fg: 'var(--foreground)' } : { bg: `color-mix(in oklab,var(--${t}) 12%,var(--card))`, fg: `var(--${t})` }; }
+  renderVals() {
+    const { ic, ic20, ic24, d } = this.state;
+    const mobile = (this.props.width ?? 'mobile') === 'mobile';
+    const st = this.props.state ?? 'active';
+    const gutter = mobile ? '16px' : '24px';
+    const base = {
+      theme: this.props.theme ?? 'light', ic, ic20, ic24, gutter,
+      frameW: mobile ? '390px' : '1440px', frameH: mobile ? '844px' : '900px',
+      barDir: mobile ? 'column' : 'row', barAlign: mobile ? 'flex-start' : 'center', barPad: mobile ? '12px 16px' : '12px 24px',
+      pagePad: mobile ? '24px 16px 16px' : '40px 24px 24px',
+      isMobile: mobile, isDesktop: !mobile,
+      isExpired: st === 'expired', notExpired: st !== 'expired', isDone: st === 'done', isActive: st === 'active',
+      milestones: [], needs: [], doneItems: [],
+    };
+    if (!d) return base;
+    const cur = st === 'done' ? 2 : 2;
+    base.milestones = d.stages.map((s, i) => {
+      const done = i < cur, now = i === cur, last = i === 5;
+      return {
+        label: s.borrower, now, current: now ? 'step' : undefined, icon: done ? ic.check : now ? ic.circleDot : null,
+        bg: done ? 'var(--primary)' : 'var(--card)', fg: done ? 'var(--primary-foreground)' : now ? 'var(--primary)' : 'var(--muted-foreground)',
+        border: done || now ? 'var(--primary)' : 'var(--border)', line: done ? 'var(--primary)' : last ? 'transparent' : 'var(--border)',
+        labelColor: now ? 'var(--foreground)' : done ? 'var(--foreground)' : 'var(--muted-foreground)', weight: now ? 600 : 400,
+        rowH: last ? '24px' : now ? '64px' : '36px',
+      };
+    });
+    base.needs = d.mariaNeeds.map(c => ({
+      ...c, iconEl: ic[c.icon], ...this.tone(c.tone),
+      showInstructions: c.status !== 'cleared',
+      zoneIdle: c.zone === 'idle', zoneUploading: c.zone === 'uploading', zoneReceived: c.status === 'received',
+    }));
+    base.doneItems = d.mariaNeeds.map(c => ({ title: c.title, borrower: c.title === 'Homeowners insurance binder' ? 'No longer needed' : c.status === 'cleared' ? 'Accepted' : 'Received, under review', iconEl: c.title === 'Homeowners insurance binder' ? ic.circleMinus : c.status === 'cleared' ? ic.circleCheck : ic.clock, ...this.tone(c.title === 'Homeowners insurance binder' ? 'muted' : c.status === 'cleared' ? 'success' : 'warning') }));
+    return base;
+  }
+}
+</script>
+</body>
+</html>

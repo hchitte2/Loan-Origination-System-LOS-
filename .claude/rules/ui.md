@@ -6,7 +6,7 @@ paths:
 ---
 # UI rules
 
-Read `.claude/skills/design-system/SKILL.md` before building or restyling a screen. Compare the result with `design/reference/<screen>.png` when one exists.
+Read `.claude/skills/design-system/SKILL.md` before building or restyling a screen. The pixel target is `design/handoff/reference/<screen>.png` and the screen's section in `design/handoff/README.md`; the HTML under `design/handoff/html/` is a reference build and is never copied.
 
 ## Tokens and themes
 - Colours, radii, spacing and type come from the tokens in `globals.css` (`:root` light, `.dark` dark, mapped through `@theme inline`). No raw hex, no arbitrary spacing like `mt-[13px]`.

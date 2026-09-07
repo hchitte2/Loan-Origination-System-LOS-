@@ -181,7 +181,7 @@ src/
     MilestoneTracker, StageBarChart, AgingBarChart, AttentionTable, LoanCard, LoanTable
 drizzle/                          committed SQL migrations (never edited once applied)
 tests/ unit/  db/  e2e/
-design/ DESIGN-PROMPT.md  exports/<date>/  reference/<screen>.png   (Claude Design output; reference only, never imported)
+design/ DESIGN-PROMPT.md  handoff/ (README.md, tokens.md, reference/*.png, html/ — the approved Claude Design handoff; reference only, never imported)
 docs/ DECISIONS.md  DEMO.md  RUNBOOK.md  archive/demo-los-kit/
 ```
 
@@ -285,15 +285,15 @@ Design happens before product UI is coded. The prompt lives in `design/DESIGN-PR
 7. Superadmin: Users with "Create user" and "View as"; the impersonation banner shown over the pipeline; the Activity page.
 8. Component sheet (light and dark): tokens and type scale; Pill in every stage, condition and review state (icon + text, never colour-only); buttons and focus ring; form field with error; EmptyState; skeleton; ConfirmDialog; toast; ImpersonationBanner; DemoBadge; ThemeToggle; table row states; reduced-motion note.
 
-**How exports feed the codebase.** Each iteration's export is unzipped into `design/exports/<yyyy-mm-dd>/` (the PNG/HTML/CSS are committed; the zip is gitignored); final PNGs go to `design/reference/<screen>.png`. After the green signal the planning chat fills the token tables in `.claude/skills/design-system/SKILL.md` from the export's token list or CSS (reading values off the PNGs if it has neither). The coding session copies those values once into `src/app/globals.css` (`:root` and `.dark`) and uses the PNGs only as pixel references for layout, never as a second source of token values. Exports are reference material, never code to paste. axe's contrast rule in the a11y spec catches transcription mistakes in both themes.
+**How the handoff feeds the codebase.** The approved handoff lives in `design/handoff/`: `README.md` (screen-by-screen spec, shells, icon mapping), `tokens.md` (light and dark values, the single source of design values), `reference/*.png` (27 frames at 2×, the pixel targets) and `html/` (a reference build plus `data.js`, the exact sample data for the seed; never copied into the app). The planning chat transcribed the tokens into `.claude/skills/design-system/SKILL.md` on 2026-09-07. The coding session copies them once into `src/app/globals.css` (`:root` and `.dark`) and uses the PNGs and README only as targets for layout and copy. axe's contrast rule in the a11y spec catches transcription mistakes in both themes.
 
-**Sign-off gate.** The user writes "green signal" in the planning chat after all artboards and the component sheet are approved. The planning chat then freezes tokens in the design-system skill and opens the UI half of Phase 1 and everything after it.
+**Sign-off gate.** Green signal received 2026-09-07 with the finalised handoff. Tokens are frozen in the design-system skill; the UI half of Phase 1 and everything after it is unblocked.
 
 ---
 
 ## 9. Build phases
 
-Each phase ends with small conventional commits on `main`, a Vercel deployment, `/verify` green, and a 10-minute hand verification by the user on the production URL. A session is one Claude Code coding session of one to three hours. Phase headings carry a status line the SessionStart hook reads; the planning chat flips `not started → active → done`.
+Each phase is one branch `phase-N-<slug>` and one pull request into `main` (CLAUDE.md, Git workflow): small conventional commits per step, CI green, `/verify` green, a rebase merge so the step commits survive, a `phase-N` tag, then a 10-minute hand verification by the user on the production URL. Phase 0 was committed directly on `main` before this rule existed. Branch protection on `main` (a PR and the `biome · tsc · vitest` check required) is switched on by the planning chat when Phase 0 closes. A session is one Claude Code coding session of one to three hours. Phase headings carry a status line the SessionStart hook reads; the planning chat flips `not started → active → done`.
 
 ### Phase 0 — Repo, tooling, guardrails, placeholder deploy
 Status: active · 1 session · runs in parallel with Claude Design
@@ -302,7 +302,7 @@ Status: active · 1 session · runs in parallel with Claude Design
 
 **Planning chat delivered:** `CLAUDE.md`, the `.claude/` tree (Section 10), `design/DESIGN-PROMPT.md`, `docs/DECISIONS.md`.
 
-**Coding chat tasks:** scaffold with `create-next-app` (TypeScript, Tailwind, App Router, `src/` dir, Biome, pnpm) into the repo root; `shadcn init`; add Drizzle, Better Auth, `@vercel/blob`, zod, `next-themes`, vitest, Playwright, axe; `lib/env.ts`; `db/index.ts` driver switch; `.env.example`; `vercel.json` with the cron; `.github/workflows/ci.yml` (biome check, tsc, vitest on push); one trivial unit test and one trivial Playwright test; a placeholder home page; `pnpm` scripts `dev check typecheck test test:db e2e db:generate db:migrate db:seed db:reset seed:files db:migrate:prod db:seed:prod`; README with non-goals and the hosting story. (`demo-los-kit/` is already archived under `docs/archive/` with its files renamed so nothing auto-loads.)
+**Coding chat tasks:** scaffold with `create-next-app` (TypeScript, Tailwind, App Router, `src/` dir, Biome, pnpm) into the repo root; `shadcn init`; add Drizzle, Better Auth, `@vercel/blob`, zod, `next-themes`, vitest, Playwright, axe; `lib/env.ts`; `db/index.ts` driver switch; `.env.example`; `vercel.json` with the cron; `.github/workflows/ci.yml` (biome check, tsc, vitest on push and pull request) and `.github/PULL_REQUEST_TEMPLATE.md` (added by the planning chat); one trivial unit test and one trivial Playwright test; a placeholder home page; `pnpm` scripts `dev check typecheck test test:db e2e db:generate db:migrate db:seed db:reset seed:files db:migrate:prod db:seed:prod`; README with non-goals and the hosting story. (`demo-los-kit/` is already archived under `docs/archive/` with its files renamed so nothing auto-loads.)
 **Done when:** CI is green on `main`; the Vercel URL renders the placeholder; `pnpm check` (biome + tsc + vitest) passes locally; every hook fires (Stop hook blocks a deliberate type error; PreToolUse hook denies `rm -rf x`).
 **Verify (10 min):** open the Vercel URL; run `pnpm check`; in a Claude session, introduce a type error, end the turn, watch the block, revert.
 
@@ -310,7 +310,7 @@ Status: active · 1 session · runs in parallel with Claude Design
 Status: not started · 2–3 sessions · non-UI half may start before the green signal; the login page, shell and tokens wait for it
 
 **Tasks (no design needed):** `db/schema.ts` per Section 6 → `pnpm db:generate` → `drizzle/0000_init.sql` → `pnpm db:generate --custom --name activity_triggers` → hand-write `activity_no_update` / `activity_no_delete` (`BEFORE UPDATE OR DELETE`, raise) in `drizzle/0001_activity_triggers.sql` → `schema-guard` → `pnpm db:migrate` on `dev` and `main` · Better Auth config (email + password, admin plugin, `impersonationSessionDuration: 14400`, `nextCookies()` last) and `app/api/auth/[...all]/route.ts` · `proxy.ts` · `requireActor`, `authz.ts` transcribed from the Section 2 matrix, `transitions.ts`, `lib/stages.ts`, with vitest tables · `seed.ts` (users with `DEMO_PASSWORD`, the fixture) and `pnpm db:seed` · impersonation actions writing activity rows · unstyled `/admin/users` and `/admin/activity` behind authorization · deploy, migrate and seed `main`.
-**Tasks (after the green signal):** tokens into `globals.css` for both themes · `ThemeProvider` and `ThemeToggle` · login page from artboard 1 · staff shell with home-route redirects · `ImpersonationBanner` · styled Users and Activity pages · Playwright scaffold (persona-card login helper) with `login.spec.ts` and `a11y.spec.ts` covering `/login` and `/admin/users` in light and dark.
+**Tasks (after the green signal):** tokens from the design-system skill into `globals.css` for both themes · `ThemeProvider` and `ThemeToggle` · login page from `design/handoff/reference/01-login-*.png` · staff shell with home-route redirects · `ImpersonationBanner` · styled Users and Activity pages · Playwright scaffold (persona-card login helper) with `login.spec.ts` and `a11y.spec.ts` covering `/login` and `/admin/users` in light and dark.
 **Done when:** all three personas log in on the **production URL** and land on their empty-but-styled home; Priya views as Sam, sees the banner on every page, cannot reach `/admin/users` while impersonating, exits; `/admin/activity` shows both impersonation rows; `authz.test.ts` covers every matrix cell; an `UPDATE activity` throws (pglite test if it takes under 30 minutes to set up, otherwise verified by hand); the theme toggle persists across reloads with no flash.
 **Verify:** three cards on the prod URL; impersonate and exit; keyboard-only from login to Exit view; switch to dark and reload; `pnpm test`.
 **.claude additions:** `authz-reviewer` and `schema-guard` checklists finalised against the real schema.
@@ -356,7 +356,8 @@ CLAUDE.md                          ~120 lines: product paragraph, commands, modu
 PLAN.md                            this file; phase status lines drive the SessionStart hook
 .mcp.json                          playwright (stdio, npx -y @playwright/mcp@latest) for browser verification
 vercel.json                        crons: [{ path: /api/cron/reset, schedule: 0 8 * * * }]
-.github/workflows/ci.yml           biome check · tsc --noEmit · vitest, on every push
+.github/workflows/ci.yml           biome check · tsc --noEmit · vitest, on every push and pull request
+.github/PULL_REQUEST_TEMPLATE.md   phase, changes, done-when checklist, verification, screenshots, drift
 .claude/
   settings.json                    permissions + hooks (committed)
   settings.local.json              personal overrides (gitignored); also the emergency hook bypass
@@ -373,11 +374,11 @@ vercel.json                        crons: [{ path: /api/cron/reset, schedule: 0 
     add-action/SKILL.md            procedure for one server action: matrix row → zod schema → action → activity → vitest row → run authz-reviewer
     db-reset/SKILL.md              /db-reset: migrate + seed against DATABASE_URL; refuses if the URL contains the prod host
     release/SKILL.md               /release: migrate main, curl smoke on /login and an unauthenticated /api/cron/reset (expects 401), warm Neon. Deploys happen on git push
-    design-system/SKILL.md         tokens (both themes), spacing, type, component rules, copy voice from the Claude Design export; background knowledge
+    design-system/SKILL.md         tokens (both themes), type, sizes, icons, recipes, component rules, copy voice — filled from design/handoff on 2026-09-07; background knowledge
     domain/SKILL.md                mortgage glossary and the "why" behind stages, conditions, public-page limits; points to lib/stages.ts for labels and PLAN.md for the matrix; background knowledge
   agents/
     authz-reviewer.md              read-only: every action/route calls requireActor + can; public page renders only redacted types; activity never updated; caps server-side; authz.ts table has one entry per matrix row and the test is driven by it
-    ui-reviewer.md                 read-only: compares a screen with design/reference and the design-system skill; states, both themes, a11y floor, copy voice
+    ui-reviewer.md                 read-only: compares a screen with design/handoff/reference and README and the design-system skill; states, both themes, a11y floor, copy voice
     schema-guard.md                read-only: audits migrations and schema against rules/db.md and the invariants; flags edits to applied migrations
     demo-walker.md                 Bash + Playwright MCP (Phase 5): clicks through Section 13 on a URL and reports where it breaks
   scripts/
@@ -393,7 +394,7 @@ vercel.json                        crons: [{ path: /api/cron/reset, schedule: 0 
 
 **Hook events used:** `SessionStart`, `PreToolUse` (matchers `Bash` and `Edit|Write`), `PostToolUse` (`Edit|Write`), `Stop`. All command hooks are macOS-safe (bash 3.2, BSD grep, `jq` required), fail open on tooling problems, and block only on real findings.
 
-**Permissions (`settings.json`).** allow: `Bash(pnpm *)`, `Bash(git status*)`, `Bash(git diff*)`, `Bash(git log*)`, `Bash(git add *)`, `Bash(git commit *)`, `Bash(git push)`, `Bash(vercel logs*)`, `Edit(src/**)`, `Edit(tests/**)`, `Edit(docs/**)`, `Edit(.env.example)`. ask: `Edit(.claude/**)`, `Edit(PLAN.md)`, `Edit(CLAUDE.md)`, `Bash(curl *)`, `Bash(vercel *)`. deny: `Read`/`Edit` of `.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test` (never `.env.example`), `Bash(sudo *)`, `Bash(git push --force*)`. Recursive `rm` is governed by the hook (all spellings; build caches excepted), not by a settings rule, because a settings deny cannot express the exception.
+**Permissions (`settings.json`).** allow: `Bash(pnpm *)`, read-only git (`status`, `diff`, `log`, `show`, `fetch`), the phase-branch flow (`git switch -c phase-*`, `git checkout -b phase-*`, `git push -u origin phase-*`, `git rebase main`, `git pull --ff-only`, `git tag *`), `git add`, `git commit`, `git push`, `gh pr create|view|checks|status|list|ready`, `gh run list|view`, `Bash(vercel logs*)`, `Edit(src/**)`, `Edit(tests/**)`, `Edit(docs/**)`, `Edit(.env.example)`. ask: `Edit(.claude/**)`, `Edit(PLAN.md)`, `Edit(CLAUDE.md)`, `Edit(design/**)`, `Bash(gh pr merge*)`, `Bash(curl *)`, `Bash(vercel *)`. deny: `Read`/`Edit` of `.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test` (never `.env.example`), `Bash(sudo *)`, `Bash(git push --force*)`. Recursive `rm` is governed by the hook (all spellings; build caches excepted), not by a settings rule, because a settings deny cannot express the exception.
 
 **Plugins and MCP.** Playwright MCP via `.mcp.json` (project-scoped, committed, so every clone has it). From the official marketplace, optional and one line each: `security-guidance` (inline nudges while writing server code) and `typescript-lsp` (go-to-definition and diagnostics for the agent). No GitHub or Vercel MCP: `gh` and `vercel` CLIs are enough, and Vercel deploys on push. No agent teams, no worktrees: one developer, one branch.
 
@@ -408,7 +409,7 @@ Minimal but real, one layer per concern.
 - **Unit (vitest, no database, runs in the Stop hook in under 10 s):** `authz.test.ts` (table-driven from the matrix, plus impersonated actors and own-vs-any rows), `transitions.test.ts` (every allowed and refused move, reason and gate rules), `analytics-math.test.ts` (pull-through, cycle time, aging buckets, stalled thresholds against fixed rows), `limits.test.ts`, `redactForPublic` field absence.
 - **DB (vitest + pglite, run by `/verify`, not the Stop hook):** migrations apply; `UPDATE` and `DELETE` on `activity` throw; one service writes exactly one activity row and rolls back with its change. Drop this layer if it costs more than 30 minutes to set up; verify the trigger by hand instead.
 - **End-to-end (Playwright, local against the Neon `dev` branch after `/db-reset`, run by `/verify`):** `login.spec.ts` (three cards land on three homes), `loan-flow.spec.ts` (create → move → withdraw), `public-upload.spec.ts` (fresh context, upload, reject, re-upload, accept, clear; revoked link), `impersonation.spec.ts` (Priya → Sam → banner → act → exit → two rows), `public-scope.spec.ts` (internal-only conditions, borrower email/phone and download URLs absent from the public page's DOM **and** raw response body), `a11y.spec.ts` (axe on login, pipeline, loan detail, queue, public page, dashboard, users, in light and dark; fail on serious and critical), `demo-path.spec.ts` (Section 13 end to end, added in Phase 5).
-- **CI (GitHub Actions on push):** biome, tsc, vitest. Playwright stays local by design; no branch protection while the workflow is "one developer commits on main".
+- **CI (GitHub Actions on push and pull request):** biome, tsc, vitest. Playwright stays local by design. Branch protection on `main` requires a pull request and the CI check; merges are rebase merges so the small step commits survive.
 - **Manual:** each phase's 10-minute verify on the production URL, as the real role.
 - **Not tested:** markup snapshots, pixel diffs.
 

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:1440px;height:900px;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;position:relative">
+  <div style="position:absolute;top:24px;right:24px;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:var(--radius);border:1px dashed var(--border);color:var(--muted-foreground);font-size:11px;font-weight:500">{{ ic.info }}Demo · synthetic data</div>
+  <div style="width:520px;display:flex;flex-direction:column;gap:32px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+      <div style="display:flex;align-items:center;gap:10px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 14h8l3 4 9-12" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-family:Geist,Inter,sans-serif;font-weight:600;font-size:28px;letter-spacing:-0.02em">Clearline</span></div>
+      <p style="margin:0;color:var(--muted-foreground);font-size:15px">A demo loan origination system</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:var(--radius);border:1px solid var(--primary);background:var(--card);color:var(--foreground);text-align:left;cursor:pointer;box-shadow:var(--shadow);font-family:Inter,sans-serif" style-hover="background:color-mix(in oklab,var(--primary) 6%,var(--card))">
+        <span style="width:44px;height:44px;border-radius:50%;flex:none;background:var(--primary);color:var(--primary-foreground);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">PN</span>
+        <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
+          <span style="font-size:15px;font-weight:600;line-height:22px">Enter as Priya Nair</span>
+          <span style="font-size:13px;color:var(--muted-foreground)">Superadmin · sees everything, can view as anyone</span>
+        </span>
+        <span style="color:var(--primary)">{{ ic20.logIn }}</span>
+      </button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <button style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);text-align:left;cursor:pointer;font-family:Inter,sans-serif" style-hover="background:var(--muted)">
+          <span style="width:36px;height:36px;border-radius:50%;flex:none;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">AR</span>
+          <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600">Enter as Alex Rivera</span><span style="font-size:12px;color:var(--muted-foreground)">Loan officer</span></span>
+        </button>
+        <button style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);text-align:left;cursor:pointer;font-family:Inter,sans-serif" style-hover="background:var(--muted)">
+          <span style="width:36px;height:36px;border-radius:50%;flex:none;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">SO</span>
+          <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600">Enter as Sam Okafor</span><span style="font-size:12px;color:var(--muted-foreground)">Processor</span></span>
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;color:var(--muted-foreground);font-size:12px"><span style="flex:1;height:1px;background:var(--border)"></span>or<span style="flex:1;height:1px;background:var(--border)"></span></div>
+      <a href="#" style="display:flex;align-items:center;justify-content:center;gap:8px;height:40px;border-radius:var(--radius);border:1px dashed var(--primary);color:var(--primary);font-size:14px;font-weight:500;text-decoration:none" style-hover="background:color-mix(in oklab,var(--primary) 6%,var(--card))">{{ ic.smartphone }}Try the borrower experience<span style="font-weight:400;color:var(--muted-foreground)">· opens Maria's upload link</span></a>
+    </div>
+    <ol style="margin:0;padding:16px 20px;list-style:none;display:flex;flex-direction:column;gap:8px;border-radius:var(--radius);background:var(--muted);font-size:13px;color:var(--muted-foreground)">
+      <li style="display:flex;gap:10px"><span style="font-weight:600;color:var(--foreground);font-variant-numeric:tabular-nums">1.</span>Enter as Priya.</li>
+      <li style="display:flex;gap:10px"><span style="font-weight:600;color:var(--foreground);font-variant-numeric:tabular-nums">2.</span>Open Users and view as Alex or Sam.</li>
+      <li style="display:flex;gap:10px"><span style="font-weight:600;color:var(--foreground);font-variant-numeric:tabular-nums">3.</span>Open the borrower link on your phone and upload a file.</li>
+    </ol>
+  </div>
+  <p style="position:absolute;bottom:24px;margin:0;font-size:12px;color:var(--muted-foreground)">Demo system with synthetic data. Do not upload real personal documents.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, ic20: {} };
+  componentDidMount() { import('./icons.js').then(I => { const m = I.makeIcons(React); this.setState({ ic: m.i16, ic20: m.i20 }); }); }
+  renderVals() { return { theme: this.props.theme ?? 'light', ic: this.state.ic, ic20: this.state.ic20 }; }
+}
+</script>
+</body>
+</html>

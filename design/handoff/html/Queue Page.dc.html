@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:1440px;height:900px;overflow:hidden;display:flex;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px">
+  <dc-import name="Sidebar" persona="sam" active="Queue" theme="{{ theme }}" hint-size="240px,100%"></dc-import>
+  <main id="main" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;flex:none">
+      <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.01em">Queue</h1>
+      <span style="font-size:12px;color:var(--muted-foreground)">Sat, Sep 6 · refreshes while this tab is open</span>
+    </header>
+    <div style="flex:1;min-height:0;padding:0 24px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr;gap:16px">
+        <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted-foreground)">Documents awaiting review<span>{{ ic.info }}</span></div>
+          <div style="font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;font-variant-numeric:tabular-nums">{{ pendingCount }}</div>
+          <div style="font-size:12px;color:var(--muted-foreground)">{{ oldestText }}</div>
+        </div>
+        <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted-foreground)">Open conditions<span>{{ ic.info }}</span></div>
+          <div style="font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;font-variant-numeric:tabular-nums">23</div>
+          <div style="font-size:12px;color:var(--muted-foreground)">Requested or received, across active files</div>
+        </div>
+        <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted-foreground)">Active files<span>{{ ic.info }}</span></div>
+          <div style="font-family:Geist,Inter,sans-serif;font-size:28px;line-height:32px;font-weight:600;font-variant-numeric:tabular-nums">8</div>
+          <div style="font-size:12px;color:var(--muted-foreground)">Loans in Processing or later</div>
+        </div>
+        <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted-foreground)">Conditions aging<span style="font-size:12px">23 open</span></div>
+          <div role="img" aria-label="Conditions aging: 0 to 3 days 9, 4 to 7 days 7, 8 to 14 days 5, 15 plus days 2" style="display:flex;flex-direction:column;gap:6px">
+            <sc-for list="{{ aging }}" as="b" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:44px 1fr 20px;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--muted-foreground);font-variant-numeric:tabular-nums">{{ b.bucket }}</span>
+                <span style="height:12px;border-radius:3px;background:var(--muted);overflow:hidden"><span style="display:block;height:100%;width:{{ b.pctW }};background:{{ b.color }};border-radius:3px"></span></span>
+                <span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ b.n }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-height:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600;white-space:nowrap">Documents to review <span style="font-weight:400;color:var(--muted-foreground)">· oldest first</span></h2>
+          <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;cursor:pointer">{{ ic.filter }}All loans{{ ic.chevronDown }}</button>
+        </div>
+        <sc-if value="{{ hasDocs }}" hint-placeholder-val="{{ true }}">
+          <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+            <div style="display:grid;grid-template-columns:1.3fr 1.3fr 1fr 1.2fr 80px 90px;align-items:center;height:36px;padding:0 12px;font-size:12px;font-weight:500;color:var(--muted-foreground);background:var(--muted);border-bottom:1px solid var(--border)"><span>File</span><span>Condition</span><span>Loan</span><span>Uploaded</span><span style="text-align:right">Age</span><span></span></div>
+            <sc-for list="{{ docs }}" as="doc" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:1.3fr 1.3fr 1fr 1.2fr 80px 90px;align-items:center;height:40px;padding:0 12px;border-bottom:1px solid var(--border)" style-hover="background:var(--muted)">
+                <span style="display:flex;align-items:center;gap:8px;font-weight:500"><span style="color:var(--muted-foreground);display:flex">{{ ic.fileText }}</span>{{ doc.file }}</span>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ doc.condition }}</span>
+                <span>{{ doc.loan }}</span>
+                <span style="color:var(--muted-foreground)">{{ doc.via }}</span>
+                <span style="text-align:right;color:var(--muted-foreground);font-variant-numeric:tabular-nums">{{ doc.age }}</span>
+                <span style="display:flex;justify-content:flex-end"><a href="#" style="display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 12px Inter,sans-serif;text-decoration:none">Open{{ ic.arrowRight }}</a></span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:48px 24px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center">
+            <span style="color:var(--muted-foreground)">{{ ic24.coffee }}</span>
+            <div style="font-size:15px;font-weight:600">Nothing to review. Enjoy the quiet.</div>
+            <div style="font-size:13px;color:var(--muted-foreground)">New uploads from borrowers and loan officers appear here, oldest first.</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, ic24: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => { const m = I.makeIcons(React); this.setState({ ic: m.i16, ic24: m.i24, d }); });
+  }
+  renderVals() {
+    const { ic, ic24, d } = this.state;
+    const empty = !!this.props.empty;
+    const base = { theme: this.props.theme ?? 'light', ic, ic24, hasDocs: !empty, isEmpty: empty, docs: [], aging: [], pendingCount: empty ? 0 : 5, oldestText: empty ? 'Nothing waiting' : 'oldest 2 d' };
+    if (!d) return base;
+    const colors = ['var(--chart-2)', 'var(--chart-4)', 'var(--warning)', 'var(--destructive)'];
+    base.aging = d.aging.map((b, i) => ({ ...b, pctW: b.pct + '%', color: colors[i] }));
+    base.docs = empty ? [] : d.pendingDocs;
+    return base;
+  }
+}
+</script>
+</body>
+</html>

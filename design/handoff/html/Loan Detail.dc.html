@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:1440px;height:900px;overflow:hidden;display:flex;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;position:relative">
+  <dc-import name="Sidebar" persona="sam" active="Queue" theme="{{ theme }}" hint-size="240px,100%"></dc-import>
+  <main id="main" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+    <header style="display:flex;flex-direction:column;gap:10px;padding:16px 24px 0;flex:none">
+      <a href="#" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted-foreground);text-decoration:none;align-self:flex-start">{{ ic.arrowLeft }}Queue</a>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.01em">Chen · 412 Maple Ave</h1>
+            <span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;background:color-mix(in oklab,var(--chart-3) 22%,var(--card))">{{ ic.loader }}Processing</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted-foreground);flex-wrap:wrap">
+            <span style="font-variant-numeric:tabular-nums;color:var(--foreground);font-weight:500">$485,000</span><span>·</span><span>Conventional purchase</span><span>·</span><span>Target close Oct 3</span><span>·</span>
+            <span style="display:inline-flex;align-items:center;gap:6px">Loan officer <span style="width:20px;height:20px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600">AR</span><span style="color:var(--foreground)">Alex Rivera</span></span><span>·</span>
+            <span style="display:inline-flex;align-items:center;gap:6px">Processor <span style="width:20px;height:20px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600">SO</span><span style="color:var(--foreground)">Sam Okafor</span></span>
+          </div>
+        </div>
+        <button title="In production an underwriter performs the next step." style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap;flex:none">Submit to underwriting{{ ic.arrowRight }}</button>
+      </div>
+      <div role="tablist" style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-top:6px">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <a href="#" role="tab" aria-selected="{{ t.selected }}" style="padding:8px 12px;font-size:13px;font-weight:500;text-decoration:none;color:{{ t.color }};box-shadow:{{ t.shadow }}">{{ t.label }}</a>
+        </sc-for>
+      </div>
+    </header>
+
+    <sc-if value="{{ isNeeds }}" hint-placeholder-val="{{ true }}">
+      <section style="flex:1;min-height:0;padding:20px 24px 24px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600;white-space:nowrap">Needs list <span style="font-weight:400;color:var(--muted-foreground)">· 3 open of 6</span></h2>
+          <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;cursor:pointer">{{ ic.plus }}Add condition</button>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+          <div style="display:grid;grid-template-columns:24px 1fr 150px 130px 70px 40px;align-items:center;height:36px;padding:0 12px;font-size:12px;font-weight:500;color:var(--muted-foreground);background:var(--muted);border-bottom:1px solid var(--border)"><span></span><span>Condition</span><span>Status</span><span>Prior to</span><span style="text-align:right">Age</span><span></span></div>
+          <sc-for list="{{ conds }}" as="c" hint-placeholder-count="6">
+            <div style="border-bottom:1px solid var(--border)">
+              <div style="display:grid;grid-template-columns:24px 1fr 150px 130px 70px 40px;align-items:center;height:40px;padding:0 12px;cursor:pointer;background:{{ c.rowBg }}" style-hover="background:var(--muted)">
+                <span style="color:var(--muted-foreground);display:flex">{{ c.chevron }}</span>
+                <span style="font-weight:500">{{ c.title }}</span>
+                <span><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;background:{{ c.bg }};color:{{ c.fg }}">{{ c.iconEl }}{{ c.staffLabel }}</span></span>
+                <span><span style="display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;border:1px solid var(--border);font-size:11px;font-weight:500;color:var(--muted-foreground)">{{ c.priorTo }}</span></span>
+                <span style="text-align:right;color:var(--muted-foreground);font-variant-numeric:tabular-nums">{{ c.age }}</span>
+                <span style="display:flex;justify-content:flex-end;color:var(--muted-foreground)">{{ ic.ellipsis }}</span>
+              </div>
+              <sc-if value="{{ c.expanded }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:4px 12px 16px 48px;display:flex;flex-direction:column;gap:12px;background:var(--muted)">
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+                    <span style="color:var(--muted-foreground)">{{ ic20.fileText }}</span>
+                    <span style="display:flex;flex-direction:column;flex:1;min-width:0">
+                      <span style="font-weight:500">w2-2025.pdf</span>
+                      <span style="font-size:12px;color:var(--muted-foreground)">uploaded via Maria's link · 2 d ago · 1.2 MB</span>
+                    </span>
+                    <span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;background:color-mix(in oklab,var(--warning) 12%,var(--card));color:var(--warning)">{{ ic.clock }}Pending</span>
+                    <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;cursor:pointer">{{ ic.download }}Download</button>
+                    <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--success);font:500 13px Inter,sans-serif;cursor:pointer">{{ ic.check }}Accept</button>
+                    <button aria-expanded="true" style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid color-mix(in oklab,var(--destructive) 40%,var(--border));background:color-mix(in oklab,var(--destructive) 10%,var(--card));color:var(--destructive);font:500 13px Inter,sans-serif;cursor:pointer">{{ ic.x }}Reject</button>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+                    <label style="display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:13px;font-weight:500">Reject · reason required <span style="font-weight:400;color:var(--muted-foreground)">· Maria sees this reason in plain language</span></span>
+                      <textarea placeholder="What should Maria fix before uploading again?" style="height:64px;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px/20px Inter,sans-serif;resize:vertical;outline:none;box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ring)">Second page is missing</textarea>
+                    </label>
+                    <div style="display:flex;justify-content:flex-end;gap:8px">
+                      <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap">Keep pending</button>
+                      <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--destructive);color:var(--destructive-foreground);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap">Reject document</button>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isActivity }}" hint-placeholder-val="{{ false }}">
+      <section style="flex:1;min-height:0;padding:20px 24px 24px;display:flex;flex-direction:column;gap:12px">
+        <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">Activity <span style="font-weight:400;color:var(--muted-foreground)">· newest first</span></h2>
+        <ol style="margin:0;padding:0;list-style:none;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);font-size:13px">
+          <sc-for list="{{ activity }}" as="a" hint-placeholder-count="7">
+            <li style="display:flex;align-items:center;gap:12px;min-height:40px;padding:0 16px;border-bottom:1px solid var(--border)">
+              <span style="display:flex;color:{{ a.color }}">{{ a.iconEl }}</span>
+              <span style="flex:1">{{ a.text }}</span>
+              <span style="color:var(--muted-foreground);font-size:12px;white-space:nowrap">{{ a.time }}</span>
+            </li>
+          </sc-for>
+        </ol>
+        <p style="margin:0;font-size:12px;color:var(--muted-foreground)">The activity log is append-only. Entries record who acted and, when viewing as someone, on whose behalf.</p>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ false }}">
+      <section style="flex:1;min-height:0;padding:20px 24px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-content:start">
+        <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:12px;font-size:13px;align-self:start">
+          <h2 style="margin:0;font-size:13px;font-weight:600;color:var(--muted-foreground)">Loan</h2>
+          <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px">
+            <dt style="color:var(--muted-foreground)">Borrower</dt><dd style="margin:0">Maria Chen</dd>
+            <dt style="color:var(--muted-foreground)">Email</dt><dd style="margin:0">maria.chen@example.com</dd>
+            <dt style="color:var(--muted-foreground)">Phone</dt><dd style="margin:0">(512) 555-0177</dd>
+            <dt style="color:var(--muted-foreground)">Property</dt><dd style="margin:0">412 Maple Ave, Austin TX 78704</dd>
+            <dt style="color:var(--muted-foreground)">Purpose</dt><dd style="margin:0">Purchase</dd>
+            <dt style="color:var(--muted-foreground)">Program</dt><dd style="margin:0">Conventional</dd>
+            <dt style="color:var(--muted-foreground)">Amount</dt><dd style="margin:0;font-variant-numeric:tabular-nums">$485,000</dd>
+            <dt style="color:var(--muted-foreground)">Referral</dt><dd style="margin:0">Realtor</dd>
+          </dl>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:12px;font-size:13px">
+            <h2 style="margin:0;font-size:13px;font-weight:600;color:var(--muted-foreground)">People</h2>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:28px;height:28px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">AR</span><span style="display:flex;flex-direction:column"><span style="font-weight:500">Alex Rivera</span><span style="font-size:12px;color:var(--muted-foreground)">Loan officer · NMLS 1234567 · (512) 555-0134</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:28px;height:28px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">SO</span><span style="display:flex;flex-direction:column"><span style="font-weight:500">Sam Okafor</span><span style="font-size:12px;color:var(--muted-foreground)">Processor</span></span></div>
+          </div>
+          <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:12px;font-size:13px">
+            <h2 style="margin:0;font-size:13px;font-weight:600;color:var(--muted-foreground)">Dates</h2>
+            <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px">
+              <dt style="color:var(--muted-foreground)">Created</dt><dd style="margin:0">Aug 31</dd>
+              <dt style="color:var(--muted-foreground)">Application</dt><dd style="margin:0">Sep 1</dd>
+              <dt style="color:var(--muted-foreground)">In Processing since</dt><dd style="margin:0">Aug 31 · 6 d</dd>
+              <dt style="color:var(--muted-foreground)">Target close</dt><dd style="margin:0">Oct 3 · in 27 d</dd>
+            </dl>
+          </div>
+        </div>
+        <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;gap:12px;font-size:13px;align-self:start">
+          <h2 style="margin:0;font-size:13px;font-weight:600;color:var(--muted-foreground)">Borrower link</h2>
+          <p style="margin:0;color:var(--muted-foreground)">Maria opens this link on her phone to see what is needed and upload documents. No login.</p>
+          <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--muted);font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted-foreground);overflow:hidden">{{ ic.link }}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">clearline.example/u/k3v9…p2qm</span></div>
+          <div style="display:flex;gap:8px">
+            <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap">{{ ic.copy }}Copy Maria's link</button>
+            <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap">{{ ic.refreshCw }}Regenerate link</button>
+          </div>
+          <p style="margin:0;font-size:12px;color:var(--muted-foreground)">Regenerating revokes the old link immediately.</p>
+        </div>
+      </section>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ confirm }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:10">
+      <div role="alertdialog" style="width:420px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--pop);display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:15px;font-weight:600">Clear this condition?</div>
+        <div style="font-size:13px;color:var(--muted-foreground)">W-2s, last 2 years has one accepted document. Maria will see it as Accepted.</div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Keep open</button>
+          <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Clear condition</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;needs&quot;,&quot;activity&quot;,&quot;overview&quot;],&quot;default&quot;:&quot;needs&quot;,&quot;tsType&quot;:&quot;'needs'|'activity'|'overview'&quot;},&quot;confirm&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, ic20: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => { const m = I.makeIcons(React); this.setState({ ic: m.i16, ic20: m.i20, d }); });
+  }
+  tone(t) { return t === 'muted' ? { bg: 'var(--muted)', fg: 'var(--muted-foreground)' } : { bg: `color-mix(in oklab,var(--${t}) 12%,var(--card))`, fg: `var(--${t})` }; }
+  renderVals() {
+    const { ic, ic20, d } = this.state;
+    const tab = this.props.tab ?? 'needs';
+    const tabs = [['Overview', 'overview'], ['Needs list', 'needs'], ['Activity', 'activity']].map(([label, k]) => ({ label, selected: tab === k, color: tab === k ? 'var(--foreground)' : 'var(--muted-foreground)', shadow: tab === k ? 'inset 0 -2px 0 var(--primary)' : 'none' }));
+    const base = { theme: this.props.theme ?? 'light', ic, ic20, tabs, isNeeds: tab === 'needs', isActivity: tab === 'activity', isOverview: tab === 'overview', confirm: !!this.props.confirm, conds: [], activity: [] };
+    if (!d) return base;
+    base.conds = d.mariaNeeds.map(c => {
+      const expanded = !!c.doc;
+      return { ...c, expanded, chevron: expanded ? ic.chevronDown : ic.chevronRight, iconEl: ic[c.staffIcon], rowBg: expanded ? 'var(--muted)' : 'transparent', ...this.tone(c.staffTone) };
+    });
+    base.activity = d.loanActivity.map(a => ({ ...a, iconEl: ic[a.icon], color: a.tone === 'muted' ? 'var(--muted-foreground)' : `var(--${a.tone})` }));
+    return base;
+  }
+}
+</script>
+</body>
+</html>

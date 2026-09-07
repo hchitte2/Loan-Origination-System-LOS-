@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e6e7ea;font-family:Inter,system-ui,sans-serif}a{color:#0f766e}a:hover{color:#0b5049}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:1440px 1440px;gap:64px;padding:48px;width:max-content">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">07-users · Create user dialog open</div>
+    <div id="users" data-screen-label="07 Users" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Users Page" create-open="{{ true }}" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">07-impersonating · Pipeline while viewing as Alex</div>
+    <div id="impersonating" data-screen-label="07 Impersonating" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Pipeline Board" impersonating="{{ true }}" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">07-activity · Activity log with filter</div>
+    <div id="activity" data-screen-label="07 Activity" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Activity Page" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font:500 13px Inter,sans-serif;color:#52525b">07-reset-confirm · "Reset demo data" confirmation</div>
+    <div id="reset-confirm" data-screen-label="07 Reset confirm" style="box-shadow:0 2px 12px rgba(0,0,0,.08)"><dc-import name="Activity Page" reset-open="{{ true }}" hint-size="1440px,900px"></dc-import></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:1440px;height:900px;overflow:hidden;display:flex;flex-direction:column;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;position:relative">
+  <sc-if value="{{ impersonating }}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px;flex:none;padding:0 16px;background:var(--banner);color:var(--banner-fg);font-size:13px;font-weight:500">
+      <span style="display:flex;align-items:center;gap:8px">{{ ic.eye }}Viewing as Alex Rivera · Loan officer</span>
+      <button style="height:28px;padding:0 10px;border-radius:var(--radius);border:1px solid rgba(28,20,0,.35);background:transparent;color:var(--banner-fg);font:500 12px Inter,sans-serif;white-space:nowrap;flex:none;cursor:pointer">Exit view</button>
+    </div>
+  </sc-if>
+  <div style="display:flex;flex:1;min-height:0">
+    <dc-import name="Sidebar" persona="alex" active="Pipeline" theme="{{ theme }}" hint-size="240px,100%"></dc-import>
+    <main id="main" style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px 12px;flex:none">
+        <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.01em">Pipeline</h1>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div role="radiogroup" aria-label="Owner filter" style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+            <button aria-checked="{{ mineChecked }}" style="display:flex;align-items:center;justify-content:center;height:26px;padding:0 12px;border-radius:4px;border:0;font:500 12px Inter,sans-serif;color:var(--foreground);cursor:pointer;background:{{ mineBg }}">Mine</button>
+            <button aria-checked="{{ allChecked }}" style="display:flex;align-items:center;justify-content:center;height:26px;padding:0 12px;border-radius:4px;border:0;font:500 12px Inter,sans-serif;color:var(--foreground);cursor:pointer;background:{{ allBg }}">All</button>
+          </div>
+          <div role="radiogroup" aria-label="View" style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)">
+            <button style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:4px;border:0;font:500 12px Inter,sans-serif;color:var(--foreground);cursor:pointer;background:{{ boardBg }}">{{ ic.kanban }}Board</button>
+            <button style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:4px;border:0;font:500 12px Inter,sans-serif;color:var(--foreground);cursor:pointer;background:{{ listBg }}">{{ ic.list }}List</button>
+          </div>
+          <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap">{{ ic.plus }}New loan</button>
+        </div>
+      </header>
+
+      <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;padding:0 24px 24px">
+          <sc-for list="{{ columns }}" as="c" hint-placeholder-count="6">
+            <section aria-label="{{ c.label }}" style="display:flex;flex-direction:column;gap:8px;min-width:0">
+              <div style="display:flex;flex-direction:column;gap:2px;padding:0 4px 6px;border-bottom:2px solid {{ c.color }}">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</div>
+                <div style="font-size:12px;color:var(--muted-foreground);font-variant-numeric:tabular-nums">{{ c.count }} · {{ c.total }}</div>
+              </div>
+              <sc-if value="{{ c.empty }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 12px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center">
+                  <span style="color:var(--muted-foreground)">{{ ic20.search }}</span>
+                  <div style="font-size:13px;font-weight:500">No loans in Underwriting.</div>
+                  <div style="font-size:12px;color:var(--muted-foreground);line-height:16px">Files move here when a processor submits them.</div>
+                </div>
+              </sc-if>
+              <sc-for list="{{ c.items }}" as="l" hint-placeholder-count="2">
+                <article style="position:relative;display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid {{ l.borderColor }};border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow);cursor:pointer" style-hover="border-color:var(--muted-foreground)">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</span>
+                    <button aria-label="Move to…" aria-haspopup="menu" style="width:24px;height:24px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:4px;border:0;cursor:pointer;color:var(--muted-foreground);background:{{ l.kebabBg }}">{{ ic.ellipsis }}</button>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-4px">{{ l.cityState }}</div>
+                  <div style="font-variant-numeric:tabular-nums;font-weight:500">{{ l.amountFmt }}</div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                    <span style="display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;border:1px solid var(--border);font-size:11px;font-weight:500;color:var(--muted-foreground)">{{ l.program }}</span>
+                    <sc-if value="{{ l.hasTag }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:4px;font-size:11px;font-weight:500;background:color-mix(in oklab,var(--warning) 12%,var(--card));color:var(--warning);white-space:nowrap">{{ l.tagIconEl }}{{ l.tag }}</span>
+                    </sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted-foreground)">{{ ic.clock }}{{ l.daysFmt }} in stage</span>
+                    <span title="{{ l.lo }}" style="width:20px;height:20px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600">{{ l.loInitials }}</span>
+                  </div>
+                  <sc-if value="{{ l.showMenu }}" hint-placeholder-val="{{ false }}">
+                    <div role="menu" style="position:absolute;top:calc(100% + 4px);right:0;z-index:5;width:220px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--pop);padding:6px;display:flex;flex-direction:column;gap:2px;font-size:13px">
+                      <div style="padding:6px 8px 4px;font-size:11px;font-weight:500;color:var(--muted-foreground)">Move to…</div>
+                      <div role="menuitem" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:var(--radius);background:var(--muted)">{{ ic.arrowLeft }}Move back to Application</div>
+                      <div style="height:1px;background:var(--border);margin:4px -6px"></div>
+                      <div role="menuitem" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:var(--radius);color:var(--destructive)">{{ ic.circleMinus }}Withdraw…</div>
+                    </div>
+                  </sc-if>
+                </article>
+              </sc-for>
+            </section>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;min-height:0;padding:0 24px 24px;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+          <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+            <div style="display:grid;grid-template-columns:120px 1.4fr 170px 110px 110px 90px 130px 90px;align-items:center;height:36px;padding:0 12px;font-size:12px;font-weight:500;color:var(--muted-foreground);background:var(--muted);border-bottom:1px solid var(--border)"><span>Borrower</span><span>Property</span><span>Stage</span><span>Program</span><span style="text-align:right">Amount</span><span style="text-align:right">In stage</span><span style="padding-left:16px">Loan officer</span><span style="text-align:right">Target close</span></div>
+            <sc-for list="{{ listRows }}" as="l" hint-placeholder-count="13">
+              <div style="display:grid;grid-template-columns:120px 1.4fr 170px 110px 110px 90px 130px 90px;align-items:center;height:40px;padding:0 12px;border-bottom:1px solid var(--border);cursor:pointer" style-hover="background:var(--muted)">
+                <span style="font-weight:500">{{ l.name }}</span>
+                <span style="color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.street }}, {{ l.cityState }}</span>
+                <span><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ l.stageBg }};color:var(--foreground)">{{ l.stageIcon }}{{ l.stageLabel }}</span></span>
+                <span>{{ l.program }}</span>
+                <span style="text-align:right;font-variant-numeric:tabular-nums">{{ l.amountFmt }}</span>
+                <span style="text-align:right;color:var(--muted-foreground);font-variant-numeric:tabular-nums">{{ l.daysFmt }}</span>
+                <span style="display:flex;align-items:center;gap:6px;padding-left:16px"><span style="width:20px;height:20px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex:none">{{ l.loInitials }}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.lo }}</span></span>
+                <span style="text-align:right;color:var(--muted-foreground);font-variant-numeric:tabular-nums">{{ l.targetClose }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600">{{ ic.chevronDown }}Closed <span style="font-weight:400;color:var(--muted-foreground)">· 2</span></div>
+            <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+              <sc-for list="{{ closedRows }}" as="l" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:120px 1.4fr 170px 110px 110px 90px 130px 90px;align-items:center;height:40px;padding:0 12px;border-bottom:1px solid var(--border);cursor:pointer" style-hover="background:var(--muted)">
+                  <span style="font-weight:500">{{ l.name }}</span>
+                  <span style="color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.street }}, {{ l.cityState }}</span>
+                  <span><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:color-mix(in oklab,var(--success) 12%,var(--card));color:var(--success)">{{ ic.circleCheck }}Funded</span></span>
+                  <span>{{ l.program }}</span>
+                  <span style="text-align:right;font-variant-numeric:tabular-nums">{{ l.amountFmt }}</span>
+                  <span style="text-align:right;color:var(--muted-foreground)">—</span>
+                  <span style="display:flex;align-items:center;gap:6px;padding-left:16px"><span style="width:20px;height:20px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex:none">{{ l.loInitials }}</span><span>{{ l.lo }}</span></span>
+                  <span style="text-align:right;color:var(--muted-foreground);white-space:nowrap">funded {{ l.fundedOn }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </main>
+  </div>
+
+  <sc-if value="{{ showDialog }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:10">
+      <div role="dialog" aria-labelledby="new-loan-title" style="width:560px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--pop);display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0">
+          <h2 id="new-loan-title" style="margin:0;font-size:17px;line-height:24px;font-weight:600">New loan</h2>
+          <span style="color:var(--muted-foreground)">{{ ic.x }}</span>
+        </div>
+        <div style="padding:16px 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px 16px">
+          <label style="display:flex;flex-direction:column;gap:6px;grid-column:1 / -1"><span style="font-size:13px;font-weight:500">Borrower name</span><input value="Jamie Ortiz" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none"></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Email</span><input value="jamie.ortiz@" aria-invalid="true" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--destructive);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none"><span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--destructive)">{{ ic.circleAlert }}Enter a full email address, like jamie@example.com.</span></label>
+          <label style="display:flex;flex-direction:column;gap:6px;align-self:start"><span style="font-size:13px;font-weight:500">Phone</span><input value="(512) 555-0198" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;grid-column:1 / -1"><span style="font-size:13px;font-weight:500">Property address</span><input value="48 Juniper Way, Austin TX 78704" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none"></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Purpose</span><span style="display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);font-size:14px">Purchase<span style="color:var(--muted-foreground)">{{ ic.chevronsUpDown }}</span></span></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Program</span><span style="display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);font-size:14px">Conventional<span style="color:var(--muted-foreground)">{{ ic.chevronsUpDown }}</span></span></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Loan amount</span><input value="$425,000" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none;text-align:right;font-variant-numeric:tabular-nums"></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Referral source</span><span style="display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);font-size:14px">Realtor<span style="color:var(--muted-foreground)">{{ ic.chevronsUpDown }}</span></span></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Target close date</span><span style="display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);font-size:14px;color:var(--muted-foreground)">Pick a date<span>{{ ic.calendar }}</span></span></label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-top:1px solid var(--border)">
+          <span style="font-size:12px;color:var(--muted-foreground)">Creates the default needs list for a purchase loan.</span>
+          <div style="display:flex;gap:8px">
+            <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Cancel</button>
+            <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Create loan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;filter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;mine&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;'all'|'mine'&quot;},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;board&quot;,&quot;list&quot;],&quot;default&quot;:&quot;board&quot;,&quot;tsType&quot;:&quot;'board'|'list'&quot;},&quot;menuOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dialog&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;newLoan&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;'none'|'newLoan'&quot;},&quot;impersonating&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, ic20: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => {
+      const m = I.makeIcons(React);
+      this.setState({ ic: m.i16, ic20: m.i20, d });
+    });
+  }
+  renderVals() {
+    const { ic, ic20, d } = this.state;
+    const theme = this.props.theme ?? 'light';
+    const filter = this.props.filter ?? 'all';
+    const view = this.props.view ?? 'board';
+    const menuOpen = this.props.menuOpen ?? false;
+    const showDialog = this.props.dialog === 'newLoan';
+    const sel = 'var(--muted)', un = 'transparent';
+    const base = {
+      theme, impersonating: !!this.props.impersonating, ic, ic20, showDialog,
+      isBoard: view === 'board', isList: view === 'list',
+      mineChecked: filter === 'mine', allChecked: filter === 'all',
+      mineBg: filter === 'mine' ? sel : un, allBg: filter === 'all' ? sel : un,
+      boardBg: view === 'board' ? sel : un, listBg: view === 'list' ? sel : un,
+      columns: [], listRows: [], closedRows: [],
+    };
+    if (!d) return base;
+    const deco = l => ({
+      ...l, hasTag: !!l.tag, tagIconEl: l.tagIcon ? ic[l.tagIcon] : null,
+      showMenu: menuOpen && l.name === 'Chen',
+      kebabBg: menuOpen && l.name === 'Chen' ? 'var(--muted)' : 'transparent',
+      borderColor: menuOpen && l.name === 'Chen' ? 'var(--muted-foreground)' : 'var(--border)',
+      stageBg: `color-mix(in oklab,var(--chart-${d.stages.find(s => s.key === l.stage).chart}) 22%,var(--card))`,
+      stageIcon: ic[d.stages.find(s => s.key === l.stage).icon],
+    });
+    base.columns = d.columns(filter).map(c => ({ ...c, color: `var(--chart-${c.chart})`, items: c.items.map(deco) }));
+    base.listRows = d.loans.filter(l => filter === 'all' || l.mine).map(deco);
+    base.closedRows = d.closedLoans;
+    return base;
+  }
+}
+</script>
+</body>
+</html>

@@ -10,6 +10,15 @@ A demo loan origination system ("CRM for LOS") for the US mortgage industry. Por
 5. Run the matching reviewer before finishing: `ui-reviewer` after UI work, `authz-reviewer` after anything in `src/server/` or `src/app/api/`, `schema-guard` before any migration.
 6. End with `/verify`, then a summary: what changed, what was verified, and any drift between the code and `PLAN.md` or a skill.
 
+## Git workflow
+- `main` is always deployable; Vercel production builds from it. After Phase 0, nothing is committed to `main` directly.
+- One branch per phase, cut from `main`: `phase-N-<slug>` (for example `phase-1-foundation`). Create it when the phase starts; push it after the first commit so CI and the Vercel preview run.
+- Commit per finished, verified step: conventional prefix and scope (`feat(pipeline): move-to menu`), imperative subject under 72 characters, a body that says why when it is not obvious. Never bundle unrelated changes. Never commit secrets, `.env*`, caches or build output.
+- Open the PR early as a draft (`gh pr create --draft --fill`), fill in `.github/PULL_REQUEST_TEMPLATE.md`, and mark it ready when the phase's done-when list is green.
+- Merge only with CI green and `/verify` passed, as a rebase merge so the small commits survive: `gh pr merge --rebase --delete-branch`. Then `git switch main && git pull --ff-only`, and tag the phase: `git tag -a phase-N -m "Phase N: <title>" && git push origin phase-N`.
+- Never force-push, rewrite published history or reset shared branches (the hook blocks these). If `main` moved, rebase your branch on it and push normally.
+- Commits and PRs carry the harness attribution trailer and footer.
+
 ## Commands (pnpm)
 `dev` · `check` (biome + tsc + unit tests) · `typecheck` · `test` (unit only, fast) · `test:db` · `e2e` · `db:generate` · `db:migrate` · `db:seed` · `db:reset` · `seed:files` · `db:migrate:prod` and `db:seed:prod` (only via `/release`)
 
@@ -47,3 +56,13 @@ Next.js 16 App Router (Server Components + Server Actions, `proxy.ts`), React 19
 
 ## Scaffold note (Phase 0 only)
 `create-next-app` refuses a non-empty directory. Scaffold into `.scaffold-tmp/`, move its contents to the repo root (keep `.git`, `PLAN.md`, `CLAUDE.md`, `.claude/`, `.mcp.json`, `design/`, `docs/`), merge `.gitignore`, then delete `.scaffold-tmp/`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

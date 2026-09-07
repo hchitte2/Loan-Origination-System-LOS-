@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme]{--background:#f7f7f8;--foreground:#18181b;--muted:#efeff1;--muted-foreground:#64687a;--card:#fff;--card-foreground:#18181b;--border:#e4e4e7;--primary:#0f766e;--primary-foreground:#fff;--success:#15803d;--success-foreground:#fff;--warning:#b45309;--warning-foreground:#fff;--destructive:#b91c1c;--destructive-foreground:#fff;--ring:#0f766e;--chart-1:#b3c2bf;--chart-2:#8fd3c9;--chart-3:#4fb8ab;--chart-4:#2a9d90;--chart-5:#0f766e;--chart-6:#0b5049;--radius:6px;--banner:#fcd34d;--banner-fg:#1c1400;--shadow:0 1px 2px rgba(0,0,0,.06);--pop:0 8px 24px rgba(0,0,0,.12)}
+[data-theme="dark"]{--background:#141518;--foreground:#ececee;--muted:#24262b;--muted-foreground:#9b9fa8;--card:#1c1d21;--card-foreground:#ececee;--border:#2e3036;--primary:#2aa393;--primary-foreground:#07201d;--success:#4ade80;--success-foreground:#052e16;--warning:#fbbf24;--warning-foreground:#1c1400;--destructive:#f87171;--destructive-foreground:#2a0a0a;--ring:#2dd4bf;--chart-1:#5b6664;--chart-2:#3f8f85;--chart-3:#4fb8ab;--chart-4:#66cbbf;--chart-5:#8fd3c9;--chart-6:#b9e8e1;--shadow:0 1px 2px rgba(0,0,0,.4);--pop:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:1440px;height:900px;overflow:hidden;display:flex;background:var(--background);color:var(--foreground);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;position:relative">
+  <dc-import name="Sidebar" persona="priya" active="Users" theme="{{ theme }}" hint-size="240px,100%"></dc-import>
+  <main id="main" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;flex:none">
+      <h1 style="margin:0;font-family:Geist,Inter,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.01em">Users</h1>
+      <button style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap">{{ ic.plus }}Create user</button>
+    </header>
+    <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:12px">
+      <p style="margin:0;font-size:13px;color:var(--muted-foreground)">"View as" shows you exactly what that person sees. Everything you do while viewing is logged under your name.</p>
+      <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;font-size:13px">
+        <div style="display:grid;grid-template-columns:1.4fr 150px 1.4fr 120px 130px 120px;align-items:center;height:36px;padding:0 12px;font-size:12px;font-weight:500;color:var(--muted-foreground);background:var(--muted);border-bottom:1px solid var(--border)"><span>Name</span><span>Role</span><span>Email</span><span style="text-align:right">Loans assigned</span><span style="padding-left:24px">Last active</span><span></span></div>
+        <sc-for list="{{ users }}" as="u" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:1.4fr 150px 1.4fr 120px 130px 120px;align-items:center;height:40px;padding:0 12px;border-bottom:1px solid var(--border)" style-hover="background:var(--muted)">
+            <span style="display:flex;align-items:center;gap:8px"><span style="width:24px;height:24px;border-radius:50%;background:color-mix(in oklab,var(--primary) 16%,var(--card));color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex:none">{{ u.initials }}</span><span style="font-weight:500">{{ u.name }}</span><sc-if value="{{ u.self }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:var(--muted-foreground)">· you</span></sc-if></span>
+            <span><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--radius);font-size:12px;font-weight:500;line-height:1;white-space:nowrap;background:{{ u.roleBg }};color:{{ u.roleFg }}">{{ u.roleIcon }}{{ u.role }}</span></span>
+            <span style="color:var(--muted-foreground)">{{ u.email }}</span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums">{{ u.loans }}</span>
+            <span style="padding-left:24px;color:var(--muted-foreground)">{{ u.lastActive }}</span>
+            <span style="display:flex;justify-content:flex-end">
+              <sc-if value="{{ u.canView }}" hint-placeholder-val="{{ true }}">
+                <button style="display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 12px Inter,sans-serif;cursor:pointer;white-space:nowrap">{{ ic.eye }}View as</button>
+              </sc-if>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+
+  <sc-if value="{{ createOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:10">
+      <div role="dialog" aria-labelledby="create-user-title" style="width:440px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--pop);display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0">
+          <h2 id="create-user-title" style="margin:0;font-size:17px;line-height:24px;font-weight:600">Create user</h2>
+          <span style="color:var(--muted-foreground)">{{ ic.x }}</span>
+        </div>
+        <div style="padding:16px 24px 24px;display:flex;flex-direction:column;gap:14px">
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Name</span><input value="Taylor Nguyen" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none"></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Email</span><input value="taylor@example.com" style="height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:400 14px Inter,sans-serif;outline:none"><span style="font-size:12px;color:var(--muted-foreground)">Demo accounts use @example.com. Nobody types a password.</span></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Role</span><span style="display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border);font-size:14px">Loan officer<span style="color:var(--muted-foreground)">{{ ic.chevronsUpDown }}</span></span></label>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid var(--border)">
+          <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Cancel</button>
+          <button style="height:32px;padding:0 12px;border-radius:var(--radius);border:0;background:var(--primary);color:var(--primary-foreground);font:500 13px Inter,sans-serif;white-space:nowrap;cursor:pointer">Create user</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;createOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { ic: {}, d: null };
+  componentDidMount() {
+    Promise.all([import('./icons.js'), import('./data.js')]).then(([I, d]) => { const m = I.makeIcons(React); this.setState({ ic: m.i16, d }); });
+  }
+  renderVals() {
+    const { ic, d } = this.state;
+    const base = { theme: this.props.theme ?? 'light', ic, createOpen: !!this.props.createOpen, users: [] };
+    if (!d) return base;
+    const roleStyle = { Superadmin: ['shield', 'color-mix(in oklab,var(--primary) 12%,var(--card))', 'var(--primary)'], 'Loan officer': ['briefcase', 'var(--muted)', 'var(--foreground)'], Processor: ['clipboardCheck', 'var(--muted)', 'var(--foreground)'] };
+    base.users = d.staff.map(u => ({ ...u, canView: !u.self, roleIcon: ic[roleStyle[u.role][0]], roleBg: roleStyle[u.role][1], roleFg: roleStyle[u.role][2] }));
+    return base;
+  }
+}
+</script>
+</body>
+</html>
