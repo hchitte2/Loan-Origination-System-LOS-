@@ -1,0 +1,158 @@
+D	rm -rf src
+D	rm -rf node_modules /
+D	rm -r src/components
+D	rm -f -r src
+D	rm --recursive src
+D	bash -c "rm -rf src"
+D	/bin/rm -rf src
+D	rm -rf ./src; echo done
+D	rm -rf .next && rm -rf src
+D	rm -rf *
+D	rm -rf n*
+D	rimraf src
+D	find . -name '*.log' -delete
+D	ls | xargs rm -rf
+D	git push --force origin main
+D	git push -f
+D	git push origin +main
+D	git push origin :feature
+D	git push --force-with-lease
+D	git reset --hard HEAD~1
+D	git clean -fd
+D	git clean -d -f
+D	git checkout -- .
+D	git checkout .
+D	git restore .
+D	git restore --staged --worktree .
+D	git checkout -f main
+D	git switch -f main
+D	git branch -D feature
+D	git stash drop
+D	cat .env.local
+D	cat ".env.local"
+D	cat './.env'
+D	cat /Users/x/repo/.env.local
+D	cat .env*
+D	head -5 .env
+D	grep SECRET .env
+D	sed -n 1p .env.local
+D	less .env
+D	source .env
+D	. .env.local
+D	cp .env.local /tmp/x
+D	cp .env.example .env.local
+D	bash -c "cat .env.local"
+D	echo $(cat .env.local)
+D	python3 -c "print(open('.env.local').read())"
+D	node -e "require('fs').readFileSync('.env.local')"
+D	echo "DATABASE_URL=x" >> .env.local
+D	echo "X=1" > .env
+D	cat > .env.local <<EOF
+D	tee .env.local
+D	printenv
+D	printenv DATABASE_URL
+D	env
+D	env | grep KEY
+D	env > out.txt
+D	echo $DATABASE_URL
+D	echo "${BETTER_AUTH_SECRET}"
+D	node -p "process.env.DATABASE_URL"
+D	node -e "console.log(process.env.BLOB_READ_WRITE_TOKEN)"
+D	rg -uu DATABASE_URL
+D	rg --no-ignore --hidden SECRET
+D	rg --hidden --no-ignore SECRET .
+D	sudo rm x
+D	pnpm drizzle-kit push
+D	npx drizzle-kit push
+D	pnpm dlx drizzle-kit push --force
+D	pnpm db:push
+D	pnpm db:migrate:prod
+D	pnpm run db:migrate:prod
+D	pnpm db:seed:prod
+D	CLEARLINE_RELEASE=1 pnpm db:migrate:prod && echo hi
+D	CLEARLINE_RELEASE=1 pnpm db:seed
+D	export CLEARLINE_RELEASE=1; pnpm db:migrate:prod
+D	env CLEARLINE_RELEASE=1 pnpm db:reset
+D	pnpm dotenv -e .env.production.local -- drizzle-kit migrate
+D	vercel env pull .env.production.local --environment production
+D	vercel env rm FOO
+D	vercel rm my-project
+D	vercel --prod
+D	psql "postgres://u:p@host/db" -c "DROP TABLE loans"
+D	psql -c 'truncate activity'
+D	echo "select 1" > drizzle/0000_init.sql
+D	sed -i '' 's/a/b/' drizzle/0001_x.sql
+D	rm drizzle/meta/_journal.json
+D	mv drizzle/0000_init.sql drizzle/old.sql
+D	cat x.sql > drizzle/meta/_journal.json
+D	tee drizzle/meta/_journal.json < x.json
+A	rm -rf .next
+A	rm -rf node_modules .next
+A	rm -rf ./.scaffold-tmp
+A	rm -rf .next/
+A	rm -rf node_modules/.cache
+A	rm -rf dist out coverage
+A	rm -rf /Users/hemakshichitte/dev/Loan-Origination-System-LOS-/.next
+A	rm -rf .next; pnpm build
+A	rm file.txt
+A	rm -f src/old.ts
+A	git push
+A	git push origin main
+A	git push -u origin main
+A	git push origin feat/fix-f
+A	git push origin HEAD:main
+A	git push --follow-tags
+A	git status; git diff; git log --oneline -5
+A	git add -A && git commit -m "feat: deny rm -rf and git push --force in hook"
+A	git commit -m 'chore: document .env.local handling and drizzle-kit push ban'
+A	git commit -m "fix(env): load .env.example"
+A	git commit --message="docs: explain CLEARLINE_RELEASE=1 marker"
+A	git checkout main
+A	git checkout -b feature/x
+A	git checkout -- src/app/page.tsx
+A	git restore src/app/page.tsx
+A	git branch -d feature
+A	git stash
+A	git stash pop
+A	git clean -n
+A	cat package.json
+A	cat .env.example
+A	head -20 .env.example
+A	grep -r requireActor src
+A	grep -rn "DROP TABLE" drizzle/
+A	cat drizzle/0000_init.sql
+A	git diff drizzle/
+A	rg DATABASE_URL src
+A	rg --hidden TODO src
+A	env NODE_ENV=test pnpm test
+A	env -i PATH=/usr/bin pnpm test
+A	export NODE_ENV=test
+A	echo "hello"
+A	echo $HOME
+A	echo $NODE_ENV
+A	printf '%s\n' "$PATH"
+A	pnpm db:generate
+A	pnpm db:migrate
+A	pnpm db:seed
+A	pnpm db:reset
+A	pnpm dotenv -e .env.local -- pnpm db:seed
+A	pnpm test -- --reporter=dot
+A	pnpm exec tsc --noEmit
+A	node -e "console.log(process.env.NODE_ENV)"
+A	CLEARLINE_RELEASE=1 pnpm db:migrate:prod
+A	CLEARLINE_RELEASE=1 pnpm db:seed:prod
+A	vercel logs
+A	vercel env pull .env.local
+A	vercel inspect
+A	curl -s https://example.com
+A	pnpm db:generate --custom --name activity_triggers
+A	ls -la .env.example
+A	docker run --rm -it node:22 bash
+A	ps aux | grep rm
+A	npm run format
+A	pnpm add -D @playwright/test
+A	mkdir -p drizzle && ls drizzle/meta
+A	git mv src/a.ts src/b.ts
+A	sed -n '1,40p' src/server/authz.ts
+A	awk '/Status: active/' PLAN.md
+A	echo "DATABASE_URL=postgres://..." >> .env.example

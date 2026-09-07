@@ -1,0 +1,23 @@
+# Claude Code personal overrides
+.claude/settings.local.json
+.claude/worktrees/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node / Next (create-next-app will extend this in Phase 0)
+node_modules/
+.next/
+.turbo/
+coverage/
+playwright-report/
+test-results/
+.scaffold-tmp/
+
+# Design exports: keep the unzipped PNG/HTML, not the zip archives
+design/exports/**/*.zip
+
+# OS
+.DS_Store
