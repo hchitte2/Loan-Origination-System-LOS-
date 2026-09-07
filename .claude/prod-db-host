@@ -4,3 +4,4 @@
 # .claude/hooks/block-unsafe.sh denies any Bash command that contains a listed host unless the
 # command starts with CLEARLINE_RELEASE=1 (used only by the /release skill).
 # Fill this in during Phase 0 once the Neon project exists.
+ep-patient-fire-awvll70d-pooler.c-12.us-east-1.aws.neon.tech
