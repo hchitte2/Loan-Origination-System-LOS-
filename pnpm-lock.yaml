@@ -120,7 +120,7 @@ importers:
         version: 2.8.0
       better-auth:
         specifier: 1.7.3
-        version: 1.7.3(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.4(@babel/core@7.29.7)(@playwright/test@1.63.0)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))
+        version: 1.7.3(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.4(@babel/core@7.29.7)(@playwright/test@1.63.0)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -129,7 +129,7 @@ importers:
         version: 0.2.6
       drizzle-orm:
         specifier: 0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+        version: 0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
       lucide-react:
         specifier: ^1.41.0
         version: 1.41.0(react@19.2.8)
@@ -164,6 +164,9 @@ importers:
       '@biomejs/biome':
         specifier: 2.5.12
         version: 2.5.12
+      '@electric-sql/pglite':
+        specifier: 0.5.8
+        version: 0.5.8
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -520,6 +523,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.5.8':
+    resolution: {integrity: sha512-n9tsbUOhwx2epK1V0ZG9Ar4SHWUju04dhmzZXiSBXwBoleOvIfals33NAaWgagQVAL4Rbvx/Ptsu3P+pA09f6Q==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -3599,12 +3605,12 @@ snapshots:
       nanostores: 1.5.3
       zod: 4.5.4
 
-  '@better-auth/drizzle-adapter@1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))':
+  '@better-auth/drizzle-adapter@1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))':
     dependencies:
       '@better-auth/core': 1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3)
       '@better-auth/utils': 0.4.2
     optionalDependencies:
-      drizzle-orm: 0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+      drizzle-orm: 0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
 
   '@better-auth/kysely-adapter@1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)(kysely@0.29.5)':
     dependencies:
@@ -3701,6 +3707,8 @@ snapshots:
   '@dotenvx/primitives@0.8.0': {}
 
   '@drizzle-team/brocli@0.10.2': {}
+
+  '@electric-sql/pglite@0.5.8': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:
@@ -4432,10 +4440,10 @@ snapshots:
 
   baseline-browser-mapping@2.11.21: {}
 
-  better-auth@1.7.3(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.4(@babel/core@7.29.7)(@playwright/test@1.63.0)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))):
+  better-auth@1.7.3(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.4(@babel/core@7.29.7)(@playwright/test@1.63.0)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))):
     dependencies:
       '@better-auth/core': 1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3)
-      '@better-auth/drizzle-adapter': 1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))
+      '@better-auth/drizzle-adapter': 1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))
       '@better-auth/kysely-adapter': 1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)(kysely@0.29.5)
       '@better-auth/memory-adapter': 1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)
       '@better-auth/mongo-adapter': 1.7.3(@better-auth/core@1.7.3(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.5.3))(@better-auth/utils@0.4.2)
@@ -4453,7 +4461,7 @@ snapshots:
       zod: 4.5.4
     optionalDependencies:
       drizzle-kit: 0.31.10
-      drizzle-orm: 0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+      drizzle-orm: 0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
       next: 16.3.4(@babel/core@7.29.7)(@playwright/test@1.63.0)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       pg: 8.23.0
       react: 19.2.8
@@ -4643,8 +4651,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.13
 
-  drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0):
+  drizzle-orm@0.45.2(@electric-sql/pglite@0.5.8)(@neondatabase/serverless@1.1.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.8
       '@neondatabase/serverless': 1.1.0
       '@types/pg': 8.23.1
       kysely: 0.29.5
