@@ -115,14 +115,24 @@ export default async function LoanOverviewPage({
         </Card>
       </div>
 
-      {loan.uploadToken ? (
+      {/*
+        Three cards, and the stage is asked first. `loan.manage_link` is a write action,
+        so `can()` refuses it on a terminal loan for everyone (PLAN.md §6 invariant 8) and
+        the token is withheld — which is right, but "managed by someone else" would be a
+        lie told to the very people who manage it. A closed file says it is closed.
+      */}
+      {isTerminalStage(loan.stage) ? (
+        <Card title="Borrower link">
+          <p className="text-body text-muted-foreground">
+            This loan is {staffLabel(loan.stage).toLowerCase()}.{" "}
+            {loan.borrowerFirstName}'s link is no longer used.
+          </p>
+        </Card>
+      ) : loan.uploadToken ? (
         <BorrowerLink
           loanId={loan.id}
           firstName={loan.borrowerFirstName}
           token={loan.uploadToken}
-          closedStage={
-            isTerminalStage(loan.stage) ? staffLabel(loan.stage) : undefined
-          }
         />
       ) : (
         <Card title="Borrower link">

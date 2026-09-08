@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { isOpenCondition, priorToLabel } from "@/lib/conditions";
 import { daysSince } from "@/lib/format";
+import { isTerminalStage } from "@/lib/stages";
 import { requireActor } from "@/server/actor";
 import { assertCan, can } from "@/server/authz";
 import { listConditions } from "@/server/queries/conditions";
@@ -68,11 +69,19 @@ export default async function NeedsListPage({
       {conditions.length === 0 ? (
         <EmptyState
           icon={ListChecks}
-          title="Nothing is being asked for yet."
+          title={
+            isTerminalStage(loan.stage)
+              ? "This loan closed with an empty needs list."
+              : "Nothing is being asked for yet."
+          }
           description={
-            mayManage
-              ? "Add a condition and it shows up on the borrower's page straight away."
-              : "The loan officer on this file has not asked for anything yet."
+            // A closed loan is read-only for everyone (invariant 8), so `mayManage` is
+            // false there for the very people the second sentence would blame.
+            isTerminalStage(loan.stage)
+              ? `Nothing was ever asked of ${loan.borrowerFirstName}.`
+              : mayManage
+                ? "Add a condition and it shows up on the borrower's page straight away."
+                : "The loan officer on this file has not asked for anything yet."
           }
         />
       ) : (
