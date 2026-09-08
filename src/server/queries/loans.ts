@@ -83,10 +83,12 @@ export async function listPipelineLoans(
         options.mine ? eq(loans.loanOfficerId, actor.userId) : undefined,
       ),
     )
-    // Oldest in stage first, so the files that have stopped moving sit at the top of
-    // their column. The design frames show the fixture's declaration order, which no
-    // query can reproduce from the data.
-    .orderBy(asc(loans.stageEnteredAt), asc(loans.id));
+    // Pipeline order, then oldest in stage first. The list reads down the funnel the way
+    // the design frame shows it, and each board column gets the files that have stopped
+    // moving at the top. Postgres orders the enum by its declared order, which is the
+    // order of `STAGES`. (The frames' order within a column is the fixture's declaration
+    // order, which no query can reproduce from the data.)
+    .orderBy(asc(loans.stage), asc(loans.stageEnteredAt), asc(loans.id));
 
   return rows.map((row) => ({
     ...row,
