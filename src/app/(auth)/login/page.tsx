@@ -2,6 +2,7 @@ import { Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { DemoBadge } from "@/components/demo-badge";
+import { SkipLink } from "@/components/skip-link";
 import { Wordmark } from "@/components/wordmark";
 import { DEMO_USERS } from "@/db/seed";
 import { getEnv } from "@/lib/env";
@@ -30,12 +31,7 @@ export default async function LoginPage() {
 
   return (
     <div className="relative flex min-h-full flex-1 flex-col">
-      <a
-        href="#main"
-        className="sr-only rounded-lg bg-primary px-3 py-2 text-control text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-      >
-        Skip to content
-      </a>
+      <SkipLink />
       <DemoBadge className="absolute top-6 right-6" />
       <main
         id="main"
