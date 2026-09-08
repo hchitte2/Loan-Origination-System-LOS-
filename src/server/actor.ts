@@ -25,9 +25,10 @@ export type Actor = {
 
 /** The current actor, or null when there is no valid session. */
 export async function getActor(): Promise<Actor | null> {
-  const session = await getAuth().api.getSession({
-    headers: await headers(),
-  });
+  // Read the request first: on a static prerender `headers()` marks the route dynamic and
+  // stops here, before `getAuth()` would demand the environment at build time.
+  const requestHeaders = await headers();
+  const session = await getAuth().api.getSession({ headers: requestHeaders });
   if (!session) return null;
   const { user } = session;
   if (!isRole(user.role)) {
