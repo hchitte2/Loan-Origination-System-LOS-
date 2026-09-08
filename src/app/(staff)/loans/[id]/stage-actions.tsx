@@ -3,9 +3,8 @@
 import { ArrowRight } from "lucide-react";
 import { useActionState } from "react";
 import { toast } from "sonner";
-import type { AvailableMove } from "@/components/move-menu";
 import { MoveMenu } from "@/components/move-menu";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import { isTerminalStage, type Stage, staffLabel } from "@/lib/stages";
 import { type MoveLoanState, moveLoan } from "@/server/actions/loans";
+import type { DescribedMove } from "@/server/transitions";
 
 /**
  * The loan's one primary action (design frame 03-loan-detail): the step this file takes
@@ -28,26 +28,40 @@ const LABELS = {
   application: "Take the application",
   processing: "Start processing",
   underwriting: "Submit to underwriting",
-  conditional_approval: "Return conditions",
-  clear_to_close: "Clear to close",
+  conditional_approval: "Issue conditional approval",
+  clear_to_close: "Issue clear to close",
   funded: "Mark funded",
   withdrawn: "Withdraw",
   denied: "Deny",
   lead: "Move back to Lead",
 } as const satisfies Record<Stage, string>;
 
+const PENDING: Partial<Record<Stage, string>> = {
+  application: "Taking…",
+  processing: "Starting…",
+  underwriting: "Submitting…",
+  conditional_approval: "Issuing…",
+  clear_to_close: "Issuing…",
+  funded: "Marking…",
+};
+
 const TOOLTIPS: Partial<Record<Stage, string>> = {
   underwriting: "In production an underwriter performs the next step.",
   conditional_approval:
-    "In production an underwriter returns these conditions.",
+    "In production an underwriter issues this approval and its conditions.",
   funded: "In production a closer disburses the loan and marks it funded.",
 };
 
-/** The one move that carries the file forward, if this actor has one. */
+/**
+ * The one move that carries the file forward, if this actor has one — blocked or not.
+ * A gated step is still shown, refused, with the gate's own sentence: the processor came
+ * to this page for that button, and silence about why it is missing is worse than the
+ * refusal.
+ */
 function forwardMove(
   stage: Stage,
-  moves: AvailableMove[],
-): AvailableMove | undefined {
+  moves: DescribedMove[],
+): DescribedMove | undefined {
   if (isTerminalStage(stage)) return undefined;
   return moves.find(
     (move) => !move.requiresClosedReason && isForward(stage, move.to),
@@ -70,6 +84,20 @@ const ORDER: Stage[] = [
   "funded",
 ];
 
+/**
+ * A gated step is refused but stays reachable: `disabled` would take the button out of
+ * the hover and focus order, and with it the tooltip that says why it is refused. The
+ * server refuses the move regardless — this is the affordance, not the control.
+ */
+function blockedProps(blockedBy: string | null) {
+  if (blockedBy === null) return {};
+  return {
+    "aria-disabled": true,
+    className: "opacity-50",
+    onClick: (event: React.MouseEvent) => event.preventDefault(),
+  };
+}
+
 export function StageActions({
   loanId,
   familyName,
@@ -79,12 +107,15 @@ export function StageActions({
   loanId: string;
   familyName: string;
   stage: Stage;
-  moves: AvailableMove[];
+  moves: DescribedMove[];
 }) {
   const forward = forwardMove(stage, moves);
-  const rest = moves.filter((move) => move.to !== forward?.to);
+  // The menu keeps only what can actually be done now.
+  const rest = moves.filter(
+    (move) => move.to !== forward?.to && move.blockedBy === null,
+  );
 
-  const [, formAction, pending] = useActionState<MoveLoanState, FormData>(
+  const [, formAction] = useActionState<MoveLoanState, FormData>(
     async (previous, formData) => {
       const result = await moveLoan(previous, formData);
       if (result?.ok) {
@@ -100,35 +131,60 @@ export function StageActions({
   );
 
   if (moves.length === 0) return null;
-  const tooltip = forward ? TOOLTIPS[forward.to] : undefined;
+  // A blocked step explains itself; an available one explains the folded role.
+  const tooltip = forward
+    ? (forward.blockedBy ?? TOOLTIPS[forward.to])
+    : undefined;
 
-  const button = forward ? (
-    <form action={formAction}>
-      <input type="hidden" name="loanId" value={loanId} />
-      <input type="hidden" name="to" value={forward.to} />
-      <Button type="submit" disabled={pending} aria-busy={pending}>
-        {LABELS[forward.to]}
-        <ArrowRight aria-hidden="true" data-icon="inline-end" />
-      </Button>
-    </form>
+  // The button itself is the tooltip trigger. Wrapping it in a span would put
+  // `aria-describedby` on the span while focus lands on the button, and the description
+  // is not inherited — a screen-reader user would never hear the sentence that explains
+  // why a processor is pressing an underwriter's button.
+  const submit = forward ? (
+    <SubmitButton
+      type="submit"
+      {...blockedProps(forward.blockedBy)}
+      pendingLabel={PENDING[forward.to] ?? "Moving…"}
+    >
+      {LABELS[forward.to]}
+      <ArrowRight aria-hidden="true" data-icon="inline-end" />
+    </SubmitButton>
   ) : null;
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      {button && tooltip ? (
-        <Tooltip>
-          <TooltipTrigger render={<span />}>{button}</TooltipTrigger>
-          <TooltipContent>{tooltip}</TooltipContent>
-        </Tooltip>
-      ) : (
-        button
-      )}
+      {forward ? (
+        <form action={formAction}>
+          <input type="hidden" name="loanId" value={loanId} />
+          <input type="hidden" name="to" value={forward.to} />
+          {tooltip ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <SubmitButton
+                    type="submit"
+                    {...blockedProps(forward.blockedBy)}
+                    pendingLabel={PENDING[forward.to] ?? "Moving…"}
+                  />
+                }
+              >
+                {LABELS[forward.to]}
+                <ArrowRight aria-hidden="true" data-icon="inline-end" />
+              </TooltipTrigger>
+              <TooltipContent>{tooltip}</TooltipContent>
+            </Tooltip>
+          ) : (
+            submit
+          )}
+        </form>
+      ) : null}
       {rest.length > 0 ? (
         <MoveMenu
           loanId={loanId}
           familyName={familyName}
           stage={stage}
           moves={rest}
+          trigger="button"
         />
       ) : null}
     </div>

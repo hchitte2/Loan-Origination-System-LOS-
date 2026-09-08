@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   ArrowRight,
+  ChevronDown,
   CircleMinus,
   CircleX,
   Ellipsis,
@@ -75,11 +76,18 @@ export function MoveMenu({
   familyName,
   stage,
   moves,
+  trigger = "icon",
 }: {
   loanId: string;
   familyName: string;
   stage: Stage;
   moves: AvailableMove[];
+  /**
+   * "icon" is the 24 px ellipsis a board card has room for. "button" is the 32 px
+   * labelled control a page header wants, where the menu may be the only stage action on
+   * screen and an unlabelled ellipsis would read as decoration.
+   */
+  trigger?: "icon" | "button";
 }) {
   const [closing, setClosing] = useState<Stage | null>(null);
   const reasonId = useId();
@@ -116,18 +124,32 @@ export function MoveMenu({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button variant="ghost" size="icon-sm" className="size-6" />}
-        >
-          <Ellipsis aria-hidden="true" />
-          <span className="sr-only">
-            Move {familyName} out of {staffLabel(stage)}
-          </span>
-        </DropdownMenuTrigger>
+        {trigger === "button" ? (
+          <DropdownMenuTrigger render={<Button variant="outline" />}>
+            Move to…
+            <ChevronDown aria-hidden="true" data-icon="inline-end" />
+            <span className="sr-only">
+              {familyName}, out of {staffLabel(stage)}
+            </span>
+          </DropdownMenuTrigger>
+        ) : (
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" size="icon-sm" className="size-6" />
+            }
+          >
+            <Ellipsis aria-hidden="true" />
+            <span className="sr-only">
+              Move {familyName} out of {staffLabel(stage)}
+            </span>
+          </DropdownMenuTrigger>
+        )}
         <DropdownMenuContent align="end">
           {/* base-ui requires a GroupLabel to sit inside its Group. */}
           <DropdownMenuGroup>
-            <DropdownMenuLabel>Move to…</DropdownMenuLabel>
+            {trigger === "icon" ? (
+              <DropdownMenuLabel>Move to…</DropdownMenuLabel>
+            ) : null}
             {moves
               .filter((m) => !m.requiresClosedReason)
               .map((m) => {

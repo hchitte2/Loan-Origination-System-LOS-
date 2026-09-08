@@ -185,19 +185,51 @@ export function move(input: MoveInput): MoveResult {
   return { ok: true, patch, detail };
 }
 
+export type DescribedMove = {
+  to: Stage;
+  requiresClosedReason: boolean;
+  /** Null when the move can be made now; the gate's sentence when it cannot. */
+  blockedBy: string | null;
+};
+
+/**
+ * Every stage this actor is *permitted* to move the loan to, including the ones a gate
+ * currently blocks and why. A screen can then show a step as unavailable with its reason
+ * instead of silently omitting it — the processor's next action disappearing without
+ * explanation is worse than seeing it refused.
+ *
+ * Moves this actor may never make are absent entirely: a permission is not a thing to
+ * explain away, and a menu that lists what you cannot do is noise.
+ */
+export function describeMoves(
+  loan: LoanForMove,
+  actor: Actor,
+  conditions: readonly ConditionForGate[],
+): DescribedMove[] {
+  if (isTerminalStage(loan.stage)) return [];
+  const targets: Stage[] = [...ACTIVE_STAGES, "funded", "withdrawn", "denied"];
+  const moves: DescribedMove[] = [];
+  for (const to of targets) {
+    if (to === loan.stage) continue;
+    const action = actionFor(loan.stage, to);
+    if (!action) continue;
+    if (!can(actor, action, loan)) continue;
+    moves.push({
+      to,
+      requiresClosedReason: isTerminalStage(to) && to !== "funded",
+      blockedBy: gateFor(to, conditions),
+    });
+  }
+  return moves;
+}
+
 /** Every stage this actor could move the loan to right now, for the "Move to…" menu. */
 export function availableMoves(
   loan: LoanForMove,
   actor: Actor,
   conditions: readonly ConditionForGate[],
 ): { to: Stage; requiresClosedReason: boolean }[] {
-  if (isTerminalStage(loan.stage)) return [];
-  const targets: Stage[] = [...ACTIVE_STAGES, "funded", "withdrawn", "denied"];
-  const moves: { to: Stage; requiresClosedReason: boolean }[] = [];
-  for (const to of targets) {
-    const check = checkMove(loan, to, actor, conditions);
-    if (check.ok)
-      moves.push({ to, requiresClosedReason: check.requiresClosedReason });
-  }
-  return moves;
+  return describeMoves(loan, actor, conditions)
+    .filter((move) => move.blockedBy === null)
+    .map(({ to, requiresClosedReason }) => ({ to, requiresClosedReason }));
 }

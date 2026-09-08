@@ -6,6 +6,7 @@ import {
   availableMoves,
   type ConditionForGate,
   checkMove,
+  describeMoves,
   type LoanForMove,
   move,
 } from "@/server/transitions";
@@ -314,5 +315,54 @@ describe("availableMoves", () => {
     expect(
       availableMoves(loanIn("funded"), actorFor("superadmin"), []),
     ).toEqual([]);
+  });
+});
+
+describe("describeMoves", () => {
+  const openBeforeDocs: ConditionForGate[] = [
+    { status: "requested", priorTo: "docs" },
+  ];
+
+  it("keeps a permitted move that a gate blocks, with the reason", () => {
+    const loan = loanIn("conditional_approval");
+    const processor = actorFor("processor");
+
+    // The processor may make this move; only the gate stands in the way.
+    const clearToClose = describeMoves(loan, processor, openBeforeDocs).find(
+      (m) => m.to === "clear_to_close",
+    );
+    expect(clearToClose).toBeDefined();
+    expect(clearToClose?.blockedBy).toMatch(/still open/);
+
+    // availableMoves is the same list with the blocked ones dropped.
+    expect(
+      availableMoves(loan, processor, openBeforeDocs).some(
+        (m) => m.to === "clear_to_close",
+      ),
+    ).toBe(false);
+  });
+
+  it("reports the same move as free once the gate is satisfied", () => {
+    const loan = loanIn("conditional_approval");
+    const processor = actorFor("processor");
+    const clearToClose = describeMoves(loan, processor, allCleared).find(
+      (m) => m.to === "clear_to_close",
+    );
+    expect(clearToClose?.blockedBy).toBeNull();
+  });
+
+  it("omits a move the actor may never make, rather than explaining it", () => {
+    // A loan officer has no loan.move_late, so underwriting is absent, not blocked.
+    expect(
+      describeMoves(loanIn("processing"), actorFor("loan_officer"), []).some(
+        (m) => m.to === "underwriting",
+      ),
+    ).toBe(false);
+  });
+
+  it("says nothing about a loan that has already left the pipeline", () => {
+    expect(describeMoves(loanIn("funded"), actorFor("superadmin"), [])).toEqual(
+      [],
+    );
   });
 });
