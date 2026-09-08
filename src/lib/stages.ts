@@ -20,6 +20,12 @@ export const STAGES = [
 
 export type Stage = (typeof STAGES)[number];
 
+export function isStage(value: unknown): value is Stage {
+  return (
+    typeof value === "string" && (STAGES as readonly string[]).includes(value)
+  );
+}
+
 /** The six pipeline columns, in order. */
 export const ACTIVE_STAGES = [
   "lead",

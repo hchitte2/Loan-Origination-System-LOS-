@@ -26,7 +26,10 @@ export type ActivityRow = {
   actorName: string | null;
   onBehalfOfName: string | null;
   loanId: string | null;
+  /** "Chen · 412 Maple Ave", for the Loan column. */
   loanLabel: string | null;
+  /** The borrower's name, which is who acted on public-link rows. */
+  borrowerName: string | null;
   createdAt: Date;
 };
 
@@ -80,6 +83,7 @@ export async function listGlobalActivity(
         row.borrowerName && row.propertyStreet
           ? `${row.borrowerName.split(" ").at(-1)} · ${row.propertyStreet}`
           : null,
+      borrowerName: row.borrowerName,
       createdAt: row.createdAt,
     });
   }

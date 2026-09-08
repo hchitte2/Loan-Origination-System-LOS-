@@ -32,7 +32,9 @@ export default async function LoginPage() {
   return (
     <div className="relative flex min-h-full flex-1 flex-col">
       <SkipLink />
-      <DemoBadge className="absolute top-6 right-6" />
+      <aside aria-label="Demo notice" className="absolute top-6 right-6">
+        <DemoBadge />
+      </aside>
       <main
         id="main"
         className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center gap-8 px-4 py-24"

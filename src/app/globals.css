@@ -94,8 +94,14 @@
   --primary-hover: color-mix(in oklab, var(--primary), var(--foreground) 12%);
   /* Active nav item and selected chips: 10 % primary on card. */
   --primary-soft: color-mix(in oklab, var(--primary) 10%, var(--card));
-  /* Initials avatars: 16 % primary on card. */
+  /* Initials avatars: 16 % primary on card. The initials lean 25 % toward foreground so
+     13 px text reaches 4.5:1 on the tint in both themes. */
   --primary-avatar: color-mix(in oklab, var(--primary) 16%, var(--card));
+  --primary-avatar-foreground: color-mix(
+    in oklab,
+    var(--primary),
+    var(--foreground) 25%
+  );
   /* Semantic pills: text in the token on a 12 % tint. Destructive hover uses the same tint. */
   --success-soft: color-mix(in oklab, var(--success) 12%, var(--card));
   --warning-soft: color-mix(in oklab, var(--warning) 12%, var(--card));
@@ -125,6 +131,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-primary-avatar: var(--primary-avatar);
+  --color-primary-avatar-foreground: var(--primary-avatar-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
