@@ -40,6 +40,7 @@ export function isActivityAction(value: unknown): value is ActivityAction {
 /** Filter chips on the superadmin Activity page, in display order. */
 export const ACTIVITY_FILTERS = [
   "all",
+  "loans",
   "stage_changes",
   "documents",
   "conditions",
@@ -52,6 +53,7 @@ export type ActivityFilter = (typeof ACTIVITY_FILTERS)[number];
 
 const FILTER_LABELS = {
   all: "All",
+  loans: "Loans",
   stage_changes: "Stage changes",
   documents: "Documents",
   conditions: "Conditions",
@@ -71,6 +73,15 @@ export function isActivityFilter(value: unknown): value is ActivityFilter {
   );
 }
 
+/** The filter chip an action belongs to (its "Type" on the Activity page). */
+export function filterForAction(action: ActivityAction): ActivityFilter {
+  for (const filter of ACTIVITY_FILTERS) {
+    if (filter !== "all" && actionsForFilter(filter).includes(action))
+      return filter;
+  }
+  return "all";
+}
+
 /** Which actions each filter chip shows; `all` shows everything. */
 export function actionsForFilter(
   filter: ActivityFilter,
@@ -78,6 +89,8 @@ export function actionsForFilter(
   switch (filter) {
     case "all":
       return ACTIVITY_ACTIONS;
+    case "loans":
+      return ["loan.created", "loan.updated", "loan.link_regenerated"];
     case "stage_changes":
       return ["loan.stage_changed"];
     case "documents":

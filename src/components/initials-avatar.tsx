@@ -31,7 +31,7 @@ export function InitialsAvatar({
         "inline-flex shrink-0 items-center justify-center rounded-full font-medium",
         tone === "solid"
           ? "bg-primary text-primary-foreground"
-          : "bg-primary-avatar text-primary",
+          : "bg-primary-avatar text-primary-avatar-foreground",
         SIZES[size],
         className,
       )}
