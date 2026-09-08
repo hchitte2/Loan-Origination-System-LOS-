@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { requireActor } from "@/server/actor";
+import { assertCan } from "@/server/authz";
 
 export const metadata: Metadata = { title: "Queue" };
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: "Queue" };
 export default async function QueuePage() {
   const actor = await requireActor();
   if (actor.role === "loan_officer") redirect("/pipeline");
+  assertCan(actor, "loan.read");
   return (
     <>
       <PageHeader title="Queue" />

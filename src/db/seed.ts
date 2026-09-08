@@ -16,8 +16,6 @@ import {
 import { DEMO_USERS, demoUser, USER_ID, type UserKey } from "./demo-users";
 import type { Db } from "./index";
 
-export { DEMO_USERS, type DemoUser, demoUser } from "./demo-users";
-
 import {
   account,
   activity,

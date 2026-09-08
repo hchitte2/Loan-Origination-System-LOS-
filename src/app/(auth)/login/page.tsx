@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { DemoBadge } from "@/components/demo-badge";
 import { SkipLink } from "@/components/skip-link";
 import { Wordmark } from "@/components/wordmark";
-import { DEMO_USERS } from "@/db/seed";
+import { DEMO_USERS } from "@/db/demo-users";
 import { getEnv } from "@/lib/env";
 import { homeRoute, roleLabel } from "@/lib/roles";
 import { getActor } from "@/server/actor";

@@ -3,13 +3,9 @@ import { sql } from "drizzle-orm";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { DEMO_USERS } from "@/db/demo-users";
 import * as schema from "@/db/schema";
-import {
-  DEMO_USERS,
-  FIXTURE_LOAN_COUNT,
-  type SeedSummary,
-  seedFixture,
-} from "@/db/seed";
+import { FIXTURE_LOAN_COUNT, type SeedSummary, seedFixture } from "@/db/seed";
 
 /**
  * The seed is the reset routine, so it must be deterministic and idempotent: two runs

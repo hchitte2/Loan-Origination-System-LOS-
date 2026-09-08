@@ -40,6 +40,11 @@ export async function startImpersonation(formData: FormData): Promise<void> {
   }
   const target = await getUserSummary(actor, userId);
   if (!target) throw new Error("That user does not exist.");
+  if (target.id === actor.userId)
+    throw new Error("You cannot view as yourself.");
+  if (target.role === "superadmin") {
+    throw new Error("Superadmins cannot view as other superadmins.");
+  }
 
   const requestHeaders = await headers();
   await getAuth().api.impersonateUser({

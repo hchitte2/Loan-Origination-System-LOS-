@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DEMO_USERS } from "@/db/seed";
+import { DEMO_USERS } from "@/db/demo-users";
 import { ROLES } from "@/lib/roles";
 
 /**

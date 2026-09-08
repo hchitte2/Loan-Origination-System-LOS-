@@ -16,8 +16,9 @@ export async function endImpersonation(actor: Actor): Promise<Actor> {
   if (!actor.impersonating) {
     throw new Error("endImpersonation called without an active impersonation.");
   }
+  const requestHeaders = await headers();
   const restored = await getAuth().api.stopImpersonating({
-    headers: await headers(),
+    headers: requestHeaders,
   });
   const role = restored.user.role;
   if (!isRole(role)) {
@@ -31,17 +32,27 @@ export async function endImpersonation(actor: Actor): Promise<Actor> {
     actorUserId: restored.user.id,
     impersonating: false,
   };
+  // A sanity assertion, not a gate: only a superadmin can hold an impersonation session.
   assertCan(superadmin, "admin.manage_users");
-  await db().transaction(async (tx) => {
-    await logActivity(tx, {
-      actor: superadmin,
-      action: "admin.impersonation_ended",
-      detail: {
-        target: actor.userId,
-        targetName: actor.name,
-        targetRole: actor.role,
-      },
+  try {
+    await db().transaction(async (tx) => {
+      await logActivity(tx, {
+        actor: superadmin,
+        action: "admin.impersonation_ended",
+        detail: {
+          target: actor.userId,
+          targetName: actor.name,
+          targetRole: actor.role,
+        },
+      });
     });
-  });
+  } catch (error) {
+    // The view must not end silently: put the session back so the exit can be retried.
+    await getAuth().api.impersonateUser({
+      body: { userId: actor.userId },
+      headers: requestHeaders,
+    });
+    throw error;
+  }
   return superadmin;
 }
