@@ -1,13 +1,15 @@
-import { Kanban, List } from "lucide-react";
+import { Kanban, List, Plus } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 import { LoanTable } from "@/components/loan-table";
 import { PageHeader } from "@/components/page-header";
 import { SegmentedLinks } from "@/components/segmented-links";
+import { buttonVariants } from "@/components/ui/button";
 import { isActiveStage } from "@/lib/stages";
 import { requireActor } from "@/server/actor";
-import { assertCan } from "@/server/authz";
+import { assertCan, can } from "@/server/authz";
 import { listGateConditions } from "@/server/queries/conditions";
 import { listPipelineLoans } from "@/server/queries/loans";
 import { availableMoves } from "@/server/transitions";
@@ -29,6 +31,7 @@ export default async function PipelinePage(props: PageProps<"/pipeline">) {
   const actor = await requireActor();
   if (actor.role === "processor") redirect("/queue");
   assertCan(actor, "loan.read");
+  const canCreate = can(actor, "loan.create");
 
   const { mine, view } = await props.searchParams;
   const onlyMine = mine === "1";
@@ -93,6 +96,12 @@ export default async function PipelinePage(props: PageProps<"/pipeline">) {
                 },
               ]}
             />
+            {canCreate ? (
+              <Link href="/loans/new" className={buttonVariants()}>
+                <Plus aria-hidden="true" />
+                New loan
+              </Link>
+            ) : null}
           </div>
         }
       />

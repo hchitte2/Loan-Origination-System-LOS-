@@ -1,6 +1,7 @@
 import { ShieldOff } from "lucide-react";
 import Link from "next/link";
 import { homeRoute } from "@/lib/roles";
+import { cn } from "@/lib/utils";
 import type { Actor } from "@/server/actor";
 import { EmptyState } from "./empty-state";
 import { PageHeader } from "./page-header";
@@ -13,9 +14,16 @@ import { buttonVariants } from "./ui/button";
 export function ForbiddenState({
   actor,
   what,
+  title,
 }: {
   actor: Actor;
+  /** The subject of the sentence: "The Users page", "Creating a loan". */
   what: string;
+  /**
+   * The whole sentence, when the default is wrong. `loan.create` belongs to loan officers
+   * too, so "is only for superadmins" would be a lie on that route.
+   */
+  title?: string;
 }) {
   return (
     <>
@@ -23,7 +31,7 @@ export function ForbiddenState({
       <div className="px-6 pb-6">
         <EmptyState
           icon={ShieldOff}
-          title={`${what} is only for superadmins.`}
+          title={title ?? `${what} is only for superadmins.`}
           description={
             actor.impersonating
               ? `You are viewing as ${actor.name}. Exit the view to open it.`
@@ -32,7 +40,7 @@ export function ForbiddenState({
           action={
             <Link
               href={homeRoute(actor.role)}
-              className={buttonVariants({ variant: "outline" })}
+              className={cn(buttonVariants({ variant: "outline" }))}
             >
               Go to your home
             </Link>

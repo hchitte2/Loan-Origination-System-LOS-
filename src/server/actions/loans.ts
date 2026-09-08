@@ -1,16 +1,23 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { loans } from "@/db/schema";
+import { conditions, loans } from "@/db/schema";
+import { defaultNeedsList } from "@/lib/needs-list";
 import type { Stage } from "@/lib/stages";
 import { logActivity } from "../activity";
 import { requireActor } from "../actor";
+import { can } from "../authz";
 import { getGateConditions } from "../queries/conditions";
-import { getLoanForAction } from "../queries/loans";
+import { familyName, getLoanForAction } from "../queries/loans";
 import { move } from "../transitions";
-import { MoveLoanSchema } from "./schemas";
+import {
+  type CreateLoanField,
+  CreateLoanSchema,
+  MoveLoanSchema,
+} from "./schemas";
 
 /**
  * Loan mutations (PLAN.md §2 rows `loan.move_early` and `loan.move_late`). Thin by
@@ -49,10 +56,17 @@ export async function moveLoan(
   const loan = await getLoanForAction(actor, loanId);
   if (!loan) return { ok: false, error: "That loan no longer exists." };
 
-  const conditions = await getGateConditions(actor, loan.id);
+  const gateConditions = await getGateConditions(actor, loan.id);
   // checkMove inside move() runs can() for the matrix row this move falls under, so a
   // direct POST from someone without the permission is refused here, not by the menu.
-  const decision = move({ loan, to, actor, conditions, closedReason, reason });
+  const decision = move({
+    loan,
+    to,
+    actor,
+    conditions: gateConditions,
+    closedReason,
+    reason,
+  });
   if (!decision.ok) return { ok: false, error: decision.error };
 
   try {
@@ -86,4 +100,137 @@ export async function moveLoan(
   revalidatePath("/pipeline");
   revalidatePath(`/loans/${loan.id}`, "layout");
   return { ok: true, to, familyName: loan.familyName };
+}
+
+/** What the borrower typed, echoed back so a failed submit keeps the form filled. */
+/**
+ * The borrower's public link: 32 URL-safe characters from the CSPRNG. The seed derives
+ * its tokens deterministically so fixtures reproduce; a real loan must not be guessable.
+ */
+function newUploadToken(): string {
+  return randomBytes(24).toString("base64url");
+}
+
+export type CreateLoanValues = Partial<Record<CreateLoanField, string>>;
+
+export type CreateLoanState =
+  | { ok: true; loanId: string; familyName: string }
+  | {
+      ok: false;
+      errors: Partial<Record<CreateLoanField, string>>;
+      error?: string;
+    }
+  | null;
+
+const CREATE_LOAN_FIELDS = [
+  "borrowerName",
+  "borrowerEmail",
+  "borrowerPhone",
+  "propertyAddress",
+  "purpose",
+  "loanType",
+  "amount",
+  "referralSource",
+  "targetCloseDate",
+] as const satisfies readonly CreateLoanField[];
+
+/**
+ * Create a loan in `lead` with its default needs list (PLAN.md §6 invariant 6). The
+ * conditions, the loan and the one activity row land in a single transaction, so a file
+ * can never exist without the list the borrower will be asked for.
+ *
+ * The creator is the assigned loan officer, which is what makes "own" mean anything on
+ * the permission matrix. A superadmin creating a loan owns it the same way.
+ */
+export async function createLoan(
+  _previous: CreateLoanState,
+  formData: FormData,
+): Promise<CreateLoanState> {
+  const parsed = CreateLoanSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    const errors: Partial<Record<CreateLoanField, string>> = {};
+    for (const issue of parsed.error.issues) {
+      const field = issue.path[0];
+      if (
+        typeof field === "string" &&
+        (CREATE_LOAN_FIELDS as readonly string[]).includes(field) &&
+        !errors[field as CreateLoanField]
+      ) {
+        errors[field as CreateLoanField] = issue.message;
+      }
+    }
+    return { ok: false, errors };
+  }
+
+  const actor = await requireActor();
+  // A processor cannot create loans. This returns rather than throws because there is a
+  // non-attack path into it: a superadmin who starts "View as Sam" in another tab and
+  // then submits a dialog they opened as themselves.
+  if (!can(actor, "loan.create")) {
+    return {
+      ok: false,
+      errors: {},
+      error: "Your role does not create loans.",
+    };
+  }
+  const data = parsed.data;
+
+  // The calendar disables past days in the browser's timezone, so a UTC "today" would
+  // refuse a date the form had just offered to anyone west of UTC. A day of slack costs
+  // nothing here and removes the disagreement.
+  const yesterdayUtc = new Date(Date.now() - 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  if (data.targetCloseDate && data.targetCloseDate < yesterdayUtc) {
+    return {
+      ok: false,
+      errors: { targetCloseDate: "Pick a date that has not passed." },
+    };
+  }
+  const loanId = await db().transaction(async (tx) => {
+    const [created] = await tx
+      .insert(loans)
+      .values({
+        borrowerName: data.borrowerName,
+        borrowerEmail: data.borrowerEmail,
+        borrowerPhone: data.borrowerPhone,
+        propertyStreet: data.propertyAddress.street,
+        propertyCity: data.propertyAddress.city,
+        propertyState: data.propertyAddress.state,
+        propertyZip: data.propertyAddress.zip,
+        purpose: data.purpose,
+        loanType: data.loanType,
+        amount: data.amount,
+        targetCloseDate: data.targetCloseDate,
+        referralSource: data.referralSource,
+        loanOfficerId: actor.userId,
+        uploadToken: newUploadToken(),
+      })
+      .returning({ id: loans.id });
+    if (!created) throw new Error("The loan insert returned no row.");
+
+    await tx.insert(conditions).values(
+      defaultNeedsList(data.purpose).map((item) => ({
+        loanId: created.id,
+        title: item.title,
+        instructions: item.instructions,
+        priorTo: item.priorTo,
+        createdBy: actor.userId,
+      })),
+    );
+    await logActivity(tx, {
+      actor,
+      loanId: created.id,
+      action: "loan.created",
+      detail: { borrowerName: data.borrowerName },
+    });
+    return created.id;
+  });
+
+  revalidatePath("/pipeline");
+  return {
+    ok: true,
+    loanId,
+    familyName: familyName(data.borrowerName),
+  };
 }
