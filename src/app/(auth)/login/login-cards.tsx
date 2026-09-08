@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, LogIn } from "lucide-react";
+import { Loader, LogIn } from "lucide-react";
 import { useActionState, useState } from "react";
 import { InitialsAvatar } from "@/components/initials-avatar";
 import { cn } from "@/lib/utils";
@@ -77,12 +77,13 @@ function PersonaForm({
       <button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         className={cn(
-          "group flex w-full cursor-pointer items-center gap-4 rounded-lg border bg-card text-left transition-colors duration-150 ease-out",
+          "group flex w-full cursor-pointer items-center gap-4 rounded-lg border bg-card text-left transition-colors motion-reduce:transition-none duration-150 ease-out",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "disabled:cursor-default disabled:opacity-70",
+          "disabled:cursor-default disabled:opacity-50 aria-busy:opacity-100",
           lead
-            ? "border-primary p-5 hover:bg-primary-soft"
+            ? "border-primary px-5 py-4 hover:bg-primary-soft"
             : "border-border px-4 py-4 hover:border-muted-foreground",
         )}
       >
@@ -106,7 +107,7 @@ function PersonaForm({
         </span>
         {lead ? (
           pending ? (
-            <Loader2
+            <Loader
               aria-hidden="true"
               className="size-5 animate-spin text-primary motion-reduce:animate-none"
             />

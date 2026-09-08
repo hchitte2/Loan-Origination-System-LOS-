@@ -61,7 +61,7 @@ export default async function UsersPage() {
                 const viewable = !self && user.role !== "superadmin";
                 return (
                   <TableRow key={user.id}>
-                    <TableCell>
+                    <TableCell className="py-1.5">
                       <span className="flex items-center gap-3">
                         <InitialsAvatar name={user.name} size="sm" />
                         <span className="font-medium text-foreground">

@@ -17,7 +17,7 @@ export function Wordmark({
     <span
       className={cn(
         "inline-flex items-center font-display font-semibold text-foreground",
-        login ? "gap-3 text-wordmark" : "gap-2 text-[17px] leading-6",
+        login ? "gap-3 text-wordmark" : "gap-2 text-wordmark-sm",
         className,
       )}
     >

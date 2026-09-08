@@ -37,7 +37,7 @@ export default async function LoginPage() {
       </aside>
       <main
         id="main"
-        className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center gap-8 px-4 py-24"
+        className="mx-auto flex w-full max-w-login flex-1 flex-col justify-center gap-8 px-4 py-24"
       >
         <header className="flex flex-col items-center gap-3 text-center">
           <h1>
@@ -50,7 +50,7 @@ export default async function LoginPage() {
 
         <LoginCards personas={personas} />
 
-        <div className="flex items-center gap-4" aria-hidden="true">
+        <div className="-my-4 flex items-center gap-4" aria-hidden="true">
           <span className="h-px flex-1 bg-border" />
           <span className="text-caption text-muted-foreground">or</span>
           <span className="h-px flex-1 bg-border" />
@@ -58,7 +58,7 @@ export default async function LoginPage() {
 
         <a
           href={borrowerHref}
-          className="flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-primary bg-card px-4 text-body-lg transition-colors duration-150 ease-out hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-primary bg-card px-4 text-body-lg transition-colors motion-reduce:transition-none duration-150 ease-out hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Smartphone aria-hidden="true" className="size-4 text-primary" />
           <span className="font-semibold text-primary">
@@ -69,7 +69,7 @@ export default async function LoginPage() {
           </span>
         </a>
 
-        <ol className="flex flex-col gap-3 rounded-lg bg-muted p-6 text-body-lg text-muted-foreground">
+        <ol className="flex flex-col gap-2 rounded-lg bg-muted px-5 py-4 text-body-lg text-muted-foreground">
           {[
             "Enter as Priya.",
             "Open Users and view as Alex or Sam.",
