@@ -1,6 +1,11 @@
 import type { ActivityAction, ActorKind } from "./activity";
 import { isRole, roleLabel } from "./roles";
-import { isStage, staffLabel } from "./stages";
+import {
+  closedReasonLabel,
+  isClosedReason,
+  isStage,
+  staffLabel,
+} from "./stages";
 
 /**
  * Turns an activity row into the sentence the Activity tab and the global log show:
@@ -54,7 +59,15 @@ export function activityText(row: ActivityLike): string {
       const to = detail.to;
       const fromLabel = isStage(from) ? staffLabel(from) : "its previous stage";
       const toLabel = isStage(to) ? staffLabel(to) : "a new stage";
-      return withReason(`moved the loan from ${fromLabel} to ${toLabel}`);
+      const moved = `moved the loan from ${fromLabel} to ${toLabel}`;
+      // Withdrawn and denied always carry a closed reason and only sometimes a note, so
+      // the reason stands in when nobody typed one; otherwise the log says why the file
+      // ended without saying why.
+      const closed = detail.closedReason;
+      if (!text(detail, "reason") && isClosedReason(closed)) {
+        return `${moved}: ${closedReasonLabel(closed).toLowerCase()}`;
+      }
+      return withReason(moved);
     }
     case "loan.link_regenerated":
       return "regenerated the borrower link";

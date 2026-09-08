@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DEMO_USERS } from "@/db/demo-users";
 import { ROLES } from "@/lib/roles";
+import { CLOSED_REASONS, STAGES } from "@/lib/stages";
 
 /**
  * Input schemas shared by Server Actions and the forms that call them. They live beside
@@ -33,3 +34,12 @@ export const CreateUserSchema = z.object({
 });
 
 export type CreateUserField = keyof z.infer<typeof CreateUserSchema>;
+
+export const MoveLoanSchema = z.object({
+  loanId: z.uuid(),
+  to: z.enum(STAGES),
+  /** Required by the stage machine for withdrawn and denied; ignored elsewhere. */
+  closedReason: z.enum(CLOSED_REASONS).optional(),
+  /** Free-text note the activity sentence appends: "…: buyer walked away". */
+  reason: z.string().trim().max(200).optional(),
+});
