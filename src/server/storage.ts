@@ -1,4 +1,4 @@
-import { get } from "@vercel/blob";
+import { BlobNotFoundError, get, head } from "@vercel/blob";
 import { getEnv } from "@/lib/env";
 
 /**
@@ -66,6 +66,29 @@ export function safeFileName(fileName: string): string {
     .trim();
   const name = cleaned.length > 0 ? cleaned : "document";
   return name.length > 120 ? name.slice(-120) : name;
+}
+
+/**
+ * What the store actually holds at this pathname, or null if nothing does.
+ *
+ * The register actions ask this instead of believing the browser: the client reports a
+ * size and a type, but the store is the only thing that knows what was really written.
+ * It also proves the upload happened — a `documents` row whose blob does not exist would
+ * be a download that 404s later.
+ */
+export async function statBlob(pathname: string): Promise<{
+  contentType: string;
+  size: number;
+} | null> {
+  try {
+    const blob = await head(pathname, {
+      token: getEnv().BLOB_READ_WRITE_TOKEN,
+    });
+    return { contentType: blob.contentType, size: blob.size };
+  } catch (error) {
+    if (error instanceof BlobNotFoundError) return null;
+    throw error;
+  }
 }
 
 /**
