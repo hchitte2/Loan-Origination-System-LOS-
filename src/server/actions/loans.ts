@@ -10,6 +10,7 @@ import type { Stage } from "@/lib/stages";
 import { logActivity } from "../activity";
 import { requireActor } from "../actor";
 import { can, closedLoanReason } from "../authz";
+import { CAP_REACHED, countLoansCreatedToday, loanCapReached } from "../limits";
 import { getGateConditions } from "../queries/conditions";
 import { familyName, getLoanForAction } from "../queries/loans";
 import { move } from "../transitions";
@@ -188,6 +189,15 @@ export async function createLoan(
       errors: { targetCloseDate: "Pick a date that has not passed." },
     };
   }
+
+  // The daily cap (PLAN.md §5). Checked after authorization so an unauthorized caller
+  // learns nothing about it, and outside the transaction: two creates landing in the same
+  // millisecond could both pass, which overshoots by one loan and bounds nothing worse.
+  // A serialized count would cost every create a lock to prevent a harmless off-by-one.
+  if (loanCapReached(await countLoansCreatedToday())) {
+    return { ok: false, errors: {}, error: CAP_REACHED };
+  }
+
   const loanId = await db().transaction(async (tx) => {
     const [created] = await tx
       .insert(loans)
