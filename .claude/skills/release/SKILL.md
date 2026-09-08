@@ -12,12 +12,12 @@ allowed-tools: Bash(git status*), Bash(git log*), Bash(git branch*), Bash(gh run
 - The user confirms this release in the conversation (a release is outward-facing).
 
 ## Migrate production (visible, marked)
-- `CLEARLINE_RELEASE=1 pnpm db:migrate:prod`. The script loads the production `DATABASE_URL` from `.env.production.local`, which the user pulls with `vercel env pull .env.production.local --environment production`. Never read that file yourself. The PreToolUse hook allows exactly these two commands, written exactly like this, and denies every other form of `db:*:prod`; the scripts themselves also refuse the production host unless `CLEARLINE_RELEASE=1` is set.
+- `CLEARLINE_RELEASE=1 pnpm db:migrate:prod`. The script loads the production `DATABASE_URL` from `.env.production.local`, which the user pulls with `vercel env pull .env.production.local --environment production`. Vercel writes blanks for variables marked Sensitive, so the user pastes those values into the file by hand before this step; warn them up front. Never read that file yourself. The PreToolUse hook allows exactly these two commands, written exactly like this, and denies every other form of `db:*:prod`; the scripts themselves also refuse the production host unless `CLEARLINE_RELEASE=1` is set.
 - Seed production only on the first release or when the user asks: `CLEARLINE_RELEASE=1 pnpm db:seed:prod`.
 
 ## Smoke (production URL from `vercel inspect` or from the user)
 - `curl -s -o /dev/null -w '%{http_code}' <url>/login` → expect 200.
-- `curl -s -o /dev/null -w '%{http_code}' <url>/api/cron/reset` → expect 401 (unauthenticated must be refused).
+- `curl -s -o /dev/null -w '%{http_code}' <url>/api/cron/reset` → expect 401 (unauthenticated must be refused; 404 until Phase 5 ships the route).
 - Open `<url>/login` with the Playwright MCP, enter as Priya, confirm the dashboard renders with numbers. This also warms Neon.
 
 ## Report
