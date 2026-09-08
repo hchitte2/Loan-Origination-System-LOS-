@@ -37,6 +37,14 @@ export type PipelineLoan = {
   pendingDocuments: number;
 };
 
+/**
+ * `loans.id` is a uuid column, so Postgres raises on a malformed literal rather than
+ * returning no rows — and a loan id arrives from the URL, where anyone can type. Checking
+ * the shape first turns "/loans/not-a-uuid" into the designed 404 it should be, instead
+ * of a database error reaching the error boundary.
+ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** "Maria Chen" → "Chen". Staff refer to a file by the borrower's family name. */
 export function familyName(name: string): string {
   return name.trim().split(/\s+/).at(-1) ?? name;
@@ -118,6 +126,7 @@ export async function getLoanForAction(
   loanId: string,
 ): Promise<LoanForAction | null> {
   assertCan(actor, "loan.read");
+  if (!UUID.test(loanId)) return null;
   const [row] = await db()
     .select({
       id: loans.id,
@@ -186,6 +195,7 @@ export async function getLoanDetail(
   loanId: string,
 ): Promise<LoanDetail | null> {
   assertCan(actor, "loan.read");
+  if (!UUID.test(loanId)) return null;
   const officer = alias(user, "loan_officer");
   const processor = alias(user, "processor");
   const [row] = await db()
