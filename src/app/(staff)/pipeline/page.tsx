@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 import { LoanTable } from "@/components/loan-table";
+import { MoveMenu } from "@/components/move-menu";
 import { PageHeader } from "@/components/page-header";
 import { SegmentedLinks } from "@/components/segmented-links";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,7 +16,6 @@ import { listPipelineLoans } from "@/server/queries/loans";
 import { availableMoves } from "@/server/transitions";
 import { PipelineBoard } from "./board";
 import { ClosedSection } from "./closed-section";
-import { MoveMenu } from "./move-menu";
 
 export const metadata: Metadata = { title: "Pipeline" };
 

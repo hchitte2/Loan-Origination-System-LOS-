@@ -8,8 +8,11 @@ import { loanTypeLabel, purposeLabel } from "@/lib/loan-facts";
 import { homeRoute } from "@/lib/roles";
 import { requireActor } from "@/server/actor";
 import { assertCan } from "@/server/authz";
+import { getGateConditions } from "@/server/queries/conditions";
+import { availableMoves } from "@/server/transitions";
 import { loadLoan } from "./loan-detail";
 import { LoanTabs } from "./loan-tabs";
+import { StageActions } from "./stage-actions";
 
 /**
  * The loan detail shell (design frame 03-loan-detail): a way back, the file's name and
@@ -25,6 +28,8 @@ export default async function LoanLayout({
   const { id } = await params;
   const loan = await loadLoan(id);
   if (!loan) notFound();
+  // The gates only look at open conditions; the machine decides the rest.
+  const gateConditions = await getGateConditions(actor, loan.id);
 
   const home = homeRoute(actor.role);
   return (
@@ -42,11 +47,19 @@ export default async function LoanLayout({
               : "Dashboard"}
         </Link>
         <div className="flex flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-display text-h1 text-foreground">
-              {loan.familyName} · {loan.propertyStreet}
-            </h1>
-            <StagePill stage={loan.stage} />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-h1 text-foreground">
+                {loan.familyName} · {loan.propertyStreet}
+              </h1>
+              <StagePill stage={loan.stage} />
+            </div>
+            <StageActions
+              loanId={loan.id}
+              familyName={loan.familyName}
+              stage={loan.stage}
+              moves={availableMoves(loan, actor, gateConditions)}
+            />
           </div>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-control font-normal text-muted-foreground">
             <span className="font-medium text-foreground tabular-nums">
