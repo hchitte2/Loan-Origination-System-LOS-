@@ -9,7 +9,7 @@ import { homeRoute } from "@/lib/roles";
 import { requireActor } from "@/server/actor";
 import { assertCan } from "@/server/authz";
 import { getGateConditions } from "@/server/queries/conditions";
-import { availableMoves } from "@/server/transitions";
+import { describeMoves } from "@/server/transitions";
 import { loadLoan } from "./loan-detail";
 import { LoanTabs } from "./loan-tabs";
 import { StageActions } from "./stage-actions";
@@ -58,7 +58,7 @@ export default async function LoanLayout({
               loanId={loan.id}
               familyName={loan.familyName}
               stage={loan.stage}
-              moves={availableMoves(loan, actor, gateConditions)}
+              moves={describeMoves(loan, actor, gateConditions)}
             />
           </div>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-control font-normal text-muted-foreground">

@@ -17,10 +17,18 @@ export default function NeedsListLoading() {
             key={row}
             className="flex h-10 items-center gap-4 border-b border-border px-4 last:border-b-0"
           >
+            {/* Mirrors the table's colgroup, so nothing slides sideways on swap. */}
             <Skeleton className="h-3 flex-1" />
-            <Skeleton className="h-pill w-28 rounded-lg" />
-            <Skeleton className="h-tag w-24 rounded-lg" />
-            <Skeleton className="h-3 w-8" />
+            <div className="w-40">
+              <Skeleton className="h-pill w-28 rounded-lg" />
+            </div>
+            <div className="w-36">
+              <Skeleton className="h-tag w-24 rounded-lg" />
+            </div>
+            <div className="flex w-20 justify-end">
+              <Skeleton className="h-3 w-8" />
+            </div>
+            <div className="w-12" />
           </div>
         ))}
       </div>

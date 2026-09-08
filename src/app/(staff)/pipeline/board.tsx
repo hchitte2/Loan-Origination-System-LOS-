@@ -19,7 +19,7 @@ import type { PipelineLoan } from "@/server/queries/loans";
  */
 
 /** The 2 px column rule. Written out so Tailwind sees every class. */
-const COLUMN_RULE = {
+export const COLUMN_RULE = {
   lead: "border-chart-1",
   application: "border-chart-2",
   processing: "border-chart-3",
