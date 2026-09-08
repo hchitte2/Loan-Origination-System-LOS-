@@ -4,8 +4,11 @@ import { PageHeader } from "@/components/page-header";
 import { SegmentedLinks } from "@/components/segmented-links";
 import { requireActor } from "@/server/actor";
 import { assertCan } from "@/server/authz";
+import { listGateConditions } from "@/server/queries/conditions";
 import { listPipelineLoans } from "@/server/queries/loans";
+import { availableMoves } from "@/server/transitions";
 import { PipelineBoard } from "./board";
+import { MoveMenu } from "./move-menu";
 
 export const metadata: Metadata = { title: "Pipeline" };
 
@@ -25,6 +28,11 @@ export default async function PipelinePage(props: PageProps<"/pipeline">) {
   const { mine } = await props.searchParams;
   const onlyMine = mine === "1";
   const loans = await listPipelineLoans(actor, { mine: onlyMine });
+  // One query for every card's menu: the gates only ever look at open conditions.
+  const gates = await listGateConditions(
+    actor,
+    loans.map((loan) => loan.id),
+  );
   const now = new Date();
 
   return (
@@ -49,6 +57,14 @@ export default async function PipelinePage(props: PageProps<"/pipeline">) {
               ? "Nothing is assigned to you right now. Switch to All to see the whole pipeline."
               : "Every file that is not funded, withdrawn or denied shows up here."
           }
+          menuFor={(loan) => (
+            <MoveMenu
+              loanId={loan.id}
+              familyName={loan.familyName}
+              stage={loan.stage}
+              moves={availableMoves(loan, actor, gates.get(loan.id) ?? [])}
+            />
+          )}
           now={now}
         />
       </div>

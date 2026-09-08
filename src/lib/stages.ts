@@ -101,6 +101,13 @@ export const CLOSED_REASONS = [
 
 export type ClosedReason = (typeof CLOSED_REASONS)[number];
 
+export function isClosedReason(value: unknown): value is ClosedReason {
+  return (
+    typeof value === "string" &&
+    (CLOSED_REASONS as readonly string[]).includes(value)
+  );
+}
+
 const CLOSED_REASON_LABELS = {
   withdrawn_by_applicant: "Withdrawn by applicant",
   incomplete: "Incomplete file",

@@ -1,10 +1,10 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { documents, loans, user } from "@/db/schema";
 import type { LoanType } from "@/lib/loan-facts";
 import type { Stage } from "@/lib/stages";
 import type { Actor } from "../actor";
-import { assertCan } from "../authz";
+import { assertCan, loanScope } from "../authz";
 
 /**
  * Loan reads for the pipeline surfaces (PLAN.md §2 "Loans: read scope"). Every staff
@@ -24,6 +24,8 @@ export type PipelineLoan = {
   propertyState: string;
   stage: Stage;
   stageEnteredAt: Date;
+  /** Set the first time the loan reaches Application; the stage machine reads it. */
+  applicationDate: string | null;
   loanType: LoanType;
   amount: number;
   targetCloseDate: string | null;
@@ -63,6 +65,7 @@ export async function listPipelineLoans(
       propertyState: loans.propertyState,
       stage: loans.stage,
       stageEnteredAt: loans.stageEnteredAt,
+      applicationDate: loans.applicationDate,
       loanType: loans.loanType,
       amount: loans.amount,
       targetCloseDate: loans.targetCloseDate,
@@ -74,7 +77,12 @@ export async function listPipelineLoans(
     .from(loans)
     .innerJoin(user, eq(user.id, loans.loanOfficerId))
     .leftJoin(pendingDocs, eq(pendingDocs.loanId, loans.id))
-    .where(options.mine ? eq(loans.loanOfficerId, actor.userId) : undefined)
+    .where(
+      and(
+        loanScope(actor, "read"),
+        options.mine ? eq(loans.loanOfficerId, actor.userId) : undefined,
+      ),
+    )
     // Oldest in stage first, so the files that have stopped moving sit at the top of
     // their column. The design frames show the fixture's declaration order, which no
     // query can reproduce from the data.
@@ -85,4 +93,39 @@ export async function listPipelineLoans(
     familyName: familyName(row.borrowerName),
     pendingDocuments: row.pendingDocuments ?? 0,
   }));
+}
+
+/** The slice of a loan a stage move needs, plus what its activity sentence will say. */
+export type LoanForAction = {
+  id: string;
+  borrowerName: string;
+  familyName: string;
+  stage: Stage;
+  loanOfficerId: string;
+  applicationDate: string | null;
+};
+
+/**
+ * One loan, for an action about to change it. Reads are unscoped for every staff role
+ * (`loanScope(actor, "read")` is `undefined`), so this returns any existing loan and the
+ * caller decides with `can()` whether the actor may write to it. Null means 404.
+ */
+export async function getLoanForAction(
+  actor: Actor,
+  loanId: string,
+): Promise<LoanForAction | null> {
+  assertCan(actor, "loan.read");
+  const [row] = await db()
+    .select({
+      id: loans.id,
+      borrowerName: loans.borrowerName,
+      stage: loans.stage,
+      loanOfficerId: loans.loanOfficerId,
+      applicationDate: loans.applicationDate,
+    })
+    .from(loans)
+    .where(and(eq(loans.id, loanId), loanScope(actor, "read")))
+    .limit(1);
+  if (!row) return null;
+  return { ...row, familyName: familyName(row.borrowerName) };
 }

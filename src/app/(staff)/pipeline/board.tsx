@@ -3,7 +3,12 @@ import { EmptyState } from "@/components/empty-state";
 import { LoanCard } from "@/components/loan-card";
 import { STAGE_ICONS } from "@/components/stage-pill";
 import { formatMoney } from "@/lib/format";
-import { ACTIVE_STAGES, type ActiveStage, staffLabel } from "@/lib/stages";
+import {
+  ACTIVE_STAGES,
+  type ActiveStage,
+  isActiveStage,
+  staffLabel,
+} from "@/lib/stages";
 import { cn } from "@/lib/utils";
 import type { PipelineLoan } from "@/server/queries/loans";
 
@@ -48,8 +53,10 @@ export function PipelineBoard({
   now: Date;
 }) {
   // Six identical dashed boxes say less than one sentence, and an empty scroll container
-  // with nothing tabbable inside is an axe violation on a narrow viewport.
-  if (loans.length === 0) {
+  // with nothing tabbable inside is an axe violation on a narrow viewport. The board only
+  // draws active stages, so a set of purely terminal loans is still an empty board.
+  const active = loans.filter((loan) => isActiveStage(loan.stage));
+  if (active.length === 0) {
     return (
       <EmptyState
         icon={Kanban}
@@ -62,7 +69,7 @@ export function PipelineBoard({
     <div className="overflow-x-auto pb-2">
       <div className="grid min-w-5xl grid-cols-6 gap-3">
         {ACTIVE_STAGES.map((stage) => {
-          const column = loans.filter((loan) => loan.stage === stage);
+          const column = active.filter((loan) => loan.stage === stage);
           const total = column.reduce((sum, loan) => sum + loan.amount, 0);
           return (
             <section key={stage} aria-labelledby={`column-${stage}`}>

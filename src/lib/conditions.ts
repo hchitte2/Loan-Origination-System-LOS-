@@ -46,8 +46,10 @@ export function conditionBorrowerLabel(
 }
 
 /** Open means still waiting on the borrower or the reviewer. */
+export const OPEN_CONDITION_STATUSES = ["requested", "received"] as const;
+
 export function isOpenCondition(status: ConditionStatus): boolean {
-  return status === "requested" || status === "received";
+  return (OPEN_CONDITION_STATUSES as readonly string[]).includes(status);
 }
 
 /** When a condition must be satisfied: before approval, before closing documents, or before funding. */
