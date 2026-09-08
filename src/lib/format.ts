@@ -41,6 +41,20 @@ export function formatDate(value: Date | string): string {
   return shortDate.format(date);
 }
 
+const fullDate = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** "Oct 3, 2026" — for a date far enough out that the year matters. */
+export function formatFullDate(value: Date | string): string {
+  const date =
+    typeof value === "string" ? new Date(`${value}T12:00:00Z`) : value;
+  return fullDate.format(date);
+}
+
 const longDate = new Intl.DateTimeFormat("en-US", {
   weekday: "short",
   month: "short",

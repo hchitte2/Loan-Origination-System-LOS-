@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function StaffNotFound() {
   return (
@@ -14,7 +15,10 @@ export default function StaffNotFound() {
           title="There is nothing at this address."
           description="The loan may have been removed by the daily reset, or the link is wrong."
           action={
-            <Link href="/" className={buttonVariants({ variant: "outline" })}>
+            <Link
+              href="/"
+              className={cn(buttonVariants({ variant: "outline" }))}
+            >
               Go to your home
             </Link>
           }
