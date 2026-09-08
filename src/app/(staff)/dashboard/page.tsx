@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { formatLongDate } from "@/lib/format";
 import { requireActor } from "@/server/actor";
+import { assertCan } from "@/server/authz";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "Dashboard" };
 export default async function DashboardPage() {
   const actor = await requireActor();
   if (actor.role === "processor") redirect("/queue");
+  assertCan(actor, "analytics.view");
   const mine = actor.role === "loan_officer";
   return (
     <>

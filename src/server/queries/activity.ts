@@ -69,8 +69,12 @@ export async function listGlobalActivity(
 
   const result: ActivityRow[] = [];
   for (const row of rows) {
-    // An unknown action name would be a bug in a writer; skip rather than guess a sentence.
-    if (!isActivityAction(row.action)) continue;
+    // Only logActivity writes this column, so an unknown name is corruption, not a case to hide.
+    if (!isActivityAction(row.action)) {
+      throw new Error(
+        `Activity row ${row.id} has an unknown action: ${row.action}`,
+      );
+    }
     result.push({
       id: row.id,
       action: row.action,
