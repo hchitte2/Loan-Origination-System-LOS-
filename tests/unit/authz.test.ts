@@ -1,12 +1,15 @@
 import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import { ROLES, type Role } from "@/lib/roles";
+import { STAGES, TERMINAL_STAGES } from "@/lib/stages";
 import type { Actor } from "@/server/actor";
 import {
   ACTIONS,
   assertCan,
   can,
   ForbiddenError,
+  isLoanWrite,
+  LOAN_WRITE_ACTIONS,
   loanScope,
   POLICY,
 } from "@/server/authz";
@@ -33,8 +36,12 @@ function actorFor(role: Role, overrides: Partial<Actor> = {}): Actor {
   };
 }
 
-const ownLoan = { loanOfficerId: ME };
-const foreignLoan = { loanOfficerId: SOMEONE_ELSE };
+/** An open loan: the terminal check in `can()` passes, so the matrix cell decides. */
+const ownLoan = { loanOfficerId: ME, stage: "processing" } as const;
+const foreignLoan = {
+  loanOfficerId: SOMEONE_ELSE,
+  stage: "processing",
+} as const;
 
 describe("POLICY shape", () => {
   it("has one row per matrix row and one cell per role", () => {
@@ -55,7 +62,9 @@ describe("can() follows every cell of POLICY", () => {
           case "any":
             expect(can(actor, action, ownLoan)).toBe(true);
             expect(can(actor, action, foreignLoan)).toBe(true);
-            expect(can(actor, action)).toBe(true);
+            // A loan write needs the loan to check the stage against, so an "any" cell
+            // is still refused without one (PLAN.md §6 invariant 8).
+            expect(can(actor, action)).toBe(!isLoanWrite(action));
             break;
           case "own":
             expect(can(actor, action, ownLoan)).toBe(true);
@@ -123,6 +132,87 @@ describe("sentences from PLAN.md §2", () => {
   });
 });
 
+describe("terminal loans are read-only (PLAN.md §6 invariant 8)", () => {
+  const openLoan = (officer: string) =>
+    ({ loanOfficerId: officer, stage: "processing" }) as const;
+
+  it("refuses every loan write on every terminal stage, for every role", () => {
+    for (const stage of TERMINAL_STAGES) {
+      for (const role of ROLES) {
+        const actor = actorFor(role);
+        for (const action of LOAN_WRITE_ACTIONS) {
+          // The owned loan is the strongest case: an "own" cell would allow it, and a
+          // superadmin's whole column is "any". The stage refuses both.
+          expect(can(actor, action, { loanOfficerId: ME, stage })).toBe(false);
+        }
+      }
+    }
+  });
+
+  it("still lets every role read a closed loan", () => {
+    const readActions = ACTIONS.filter((a) => !isLoanWrite(a));
+    for (const stage of TERMINAL_STAGES) {
+      for (const action of readActions) {
+        const priya = actorFor("superadmin");
+        expect(can(priya, action, { loanOfficerId: ME, stage })).toBe(
+          POLICY.superadmin[action] !== false,
+        );
+      }
+    }
+  });
+
+  it("leaves the six active stages to the matrix", () => {
+    const active = STAGES.filter((s) => !TERMINAL_STAGES.includes(s as never));
+    for (const stage of active) {
+      const sam = actorFor("processor");
+      expect(can(sam, "document.review", { loanOfficerId: ME, stage })).toBe(
+        true,
+      );
+      expect(can(sam, "condition.resolve", { loanOfficerId: ME, stage })).toBe(
+        true,
+      );
+    }
+    expect(active).toHaveLength(6);
+  });
+
+  it("names every write action that a stage can close", () => {
+    // A new write action must be listed, or a closed loan would still accept it. The
+    // ones deliberately absent have no loan to be terminal.
+    const notLoanScoped = [
+      "loan.create",
+      "admin.manage_users",
+      "admin.reset_demo",
+    ];
+    const reads = [
+      "loan.read",
+      "loan.read_loan_officer",
+      "loan.read_stage",
+      "condition.read",
+      "document.download",
+      "activity.read_loan",
+      "admin.read_activity",
+      "analytics.view",
+    ];
+    expect([...LOAN_WRITE_ACTIONS].sort()).toEqual(
+      ACTIONS.filter(
+        (a) => !notLoanScoped.includes(a) && !reads.includes(a),
+      ).sort(),
+    );
+  });
+
+  it("refuses a loan write that arrives without a loan, whatever the cell says", () => {
+    for (const role of ROLES) {
+      for (const action of LOAN_WRITE_ACTIONS) {
+        expect(can(actorFor(role), action)).toBe(false);
+      }
+    }
+    // The open loan is the control: the same calls pass once the loan is in hand.
+    expect(can(actorFor("superadmin"), "document.review", openLoan(ME))).toBe(
+      true,
+    );
+  });
+});
+
 describe("assertCan", () => {
   it("throws ForbiddenError naming the role and action", () => {
     const sam = actorFor("processor");
@@ -130,7 +220,7 @@ describe("assertCan", () => {
     expect(() => assertCan(sam, "loan.create")).toThrow(
       "processor may not loan.create",
     );
-    expect(() => assertCan(sam, "document.review")).not.toThrow();
+    expect(() => assertCan(sam, "document.review", ownLoan)).not.toThrow();
   });
 });
 

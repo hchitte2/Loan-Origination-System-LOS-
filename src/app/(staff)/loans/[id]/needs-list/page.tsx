@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { isOpenCondition, priorToLabel } from "@/lib/conditions";
 import { daysSince } from "@/lib/format";
-import { isTerminalStage } from "@/lib/stages";
 import { requireActor } from "@/server/actor";
 import { assertCan, can } from "@/server/authz";
 import { listConditions } from "@/server/queries/conditions";
@@ -45,9 +44,9 @@ export default async function NeedsListPage({
   if (!loan) notFound();
 
   const conditions = await listConditions(actor, loan.id);
-  // A closed loan is a record: the actions refuse it, so the controls do not offer it.
-  const mayManage =
-    can(actor, "condition.manage", loan) && !isTerminalStage(loan.stage);
+  // A closed loan is a record: `can()` refuses a write on one (PLAN.md §6 invariant 8),
+  // so asking it is enough for the controls to stop offering it.
+  const mayManage = can(actor, "condition.manage", loan);
   const open = conditions.filter((c) => isOpenCondition(c.status)).length;
   const now = new Date();
 
