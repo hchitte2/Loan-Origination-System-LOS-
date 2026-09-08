@@ -12,6 +12,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
+  // These run against `next dev`, which compiles a route the first time it is asked for.
+  // Under parallel workers that regularly outruns the 5 s default and fails a healthy
+  // assertion, so the floor is raised rather than sprinkling waits through the specs.
+  expect: { timeout: 15_000 },
   use: {
     baseURL,
     trace: "on-first-retry",
