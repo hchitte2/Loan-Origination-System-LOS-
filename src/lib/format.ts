@@ -82,3 +82,17 @@ export function initials(name: string): string {
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 }
+
+/**
+ * Whole days from `now` until a calendar date ("2026-10-03" → 27 on Sep 6). Negative
+ * once the date has passed. Calendar days are read at noon UTC so a timezone offset
+ * never shifts the answer by one.
+ */
+export function daysUntil(date: Date | string, now: Date = new Date()): number {
+  const target =
+    typeof date === "string" ? new Date(`${date}T12:00:00Z`) : date;
+  const from = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12),
+  );
+  return Math.round((target.getTime() - from.getTime()) / DAY_MS);
+}
