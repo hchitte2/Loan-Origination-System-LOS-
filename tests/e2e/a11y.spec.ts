@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { openLoanFromPipeline, SHOWCASE } from "./helpers/loans";
 import { enterAs } from "./helpers/personas";
 
 /**
@@ -32,10 +33,117 @@ for (const scheme of SCHEMES) {
       ).toBeVisible();
       await expectNoSeriousViolations(page);
     });
+
+    test(`/pipeline board has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "alex");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Pipeline" }),
+      ).toBeVisible();
+      // The board's cards, stage pills, attention tags and Move to… trigger.
+      await expect(page.getByRole("article").first()).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`/pipeline list and its Closed section have no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "alex");
+      await page.goto("/pipeline?view=list");
+      await expect(page.getByRole("table").first()).toBeVisible();
+      // Expanded, so the second table is in the tree when axe runs.
+      await page.getByRole("button", { name: /^Closed/ }).click();
+      await expect(page.getByRole("table")).toHaveCount(2);
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`/loans/new has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "alex");
+      await page.goto("/loans/new");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "New loan" }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`/loans/[id] tabs have no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "alex");
+      const loan = await openLoanFromPipeline(page, SHOWCASE.street);
+
+      // Overview: the facts, the people and the borrower link.
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 2, name: "Borrower link" }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+
+      // Needs list: the conditions table, its pills and tags.
+      await page.goto(`${loan}/needs-list`);
+      await expect(page.getByRole("table")).toBeVisible();
+      await expectNoSeriousViolations(page);
+
+      // Activity: the sentence rows.
+      await page.goto(`${loan}/activity`);
+      await expect(
+        page.getByRole("heading", { level: 2, name: /^Activity/ }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`the dialogs this phase adds have no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "alex");
+
+      // New loan, intercepted over the board.
+      await page.getByRole("link", { name: "New loan" }).click();
+      await expect(
+        page.getByRole("dialog", { name: "New loan" }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+      await page.keyboard.press("Escape");
+
+      // Add condition.
+      const loan = await openLoanFromPipeline(page, SHOWCASE.street);
+      await page.goto(`${loan}/needs-list`);
+      await page.getByRole("button", { name: "Add condition" }).click();
+      await expect(
+        page.getByRole("dialog", { name: "Add condition" }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+      await page.keyboard.press("Escape");
+
+      // The withdraw confirm, which is an alertdialog carrying a form.
+      await page.goto("/pipeline");
+      const card = page
+        .getByRole("article")
+        .filter({ hasText: SHOWCASE.borrowerName.split(" ").at(-1) ?? "" })
+        .first();
+      await card.getByRole("button", { name: /^Move / }).click();
+      await page.getByRole("menuitem", { name: "Withdraw…" }).click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
   });
 }
 
 async function expectNoSeriousViolations(page: Page) {
+  // Wait for every running transition to finish first. A dialog captured mid-fade has a
+  // blended background, and axe reports the intermediate colours as contrast failures —
+  // a flake, not a defect, and one that only shows up on whichever run happens to be
+  // slower. Awaiting the animations is deterministic; a sleep would not be.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
   const results = await new AxeBuilder({ page }).analyze();
   const serious = results.violations.filter(
     (v) => v.impact === "serious" || v.impact === "critical",
