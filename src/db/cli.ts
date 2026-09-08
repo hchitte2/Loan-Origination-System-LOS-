@@ -15,9 +15,15 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import { getEnv } from "@/lib/env";
+import { putSpecimen } from "@/server/storage";
 import { isProductionHost, parseProdHostFile } from "./guard";
 import { closeDb, db } from "./index";
-import { type SeedSummary, seedFixture } from "./seed";
+import {
+  type SeedSummary,
+  SPECIMEN_SOURCE_DIR,
+  SPECIMENS,
+  seedFixture,
+} from "./seed";
 
 const COMMANDS = ["migrate", "seed", "reset", "seed-files"] as const;
 type Command = (typeof COMMANDS)[number];
@@ -101,6 +107,53 @@ async function runSeed(mode: "seed" | "reset"): Promise<void> {
   await closeDb();
 }
 
+/**
+ * Upload the three specimen PDFs to `seed/` in Blob. Re-runnable: each goes to a fixed
+ * pathname and overwrites, so running it twice leaves three objects, not six.
+ *
+ * The size the fixture quotes is what the needs list prints, so it has to be what the
+ * download sends. A mismatch means the PDFs were rebuilt without updating `SPECIMENS`,
+ * and this refuses rather than seeding a size no file has.
+ */
+async function runSeedFiles(): Promise<void> {
+  getEnv(); // BLOB_READ_WRITE_TOKEN, before anything is read from disk
+  const mismatches: string[] = [];
+  const files = Object.values(SPECIMENS).map((specimen) => {
+    const source = path.join(
+      SPECIMEN_SOURCE_DIR,
+      path.basename(specimen.pathname),
+    );
+    if (!existsSync(source)) {
+      fail(
+        `Missing ${source}. Rebuild it with: npx tsx src/db/specimens/build.ts`,
+      );
+    }
+    const body = readFileSync(source);
+    if (body.byteLength !== specimen.sizeBytes) {
+      mismatches.push(
+        `  ${specimen.pathname}: file is ${body.byteLength} B, SPECIMENS says ${specimen.sizeBytes} B`,
+      );
+    }
+    return { pathname: specimen.pathname, body };
+  });
+
+  if (mismatches.length > 0) {
+    fail(
+      [
+        "The specimen PDFs and the sizes in src/db/seed.ts disagree:",
+        ...mismatches,
+        "Update SPECIMENS to the real byte counts, then run this again.",
+      ].join("\n"),
+    );
+  }
+
+  for (const file of files) {
+    await putSpecimen(file.pathname, file.body, "application/pdf");
+    console.log(`  uploaded ${file.pathname} (${file.body.byteLength} B)`);
+  }
+  console.log(`Specimens uploaded: ${files.length}.`);
+}
+
 function printSummary(mode: "seed" | "reset", s: SeedSummary): void {
   const byStage = Object.entries(s.loansByStage)
     .map(([stage, n]) => `${stage} ${n}`)
@@ -153,8 +206,8 @@ async function main(): Promise<void> {
       await runSeed("reset");
       return;
     case "seed-files":
-      fail('"seed-files" arrives with document storage in Phase 3.');
-      break;
+      await runSeedFiles();
+      return;
   }
 }
 

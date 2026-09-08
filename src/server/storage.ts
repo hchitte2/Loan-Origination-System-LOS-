@@ -1,4 +1,4 @@
-import { BlobNotFoundError, get, head } from "@vercel/blob";
+import { BlobNotFoundError, get, head, put } from "@vercel/blob";
 import { getEnv } from "@/lib/env";
 
 /**
@@ -66,6 +66,28 @@ export function safeFileName(fileName: string): string {
     .trim();
   const name = cleaned.length > 0 ? cleaned : "document";
   return name.length > 120 ? name.slice(-120) : name;
+}
+
+/**
+ * Put one specimen at a fixed `seed/` pathname. Overwrites on purpose and adds no random
+ * suffix: the fixture points at these exact pathnames, `pnpm seed:files` is re-runnable,
+ * and re-running it must not leave a second copy behind.
+ */
+export async function putSpecimen(
+  pathname: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  if (!pathname.startsWith(SEED_PREFIX)) {
+    throw new Error(`A specimen must live under ${SEED_PREFIX}: ${pathname}`);
+  }
+  await put(pathname, body, {
+    access: "private",
+    contentType,
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    token: getEnv().BLOB_READ_WRITE_TOKEN,
+  });
 }
 
 /**

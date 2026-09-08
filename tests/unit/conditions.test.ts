@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  canClear,
-  canDelete,
   CONDITION_STATUSES,
   type ConditionStatus,
+  canClear,
+  canDelete,
   statusAfterRejection,
   statusAfterUpload,
 } from "@/lib/conditions";

@@ -56,13 +56,22 @@ export const SPECIMENS: Record<
   Specimen,
   { pathname: string; sizeBytes: number }
 > = {
-  "pay-stub": { pathname: "seed/specimen-pay-stub.pdf", sizeBytes: 184_302 },
-  w2: { pathname: "seed/specimen-w2.pdf", sizeBytes: 96_540 },
+  "pay-stub": { pathname: "seed/specimen-pay-stub.pdf", sizeBytes: 1_689 },
+  w2: { pathname: "seed/specimen-w2.pdf", sizeBytes: 1_545 },
   "bank-statement": {
     pathname: "seed/specimen-bank-statement.pdf",
-    sizeBytes: 412_887,
+    sizeBytes: 1_801,
   },
 };
+
+/** The file beside `src/db/specimens/` that each Blob pathname is uploaded from. */
+export const SPECIMEN_SOURCE_DIR = "src/db/specimens";
+
+/**
+ * `sizeBytes` above is what the needs list prints, so it must be what the download
+ * actually sends. `pnpm seed:files` compares the two and refuses on a mismatch rather
+ * than letting the UI quote a size no file has.
+ */
 
 function specimenFor(conditionTitle: string): Specimen {
   if (/pay stub/i.test(conditionTitle)) return "pay-stub";

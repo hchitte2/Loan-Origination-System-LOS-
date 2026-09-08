@@ -1,0 +1,97 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+6 0 obj
+<< /Length 1037 >>
+stream
+q
+0.85 0.85 0.85 rg
+BT
+/F2 46 Tf
+0.7071 0.7071 -0.7071 0.7071 96 330 Tm
+(SPECIMEN - SYNTHETIC) Tj
+ET
+Q
+q
+0 0 0 rg
+BT
+/F2 20 Tf
+1 0 0 1 64 708 Td
+(Earnings Statement) Tj
+ET
+Q
+q
+0.6 0.6 0.6 RG
+1 w
+64 694 m 548 694 l S
+Q
+q
+0.1 0.1 0.1 rg
+BT
+1 0 0 1 64 660 Td
+/F2 13 Tf
+(Northgate Provisions Co.) Tj
+/F1 11 Tf
+0 -18 Td
+(1400 Aldergrove Blvd, Austin TX 78702) Tj
+/F1 11 Tf
+0 -30 Td
+(Employee: M. Chen          Pay period: Aug 16 - Aug 31) Tj
+/F2 11 Tf
+0 -30 Td
+(Earnings) Tj
+/F1 11 Tf
+0 -18 Td
+(Regular            80.00 hrs        3,120.00) Tj
+/F1 11 Tf
+0 -18 Td
+(Overtime            4.50 hrs          263.25) Tj
+/F2 11 Tf
+0 -18 Td
+(Gross pay                            3,383.25) Tj
+/F2 11 Tf
+0 -30 Td
+(Deductions) Tj
+/F1 11 Tf
+0 -18 Td
+(Withholding                            487.10) Tj
+/F1 11 Tf
+0 -18 Td
+(Benefits                               162.00) Tj
+/F2 11 Tf
+0 -18 Td
+(Net pay                              2,734.15) Tj
+/F1 9 Tf
+0 -34 Td
+(This is a synthetic sample used in a product demonstration. It is not a real document.) Tj
+ET
+Q
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000000321 00000 n 
+0000000396 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1485
+%%EOF
