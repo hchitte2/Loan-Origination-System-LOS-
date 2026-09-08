@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { conditions, loans } from "@/db/schema";
 import { defaultNeedsList } from "@/lib/needs-list";
-import type { Stage } from "@/lib/stages";
+import { isTerminalStage, type Stage, staffLabel } from "@/lib/stages";
 import { logActivity } from "../activity";
 import { requireActor } from "../actor";
 import { can } from "../authz";
@@ -17,6 +17,7 @@ import {
   type CreateLoanField,
   CreateLoanSchema,
   MoveLoanSchema,
+  RegenerateLinkSchema,
 } from "./schemas";
 
 /**
@@ -233,4 +234,59 @@ export async function createLoan(
     loanId,
     familyName: familyName(data.borrowerName),
   };
+}
+
+export type RegenerateLinkState =
+  | { ok: true }
+  | { ok: false; error: string }
+  | null;
+
+/**
+ * Issue a new borrower link and revoke the old one (PLAN.md §2 "Public link: copy,
+ * regenerate"). The old token stops working the moment this commits, which is the point:
+ * it is how a link sent to the wrong address is taken back.
+ */
+export async function regenerateLink(
+  _previous: RegenerateLinkState,
+  formData: FormData,
+): Promise<RegenerateLinkState> {
+  const parsed = RegenerateLinkSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success)
+    return { ok: false, error: "That loan was not understood." };
+
+  const actor = await requireActor();
+  const loan = await getLoanForAction(actor, parsed.data.loanId);
+  if (!loan) return { ok: false, error: "That loan no longer exists." };
+  // Returns rather than throws for the same reason createLoan does: a superadmin can
+  // render this card as themselves and then start "View as" in another tab.
+  if (!can(actor, "loan.manage_link", loan)) {
+    return {
+      ok: false,
+      error: "Only the assigned loan officer or a processor can do that.",
+    };
+  }
+  // The stage machine refuses every move on a terminal loan; the link that feeds it
+  // should not be reissued either. Phase 3's public page will refuse the token anyway,
+  // so this stops a new link being born dead.
+  if (isTerminalStage(loan.stage)) {
+    return {
+      ok: false,
+      error: `This loan is ${staffLabel(loan.stage).toLowerCase()}. Its borrower link is no longer used.`,
+    };
+  }
+
+  await db().transaction(async (tx) => {
+    await tx
+      .update(loans)
+      .set({ uploadToken: newUploadToken(), uploadTokenRevokedAt: null })
+      .where(eq(loans.id, loan.id));
+    await logActivity(tx, {
+      actor,
+      loanId: loan.id,
+      action: "loan.link_regenerated",
+    });
+  });
+
+  revalidatePath(`/loans/${loan.id}`, "layout");
+  return { ok: true };
 }

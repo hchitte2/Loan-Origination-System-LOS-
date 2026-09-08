@@ -68,6 +68,19 @@ describe("seedFixture", () => {
     ]);
   });
 
+  it("gives every loan a distinct, well-formed borrower token", async () => {
+    // The generator XORs two unsigned words; `^` returns a signed int, so a negative
+    // index once produced tokens that read "undefinedundefinedu…" for every loan but the
+    // showcase one, whose token comes from the environment. The public page in Phase 3
+    // authenticates on nothing else.
+    const rows = await db
+      .select({ token: schema.loans.uploadToken })
+      .from(schema.loans);
+    expect(rows).toHaveLength(FIXTURE_LOAN_COUNT);
+    for (const { token } of rows) expect(token).toMatch(/^[a-z0-9]{32}$/);
+    expect(new Set(rows.map((r) => r.token)).size).toBe(rows.length);
+  });
+
   it("gives every seeded user a credential account with a password hash", async () => {
     const accounts = await db
       .select({

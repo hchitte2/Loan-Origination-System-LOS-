@@ -1,10 +1,11 @@
 import { and, asc, eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { documents, loans, user } from "@/db/schema";
-import type { LoanType } from "@/lib/loan-facts";
-import type { Stage } from "@/lib/stages";
+import type { LoanType, Purpose, ReferralSource } from "@/lib/loan-facts";
+import type { ClosedReason, Stage } from "@/lib/stages";
 import type { Actor } from "../actor";
-import { assertCan, loanScope } from "../authz";
+import { assertCan, can, loanScope } from "../authz";
 
 /**
  * Loan reads for the pipeline surfaces (PLAN.md §2 "Loans: read scope"). Every staff
@@ -130,4 +131,128 @@ export async function getLoanForAction(
     .limit(1);
   if (!row) return null;
   return { ...row, familyName: familyName(row.borrowerName) };
+}
+
+/** Everything the loan detail header and Overview tab render. */
+export type LoanDetail = {
+  id: string;
+  borrowerName: string;
+  familyName: string;
+  /** "Maria" — the borrower link buttons say whose link it is. */
+  borrowerFirstName: string;
+  borrowerEmail: string;
+  borrowerPhone: string | null;
+  propertyStreet: string;
+  propertyCity: string;
+  propertyState: string;
+  propertyZip: string;
+  purpose: Purpose;
+  loanType: LoanType;
+  amount: number;
+  purchasePrice: number | null;
+  referralSource: ReferralSource;
+  stage: Stage;
+  stageEnteredAt: Date;
+  applicationDate: string | null;
+  targetCloseDate: string | null;
+  fundedAt: Date | null;
+  closedReason: ClosedReason | null;
+  createdAt: Date;
+  loanOfficerId: string;
+  loanOfficer: LoanPerson;
+  processor: LoanPerson | null;
+  /**
+   * Only for an actor who may manage the link (`loan.manage_link`). The token is the
+   * borrower's whole authentication, so it is projected here rather than fetched and
+   * hidden in a component: a Server Component serialises whatever the page fetched.
+   */
+  uploadToken: string | null;
+};
+
+export type LoanPerson = {
+  id: string;
+  name: string;
+  nmlsId: string | null;
+  phone: string | null;
+};
+
+/**
+ * One loan with the people on it. Returns null when there is no such loan, which the
+ * page turns into a 404. `assertCan(loan.read)` runs first; the upload token is dropped
+ * unless the actor may manage the link.
+ */
+export async function getLoanDetail(
+  actor: Actor,
+  loanId: string,
+): Promise<LoanDetail | null> {
+  assertCan(actor, "loan.read");
+  const officer = alias(user, "loan_officer");
+  const processor = alias(user, "processor");
+  const [row] = await db()
+    .select({
+      // Named, not `loans` wholesale: the upload token is the borrower's whole
+      // authentication, and a spread would carry it — and any column added later — into
+      // the payload where only statement order kept it out. Listing the columns makes
+      // tsc the guard instead of a habit.
+      id: loans.id,
+      borrowerName: loans.borrowerName,
+      borrowerEmail: loans.borrowerEmail,
+      borrowerPhone: loans.borrowerPhone,
+      propertyStreet: loans.propertyStreet,
+      propertyCity: loans.propertyCity,
+      propertyState: loans.propertyState,
+      propertyZip: loans.propertyZip,
+      purpose: loans.purpose,
+      loanType: loans.loanType,
+      amount: loans.amount,
+      purchasePrice: loans.purchasePrice,
+      referralSource: loans.referralSource,
+      stage: loans.stage,
+      stageEnteredAt: loans.stageEnteredAt,
+      applicationDate: loans.applicationDate,
+      targetCloseDate: loans.targetCloseDate,
+      fundedAt: loans.fundedAt,
+      closedReason: loans.closedReason,
+      createdAt: loans.createdAt,
+      loanOfficerId: loans.loanOfficerId,
+      uploadToken: loans.uploadToken,
+      officerId: officer.id,
+      officerName: officer.name,
+      officerNmls: officer.nmlsId,
+      officerPhone: officer.phone,
+      processorId: processor.id,
+      processorName: processor.name,
+      processorNmls: processor.nmlsId,
+      processorPhone: processor.phone,
+    })
+    .from(loans)
+    .innerJoin(officer, eq(officer.id, loans.loanOfficerId))
+    .leftJoin(processor, eq(processor.id, loans.processorId))
+    .where(and(eq(loans.id, loanId), loanScope(actor, "read")))
+    .limit(1);
+  if (!row) return null;
+
+  const { uploadToken, ...loan } = row;
+  const mayManageLink = can(actor, "loan.manage_link", loan);
+  return {
+    ...loan,
+    familyName: familyName(loan.borrowerName),
+    borrowerFirstName:
+      loan.borrowerName.trim().split(/\s+/)[0] ?? loan.borrowerName,
+    loanOfficer: {
+      id: row.officerId,
+      name: row.officerName,
+      nmlsId: row.officerNmls,
+      phone: row.officerPhone,
+    },
+    processor: row.processorId
+      ? {
+          id: row.processorId,
+          name: row.processorName ?? "",
+          nmlsId: row.processorNmls,
+          phone: row.processorPhone,
+        }
+      : null,
+    uploadToken: mayManageLink ? uploadToken : null,
+  };
 }

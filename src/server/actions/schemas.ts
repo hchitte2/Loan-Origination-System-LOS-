@@ -119,3 +119,5 @@ export const CreateLoanSchema = z.object({
 });
 
 export type CreateLoanField = keyof z.infer<typeof CreateLoanSchema>;
+
+export const RegenerateLinkSchema = z.object({ loanId: z.uuid() });
