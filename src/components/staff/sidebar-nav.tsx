@@ -2,17 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Role } from "@/lib/roles";
+import { homeRoute, type Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
-import { navFor } from "./nav";
+import { isNavRoute, navFor } from "./nav";
 
-/** Role navigation; the active item is `primary` on a 10 % primary tint. */
+/**
+ * Role navigation; the active item is `primary` on a 10 % primary tint. A route that is
+ * not itself in the nav — a loan detail, the new loan page — lights the role's home
+ * instead, so the shell never looks like it belongs nowhere.
+ */
 export function SidebarNav({ role }: { role: Role }) {
   const pathname = usePathname();
+  const fallback = isNavRoute(role, pathname) ? null : homeRoute(role);
   return (
     <nav aria-label="Main" className="flex flex-col gap-1 px-4">
       {navFor(role).map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
+        const active =
+          pathname === href ||
+          pathname.startsWith(`${href}/`) ||
+          fallback === href;
         return (
           <Link
             key={href}

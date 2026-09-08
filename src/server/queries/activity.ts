@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { activity, loans, user } from "@/db/schema";
@@ -10,7 +10,8 @@ import {
   isActivityAction,
 } from "@/lib/activity";
 import type { Actor } from "../actor";
-import { assertCan } from "../authz";
+import { assertCan, loanScope } from "../authz";
+import { familyName } from "./loans";
 
 /**
  * The global activity log (PLAN.md §2 "Global activity log", superadmin only). Rows come
@@ -92,4 +93,59 @@ export async function listGlobalActivity(
     });
   }
   return result;
+}
+
+/**
+ * One loan's activity, newest first (design frame 03-loan-activity). `activity.read_loan`
+ * is `any` for all three staff roles, so this authorizes and returns the whole thread.
+ * The caller owes it a loan id the server resolved.
+ */
+export async function listLoanActivity(
+  actor: Actor,
+  loanId: string,
+  options: { limit?: number } = {},
+): Promise<ActivityRow[]> {
+  assertCan(actor, "activity.read_loan");
+  const actorUser = alias(user, "actor_user");
+  const behalfUser = alias(user, "behalf_user");
+  const rows = await db()
+    .select({
+      id: activity.id,
+      action: activity.action,
+      detail: activity.detail,
+      actorKind: activity.actorKind,
+      actorName: actorUser.name,
+      onBehalfOfName: behalfUser.name,
+      loanId: activity.loanId,
+      borrowerName: loans.borrowerName,
+      propertyStreet: loans.propertyStreet,
+      createdAt: activity.createdAt,
+    })
+    .from(activity)
+    .leftJoin(actorUser, eq(actorUser.id, activity.actorId))
+    .leftJoin(behalfUser, eq(behalfUser.id, activity.onBehalfOf))
+    .innerJoin(loans, eq(loans.id, activity.loanId))
+    .where(and(eq(activity.loanId, loanId), loanScope(actor, "read")))
+    .orderBy(desc(activity.createdAt), desc(activity.id))
+    .limit(options.limit ?? 200);
+
+  return rows.map((row) => {
+    if (!isActivityAction(row.action)) {
+      throw new Error(
+        `Activity row ${row.id} has an unknown action: ${row.action}`,
+      );
+    }
+    return {
+      id: row.id,
+      action: row.action,
+      detail: row.detail,
+      actorKind: row.actorKind,
+      actorName: row.actorName,
+      onBehalfOfName: row.onBehalfOfName,
+      loanId: row.loanId,
+      loanLabel: `${familyName(row.borrowerName)} · ${row.propertyStreet}`,
+      borrowerName: row.borrowerName,
+      createdAt: row.createdAt,
+    };
+  });
 }

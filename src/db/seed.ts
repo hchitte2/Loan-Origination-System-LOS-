@@ -1286,7 +1286,9 @@ function uploadTokenFor(key: string): string {
   for (let i = 0; i < 32; i += 1) {
     x = (Math.imul(x, 1664525) + 1013904223) >>> 0;
     y = (Math.imul(y ^ (y >>> 13), 2654435761) + i) >>> 0;
-    out += alphabet[(x ^ y) % alphabet.length];
+    // `^` yields a signed 32-bit int, so the high bit made this index negative and the
+    // token came out as a run of "undefined". Coerce back to unsigned before the modulo.
+    out += alphabet[((x ^ y) >>> 0) % alphabet.length];
   }
   return out;
 }

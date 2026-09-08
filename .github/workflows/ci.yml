@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   check:
-    name: biome · tsc · vitest
+    name: biome · tsc · vitest · db
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -24,3 +24,7 @@ jobs:
       - run: pnpm exec biome check .
       - run: pnpm typecheck
       - run: pnpm test
+      # The db project runs migrations and the seed against pglite, so it needs no
+      # external database. It was outside CI while a seed bug broke the borrower token on
+      # every loan and the pipeline stayed green.
+      - run: pnpm test:db

@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import type { ActivityAction } from "@/lib/activity";
+import { cn } from "@/lib/utils";
 
 const ICONS: Record<ActivityAction, LucideIcon> = {
   "loan.created": Plus,
@@ -34,8 +35,28 @@ const ICONS: Record<ActivityAction, LucideIcon> = {
   "demo.reset": RotateCcw,
 };
 
-/** The 16 px lucide icon for an activity row; decorative, the sentence says it all. */
-export function ActivityIcon({ action }: { action: ActivityAction }) {
+/** Outcomes carry their tone on the loan's Activity tab; the global log stays neutral. */
+const TONES: Partial<Record<ActivityAction, string>> = {
+  "document.accepted": "text-success-on-soft",
+  "condition.cleared": "text-success-on-soft",
+  "document.rejected": "text-destructive",
+};
+
+/**
+ * The 16 px lucide icon for an activity row; decorative, the sentence says it all.
+ * `tone="semantic"` colours the three outcome rows the way frame 03-loan-activity does.
+ * The global log (frame 07-activity) shows every row grey, so that stays the default.
+ */
+export function ActivityIcon({
+  action,
+  tone = "muted",
+}: {
+  action: ActivityAction;
+  tone?: "muted" | "semantic";
+}) {
   const Icon = ICONS[action];
-  return <Icon aria-hidden="true" className="size-4 text-muted-foreground" />;
+  const colour =
+    (tone === "semantic" ? TONES[action] : undefined) ??
+    "text-muted-foreground";
+  return <Icon aria-hidden="true" className={cn("size-4", colour)} />;
 }
