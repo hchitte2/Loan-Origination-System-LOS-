@@ -106,6 +106,12 @@
   --success-soft: color-mix(in oklab, var(--success) 12%, var(--card));
   --warning-soft: color-mix(in oklab, var(--warning) 12%, var(--card));
   --destructive-soft: color-mix(in oklab, var(--destructive) 12%, var(--card));
+  /* Text on those tints. Success and warning at full strength are only 4.3:1 on their own
+     12 % tint, under the 4.5:1 floor for 11–12 px text, so they lean 15 % toward foreground
+     the way the avatar initials do — darker in light, lighter in dark, ≥ 5.3:1 in both.
+     Destructive (5.4:1) and the tokens used on solid fills need no adjustment. */
+  --success-on-soft: color-mix(in oklab, var(--success), var(--foreground) 15%);
+  --warning-on-soft: color-mix(in oklab, var(--warning), var(--foreground) 15%);
   /* Stage pills: 22 % of the stage's chart colour on card. */
   --stage-1: color-mix(in oklab, var(--chart-1) 22%, var(--card));
   --stage-2: color-mix(in oklab, var(--chart-2) 22%, var(--card));
@@ -139,9 +145,11 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-soft: var(--success-soft);
+  --color-success-on-soft: var(--success-on-soft);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-warning-soft: var(--warning-soft);
+  --color-warning-on-soft: var(--warning-on-soft);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-soft: var(--destructive-soft);

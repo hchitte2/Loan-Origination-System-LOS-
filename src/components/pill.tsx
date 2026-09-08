@@ -22,8 +22,8 @@ export type PillTone =
 const TONES: Record<PillTone, string> = {
   neutral: "bg-muted text-muted-foreground",
   primary: "bg-primary-soft text-primary",
-  success: "bg-success-soft text-success",
-  warning: "bg-warning-soft text-warning",
+  success: "bg-success-soft text-success-on-soft",
+  warning: "bg-warning-soft text-warning-on-soft",
   destructive: "bg-destructive-soft text-destructive",
   "stage-1": "bg-stage-1 text-foreground",
   "stage-2": "bg-stage-2 text-foreground",
