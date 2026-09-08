@@ -56,7 +56,11 @@ export function ConfirmDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent role="alertdialog" className="sm:max-w-dialog-confirm">
+      <DialogContent
+        role="alertdialog"
+        showCloseButton={false}
+        className="sm:max-w-dialog-confirm"
+      >
         <form action={action} className="flex flex-col gap-4">
           {Object.entries(fields ?? {}).map(([name, value]) => (
             <input key={name} type="hidden" name={name} value={value} />

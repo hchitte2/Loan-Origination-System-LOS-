@@ -5,6 +5,7 @@ import {
   ADDRESS_MAX_LENGTH,
   parseAddress,
 } from "@/lib/address";
+import { PRIOR_TO } from "@/lib/conditions";
 import { LOAN_TYPES, PURPOSES, REFERRAL_SOURCES } from "@/lib/loan-facts";
 import { ROLES } from "@/lib/roles";
 import { CLOSED_REASONS, STAGES } from "@/lib/stages";
@@ -121,3 +122,41 @@ export const CreateLoanSchema = z.object({
 export type CreateLoanField = keyof z.infer<typeof CreateLoanSchema>;
 
 export const RegenerateLinkSchema = z.object({ loanId: z.uuid() });
+
+const ConditionFields = {
+  title: z
+    .string()
+    .trim()
+    .min(3, 'Name the condition, like "Gift letter".')
+    .max(120, "Keep the name under 120 characters."),
+  /** Borrower-facing wording; the public page shows it verbatim. */
+  instructions: z
+    .string()
+    .trim()
+    .max(400, "Keep the instructions under 400 characters.")
+    .optional()
+    .transform((value) => value || undefined),
+  priorTo: z.enum(PRIOR_TO, { message: "Choose when it is due." }),
+  borrowerFacing: z
+    .union([z.literal("on"), z.literal("")])
+    .optional()
+    .transform((value) => value === "on"),
+};
+
+export const AddConditionSchema = z.object({
+  loanId: z.uuid(),
+  ...ConditionFields,
+});
+
+export const EditConditionSchema = z.object({
+  loanId: z.uuid(),
+  conditionId: z.uuid(),
+  ...ConditionFields,
+});
+
+export const DeleteConditionSchema = z.object({
+  loanId: z.uuid(),
+  conditionId: z.uuid(),
+});
+
+export type ConditionField = keyof z.infer<typeof EditConditionSchema>;

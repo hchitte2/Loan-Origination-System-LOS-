@@ -1,14 +1,14 @@
 "use client";
 
-import { CalendarIcon, CircleAlert } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useId, useState } from "react";
 import { toast } from "sonner";
+import { Field } from "@/components/field";
 import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -347,47 +347,6 @@ export function NewLoanForm({
         </div>
       </div>
     </form>
-  );
-}
-
-/** Label, control, optional hint and the error that replaces it. */
-function Field({
-  id,
-  label,
-  error,
-  hint,
-  hintId,
-  className,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  hint?: string;
-  hintId?: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label id={`${id}-label`} htmlFor={id}>
-        {label}
-      </Label>
-      {children}
-      {error ? (
-        <p
-          id={`${id}-error`}
-          className="flex items-start gap-1 text-caption text-destructive"
-        >
-          <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          {error}
-        </p>
-      ) : hint ? (
-        <p id={hintId} className="text-caption text-muted-foreground">
-          {hint}
-        </p>
-      ) : null}
-    </div>
   );
 }
 
