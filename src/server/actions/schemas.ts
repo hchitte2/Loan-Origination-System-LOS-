@@ -160,3 +160,31 @@ export const DeleteConditionSchema = z.object({
 });
 
 export type ConditionField = keyof z.infer<typeof EditConditionSchema>;
+
+/**
+ * Registering an upload. The browser reports where it wrote and what the file was
+ * called; it does not report the size or the type, because the store is asked for those
+ * (`statBlob`) rather than believed. The pathname is checked against the loan's prefix
+ * server-side, so its shape here is only a sanity bound.
+ */
+const UploadFields = {
+  blobPathname: z.string().trim().min(1).max(400),
+  fileName: z.string().trim().min(1).max(255),
+  conditionId: z.uuid().optional(),
+};
+
+export const RegisterDocumentSchema = z.object({
+  loanId: z.uuid(),
+  ...UploadFields,
+});
+
+export const RegisterPublicDocumentSchema = z.object({
+  /** The public page has no session; the token is the whole of the authorization. */
+  token: z.string().trim().min(16).max(64),
+  /** A borrower's upload always answers a specific request. */
+  conditionId: z.uuid(),
+  blobPathname: z.string().trim().min(1).max(400),
+  fileName: z.string().trim().min(1).max(255),
+  /** The e-consent box, stored in the activity detail with the first upload. */
+  econsent: z.coerce.boolean(),
+});

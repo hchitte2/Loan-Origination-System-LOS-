@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { loans } from "@/db/schema";
+import { conditions, loans } from "@/db/schema";
+import type { ConditionStatus } from "@/lib/conditions";
 import { isTerminalStage, type Stage } from "@/lib/stages";
 
 /**
@@ -41,4 +42,38 @@ export async function resolveUploadToken(
   if (row.revokedAt !== null) return null;
   if (isTerminalStage(row.stage)) return null;
   return { id: row.id, stage: row.stage };
+}
+
+/** The slice of a condition a public upload needs to decide what it may answer. */
+export type PublicCondition = {
+  id: string;
+  title: string;
+  status: ConditionStatus;
+};
+
+/**
+ * A condition the borrower may upload against: on this loan, and borrower-facing
+ * (PLAN.md §6 invariant 5). An internal condition is invisible here, so a token holder
+ * cannot answer one by guessing its id — it returns null exactly as a foreign id does.
+ */
+export async function getPublicCondition(
+  loanId: string,
+  conditionId: string,
+): Promise<PublicCondition | null> {
+  const [row] = await db()
+    .select({
+      id: conditions.id,
+      title: conditions.title,
+      status: conditions.status,
+    })
+    .from(conditions)
+    .where(
+      and(
+        eq(conditions.id, conditionId),
+        eq(conditions.loanId, loanId),
+        eq(conditions.borrowerFacing, true),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
 }
