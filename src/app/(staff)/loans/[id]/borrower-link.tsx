@@ -24,13 +24,10 @@ export function BorrowerLink({
   loanId,
   firstName,
   token,
-  closedStage,
 }: {
   loanId: string;
   firstName: string;
   token: string;
-  /** The staff label of a terminal stage, when the loan has left the pipeline. */
-  closedStage?: string;
 }) {
   const path = `/u/${token}`;
   const [origin, setOrigin] = useState("");
@@ -75,39 +72,30 @@ export function BorrowerLink({
   return (
     <Card title="Borrower link">
       <p className="text-body text-muted-foreground">
-        {closedStage
-          ? `This loan is ${closedStage.toLowerCase()}. ${firstName}'s link is no longer used.`
-          : `${firstName} opens this link on their phone to see what is needed and upload documents. No login.`}
+        {firstName} opens this link on their phone to see what is needed and
+        upload documents. No login.
       </p>
       <p className="flex items-center gap-2 overflow-hidden rounded-lg bg-muted px-3 py-2 font-mono text-caption text-muted-foreground">
         <Link2 aria-hidden="true" className="size-4 shrink-0" />
         <span className="truncate">{origin ? `${origin}${path}` : path}</span>
       </p>
-      {closedStage ? null : (
-        <>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={copy}>
-              {copied ? (
-                <Check aria-hidden="true" />
-              ) : (
-                <Copy aria-hidden="true" />
-              )}
-              {copied ? "Copied" : `Copy ${firstName}'s link`}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setConfirming(true)}
-            >
-              <RefreshCw aria-hidden="true" />
-              Regenerate link
-            </Button>
-          </div>
-          <p className="text-caption text-muted-foreground">
-            Regenerating revokes the old link immediately.
-          </p>
-        </>
-      )}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" onClick={copy}>
+          {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+          {copied ? "Copied" : `Copy ${firstName}'s link`}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setConfirming(true)}
+        >
+          <RefreshCw aria-hidden="true" />
+          Regenerate link
+        </Button>
+      </div>
+      <p className="text-caption text-muted-foreground">
+        Regenerating revokes the old link immediately.
+      </p>
 
       {confirming ? (
         <ConfirmDialog
