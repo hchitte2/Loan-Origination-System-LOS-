@@ -75,14 +75,26 @@ export async function stopImpersonation(): Promise<void> {
   redirect("/admin/users");
 }
 
+/** What the user typed, echoed back so the form keeps it after a failed submit. */
+export type CreateUserValues = Partial<Record<CreateUserField, string>>;
+
 export type CreateUserState =
   | { ok: true; name: string }
   | {
       ok: false;
       errors: Partial<Record<CreateUserField, string>>;
       error?: string;
+      values: CreateUserValues;
     }
   | null;
+
+function submittedValues(formData: FormData): CreateUserValues {
+  const read = (key: CreateUserField) => {
+    const value = formData.get(key);
+    return typeof value === "string" ? value : undefined;
+  };
+  return { name: read("name"), email: read("email"), role: read("role") };
+}
 
 /** Create a staff account with the shared demo password; superadmin only. */
 export async function createUser(
@@ -90,6 +102,7 @@ export async function createUser(
   formData: FormData,
 ): Promise<CreateUserState> {
   const parsed = CreateUserSchema.safeParse(Object.fromEntries(formData));
+  const values = submittedValues(formData);
   if (!parsed.success) {
     const errors: Partial<Record<CreateUserField, string>> = {};
     for (const issue of parsed.error.issues) {
@@ -101,7 +114,7 @@ export async function createUser(
         errors[field] = issue.message;
       }
     }
-    return { ok: false, errors };
+    return { ok: false, errors, values };
   }
   const actor = await requireActor();
   assertCan(actor, "admin.manage_users");
@@ -120,7 +133,7 @@ export async function createUser(
       const message = /already exists/i.test(error.message)
         ? "Someone already has that email address."
         : "Could not create the user.";
-      return { ok: false, errors: {}, error: message };
+      return { ok: false, errors: {}, error: message, values };
     }
     throw error;
   }

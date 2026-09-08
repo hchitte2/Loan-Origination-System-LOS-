@@ -59,6 +59,9 @@ export function CreateUserDialog() {
   }, null);
   const errors = state && !state.ok ? state.errors : {};
   const formError = state && !state.ok ? state.error : undefined;
+  // React resets an uncontrolled form after its action runs; the echoed values keep what
+  // the user typed while they fix the one field that failed.
+  const values = state && !state.ok ? state.values : {};
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -81,6 +84,7 @@ export function CreateUserDialog() {
                 id={ids.name}
                 name="name"
                 autoComplete="off"
+                defaultValue={values.name}
                 required
                 aria-invalid={errors.name ? true : undefined}
                 aria-describedby={errors.name ? `${ids.name}-error` : undefined}
@@ -99,6 +103,7 @@ export function CreateUserDialog() {
                 type="email"
                 inputMode="email"
                 autoComplete="off"
+                defaultValue={values.email}
                 required
                 aria-invalid={errors.email ? true : undefined}
                 aria-describedby={cn(
@@ -118,7 +123,7 @@ export function CreateUserDialog() {
                   className="w-full"
                   aria-invalid={errors.role ? true : undefined}
                 >
-                  <SelectValue />
+                  <SelectValue>{roleLabel(role)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {ROLES.map((value) => (
