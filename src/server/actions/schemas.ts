@@ -188,3 +188,38 @@ export const RegisterPublicDocumentSchema = z.object({
   /** The e-consent box, stored in the activity detail with the first upload. */
   econsent: z.coerce.boolean(),
 });
+
+/**
+ * Reviewing an upload and resolving a condition. A rejection and a waiver both carry a
+ * reason the borrower will read in plain language, so both are required and trimmed —
+ * PLAN.md §6 invariant 3 makes the reason part of the rule, not a nicety.
+ */
+export const AcceptDocumentSchema = z.object({
+  loanId: z.uuid(),
+  documentId: z.uuid(),
+});
+
+export const RejectDocumentSchema = z.object({
+  loanId: z.uuid(),
+  documentId: z.uuid(),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Say what is wrong with it, so they can fix it.")
+    .max(300, "Keep the reason under 300 characters."),
+});
+
+export const ClearConditionSchema = z.object({
+  loanId: z.uuid(),
+  conditionId: z.uuid(),
+});
+
+export const WaiveConditionSchema = z.object({
+  loanId: z.uuid(),
+  conditionId: z.uuid(),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Say why it is no longer needed.")
+    .max(300, "Keep the reason under 300 characters."),
+});

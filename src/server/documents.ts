@@ -1,14 +1,18 @@
 import { and, eq } from "drizzle-orm";
 import type { Tx } from "@/db";
 import { conditions, documents } from "@/db/schema";
-import { type ConditionStatus, statusAfterUpload } from "@/lib/conditions";
-import type { UploadedVia } from "@/lib/doc-types";
+import {
+  type ConditionStatus,
+  statusAfterRejection,
+  statusAfterUpload,
+} from "@/lib/conditions";
+import type { ReviewStatus, UploadedVia } from "@/lib/doc-types";
 import { type ActivityInput, logActivity } from "./activity";
 import { safeFileName } from "./storage";
 
 /**
- * The document service: the writes that `actions/documents.ts` (staff) and
- * `actions/public.ts` (the borrower's link) both perform, once.
+ * The document service: the review pipeline's writes — a document arriving, being
+ * accepted or rejected, and the condition it answers being cleared or waived.
  *
  * It lives outside both because a `"use server"` module's exports are callable over the
  * network — a shared helper exported from one would be a Server Action nobody
@@ -75,4 +79,139 @@ export async function receiveCondition(
     .update(conditions)
     .set({ status: next, lastRejectionReason: null })
     .where(and(eq(conditions.id, conditionId), eq(conditions.status, current)));
+}
+
+/**
+ * Accept a document: mark it reviewed, and note who and when. The condition does not
+ * move — accepting is a statement about the file, and clearing is the separate decision
+ * about the requirement, which is why the design prompts for it afterwards.
+ */
+export async function acceptDocument(
+  tx: Tx,
+  input: {
+    documentId: string;
+    from: ReviewStatus;
+    reviewerId: string;
+    activity: ActivityInput;
+  },
+): Promise<boolean> {
+  const changed = await tx
+    .update(documents)
+    .set({
+      reviewStatus: "accepted",
+      reviewReason: null,
+      reviewedBy: input.reviewerId,
+      reviewedAt: new Date(),
+    })
+    // Compare-and-set on the status it was read at, so two reviewers deciding at once
+    // write one activity row for one decision, not two (PLAN.md §6 invariant 4).
+    .where(
+      and(
+        eq(documents.id, input.documentId),
+        eq(documents.reviewStatus, input.from),
+      ),
+    )
+    .returning({ id: documents.id });
+  if (changed.length === 0) return false;
+  await logActivity(tx, input.activity);
+  return true;
+}
+
+/**
+ * Reject a document with the reason the borrower will read, and reopen the condition if
+ * nothing accepted is left standing on it (PLAN.md §6 invariant 3). The reason is
+ * written to the condition too, which is what turns "Needed" into
+ * "Needs another: pages are cut off" on the public page.
+ */
+export async function rejectDocument(
+  tx: Tx,
+  input: {
+    documentId: string;
+    from: ReviewStatus;
+    reviewerId: string;
+    reason: string;
+    condition: { id: string; status: ConditionStatus } | null;
+    hasOtherAcceptedDocument: boolean;
+    activity: ActivityInput;
+  },
+): Promise<boolean> {
+  const changed = await tx
+    .update(documents)
+    .set({
+      reviewStatus: "rejected",
+      reviewReason: input.reason,
+      reviewedBy: input.reviewerId,
+      reviewedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(documents.id, input.documentId),
+        eq(documents.reviewStatus, input.from),
+      ),
+    )
+    .returning({ id: documents.id });
+  if (changed.length === 0) return false;
+
+  if (input.condition) {
+    const next = statusAfterRejection(
+      input.condition.status,
+      input.hasOtherAcceptedDocument,
+    );
+    if (next) {
+      await tx
+        .update(conditions)
+        .set({ status: next, lastRejectionReason: input.reason })
+        .where(
+          and(
+            eq(conditions.id, input.condition.id),
+            eq(conditions.status, input.condition.status),
+          ),
+        );
+    }
+  }
+  await logActivity(tx, input.activity);
+  return true;
+}
+
+/**
+ * Resolve a condition — cleared because a document was accepted, or waived because none
+ * will ever come. `cleared_by` and `cleared_at` record who settled it either way.
+ *
+ * Both drop `last_rejection_reason`: it is what turns "Needed" into
+ * "Needs another: …" on the borrower's page, and a settled item must stop saying that.
+ * A waiver's reason lives only in its activity row (PLAN.md §6, `condition.waived
+ * {reason}`) — the borrower sees "No longer needed" and is not told why, because the
+ * reason is a note between staff.
+ */
+export async function resolveCondition(
+  tx: Tx,
+  input: {
+    conditionId: string;
+    from: ConditionStatus;
+    to: "cleared" | "waived";
+    reviewerId: string;
+    activity: ActivityInput;
+  },
+): Promise<boolean> {
+  const changed = await tx
+    .update(conditions)
+    .set({
+      status: input.to,
+      clearedBy: input.reviewerId,
+      clearedAt: new Date(),
+      lastRejectionReason: null,
+    })
+    // Compare-and-set on the status it was decided from: a borrower uploading against
+    // this condition in the same moment must not have their answer silently overwritten
+    // by a decision made before it arrived.
+    .where(
+      and(
+        eq(conditions.id, input.conditionId),
+        eq(conditions.status, input.from),
+      ),
+    )
+    .returning({ id: conditions.id });
+  if (changed.length === 0) return false;
+  await logActivity(tx, input.activity);
+  return true;
 }

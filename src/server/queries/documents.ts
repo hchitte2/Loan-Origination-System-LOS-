@@ -135,3 +135,35 @@ export async function getDocumentForDownload(
     .limit(1);
   return row ?? null;
 }
+
+/** The slice of a document the review actions need, scoped to the loan they name. */
+export type ReviewableDocument = {
+  id: string;
+  conditionId: string | null;
+  fileName: string;
+  reviewStatus: ReviewStatus;
+};
+
+/**
+ * One document on one loan, or null. The loan id must be one the server derived; the
+ * document id came from a client, so scoping it to that loan is what stops an id from
+ * another file being reviewed through a loan the actor does have.
+ */
+export async function getDocumentOnLoan(
+  actor: Actor,
+  loanId: string,
+  documentId: string,
+): Promise<ReviewableDocument | null> {
+  assertCan(actor, "document.download");
+  const [row] = await db()
+    .select({
+      id: documents.id,
+      conditionId: documents.conditionId,
+      fileName: documents.fileName,
+      reviewStatus: documents.reviewStatus,
+    })
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.loanId, loanId)))
+    .limit(1);
+  return row ?? null;
+}
