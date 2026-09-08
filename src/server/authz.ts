@@ -1,7 +1,12 @@
 import { eq, inArray, type SQL } from "drizzle-orm";
 import { loans } from "@/db/schema";
 import type { Role } from "@/lib/roles";
-import { ACTIVE_STAGES } from "@/lib/stages";
+import {
+  ACTIVE_STAGES,
+  isTerminalStage,
+  type Stage,
+  staffLabel,
+} from "@/lib/stages";
 import type { Actor } from "./actor";
 
 /**
@@ -169,6 +174,22 @@ export function can(actor: Actor, action: Action, loan?: OwnedLoan): boolean {
   if (permission === "any") return true;
   if (permission === "own") return loan?.loanOfficerId === actor.userId;
   return false;
+}
+
+/**
+ * A closed loan is a record, not a workspace. PLAN.md §5 scopes a processor's writes to
+ * active loans; nothing on a funded, withdrawn or denied file should still be edited by
+ * anyone, so this applies to every role rather than only the one the scope names.
+ *
+ * Returns the sentence to show, or null when the loan is still open. `what` completes it:
+ * "Its needs list is closed."
+ */
+export function closedLoanReason(
+  loan: { stage: Stage },
+  what: string,
+): string | null {
+  if (!isTerminalStage(loan.stage)) return null;
+  return `This loan is ${staffLabel(loan.stage).toLowerCase()}. ${what}`;
 }
 
 export class ForbiddenError extends Error {

@@ -6,10 +6,10 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { conditions, loans } from "@/db/schema";
 import { defaultNeedsList } from "@/lib/needs-list";
-import { isTerminalStage, type Stage, staffLabel } from "@/lib/stages";
+import type { Stage } from "@/lib/stages";
 import { logActivity } from "../activity";
 import { requireActor } from "../actor";
-import { can } from "../authz";
+import { can, closedLoanReason } from "../authz";
 import { getGateConditions } from "../queries/conditions";
 import { familyName, getLoanForAction } from "../queries/loans";
 import { move } from "../transitions";
@@ -268,12 +268,8 @@ export async function regenerateLink(
   // The stage machine refuses every move on a terminal loan; the link that feeds it
   // should not be reissued either. Phase 3's public page will refuse the token anyway,
   // so this stops a new link being born dead.
-  if (isTerminalStage(loan.stage)) {
-    return {
-      ok: false,
-      error: `This loan is ${staffLabel(loan.stage).toLowerCase()}. Its borrower link is no longer used.`,
-    };
-  }
+  const closed = closedLoanReason(loan, "Its borrower link is no longer used.");
+  if (closed) return { ok: false, error: closed };
 
   await db().transaction(async (tx) => {
     await tx

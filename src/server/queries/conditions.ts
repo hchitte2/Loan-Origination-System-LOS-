@@ -1,7 +1,11 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { conditions } from "@/db/schema";
-import { OPEN_CONDITION_STATUSES } from "@/lib/conditions";
+import {
+  type ConditionStatus,
+  OPEN_CONDITION_STATUSES,
+  type PriorTo,
+} from "@/lib/conditions";
 import type { Actor } from "../actor";
 import { assertCan } from "../authz";
 import type { ConditionForGate } from "../transitions";
@@ -66,4 +70,81 @@ export async function getGateConditions(
       ),
     );
   return rows;
+}
+
+/** One row of the needs list (design frame 03-loan-detail). */
+export type ConditionRow = {
+  id: string;
+  loanId: string;
+  title: string;
+  instructions: string | null;
+  status: ConditionStatus;
+  priorTo: PriorTo;
+  borrowerFacing: boolean;
+  lastRejectionReason: string | null;
+  createdAt: Date;
+  clearedAt: Date | null;
+};
+
+/**
+ * A loan's whole needs list, soonest-due first: by prior-to bucket (the enum is declared
+ * approval → docs → funding, which is the order they block), then oldest, then by title.
+ *
+ * The title is the tiebreak rather than the id because the default list is seeded in one
+ * transaction and every row shares a `created_at` — ordering on the uuid would shuffle
+ * the list on every reseed.
+ */
+export async function listConditions(
+  actor: Actor,
+  loanId: string,
+): Promise<ConditionRow[]> {
+  assertCan(actor, "condition.read");
+  return db()
+    .select({
+      id: conditions.id,
+      loanId: conditions.loanId,
+      title: conditions.title,
+      instructions: conditions.instructions,
+      status: conditions.status,
+      priorTo: conditions.priorTo,
+      borrowerFacing: conditions.borrowerFacing,
+      lastRejectionReason: conditions.lastRejectionReason,
+      createdAt: conditions.createdAt,
+      clearedAt: conditions.clearedAt,
+    })
+    .from(conditions)
+    .where(eq(conditions.loanId, loanId))
+    .orderBy(
+      asc(conditions.priorTo),
+      asc(conditions.createdAt),
+      asc(conditions.title),
+    );
+}
+
+/** One condition, for an action about to change it. Null means it is not on this loan. */
+export async function getCondition(
+  actor: Actor,
+  loanId: string,
+  conditionId: string,
+): Promise<ConditionRow | null> {
+  assertCan(actor, "condition.read");
+  const [row] = await db()
+    .select({
+      id: conditions.id,
+      loanId: conditions.loanId,
+      title: conditions.title,
+      instructions: conditions.instructions,
+      status: conditions.status,
+      priorTo: conditions.priorTo,
+      borrowerFacing: conditions.borrowerFacing,
+      lastRejectionReason: conditions.lastRejectionReason,
+      createdAt: conditions.createdAt,
+      clearedAt: conditions.clearedAt,
+    })
+    .from(conditions)
+    // Scoped by loan as well as by id, so a condition id from one loan can never be
+    // edited through another loan the actor does happen to own.
+    .where(and(eq(conditions.id, conditionId), eq(conditions.loanId, loanId)))
+    .limit(1);
+  return row ?? null;
 }
