@@ -162,14 +162,61 @@ export const POLICY: Record<Role, Record<Action, Permission>> = {
   },
 };
 
-/** The slice of a loan that ownership checks need. */
-export type OwnedLoan = { loanOfficerId: string };
+/**
+ * The actions that change one particular loan (PLAN.md §6 invariant 8). Every one of
+ * them needs the loan in hand — to resolve an `"own"` cell, and to see the stage — so
+ * `can()` refuses when it is missing rather than trusting the caller to remember.
+ *
+ * The writes that are *not* here have no loan to be terminal: creating one, and the two
+ * admin actions. Read actions are absent on purpose; a closed loan is still readable.
+ */
+export const LOAN_WRITE_ACTIONS = [
+  "loan.edit_facts",
+  "loan.edit_borrower_name",
+  "loan.edit_borrower_contact",
+  "loan.edit_property_and_terms",
+  "loan.move_early",
+  "loan.move_late",
+  "loan.edit_dates_and_preapproval",
+  "condition.manage",
+  "condition.resolve",
+  "condition.edit_rejection_reason",
+  "document.upload",
+  "document.review",
+  "loan.edit_closed_reason",
+  "loan.manage_link",
+] as const satisfies readonly Action[];
+
+const LOAN_WRITES: ReadonlySet<Action> = new Set(LOAN_WRITE_ACTIONS);
+
+export function isLoanWrite(action: Action): boolean {
+  return LOAN_WRITES.has(action);
+}
+
+/** The slice of a loan that ownership and the terminal check need. */
+export type OwnedLoan = { loanOfficerId: string; stage: Stage };
 
 /**
- * May this actor perform `action`? An `"own"` cell needs the loan to resolve; without
- * one it is refused, so a caller can never forget to load the loan.
+ * May this actor perform `action`?
+ *
+ * Two rules sit in front of the matrix, both for the same reason — a caller must not be
+ * able to forget them:
+ *
+ * 1. A loan write without a loan is refused. An `"own"` cell has nothing to resolve, and
+ *    an `"any"` cell would otherwise skip rule 2 entirely.
+ * 2. A loan write on a terminal loan is refused for every role, superadmin included
+ *    (PLAN.md §6 invariant 8). Funded, withdrawn and denied files are records, not
+ *    workspaces: no fact edits, no condition changes, no uploads, no reviews. Putting it
+ *    here means every write action inherits it instead of re-checking the stage, and
+ *    every control that asks `can()` stops offering it.
+ *
+ * `closedLoanReason()` supplies the sentence a refused write should show.
  */
 export function can(actor: Actor, action: Action, loan?: OwnedLoan): boolean {
+  if (isLoanWrite(action)) {
+    if (!loan) return false;
+    if (isTerminalStage(loan.stage)) return false;
+  }
   const permission = POLICY[actor.role][action];
   if (permission === "any") return true;
   if (permission === "own") return loan?.loanOfficerId === actor.userId;

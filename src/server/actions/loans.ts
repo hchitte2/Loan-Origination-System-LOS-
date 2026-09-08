@@ -267,6 +267,12 @@ export async function regenerateLink(
   const actor = await requireActor();
   const loan = await getLoanForAction(actor, parsed.data.loanId);
   if (!loan) return { ok: false, error: "That loan no longer exists." };
+  // The stage machine refuses every move on a terminal loan; the link that feeds it
+  // should not be reissued either. The public page refuses the token anyway, so this
+  // stops a new link being born dead. First, because `can()` also refuses a write on a
+  // terminal loan (PLAN.md §6 invariant 8) and this is the sentence worth showing.
+  const closed = closedLoanReason(loan, "Its borrower link is no longer used.");
+  if (closed) return { ok: false, error: closed };
   // Returns rather than throws for the same reason createLoan does: a superadmin can
   // render this card as themselves and then start "View as" in another tab.
   if (!can(actor, "loan.manage_link", loan)) {
@@ -275,11 +281,6 @@ export async function regenerateLink(
       error: "Only the assigned loan officer or a processor can do that.",
     };
   }
-  // The stage machine refuses every move on a terminal loan; the link that feeds it
-  // should not be reissued either. Phase 3's public page will refuse the token anyway,
-  // so this stops a new link being born dead.
-  const closed = closedLoanReason(loan, "Its borrower link is no longer used.");
-  if (closed) return { ok: false, error: closed };
 
   await db().transaction(async (tx) => {
     await tx

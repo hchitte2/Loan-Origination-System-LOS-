@@ -81,6 +81,11 @@ export async function addCondition(
   const loan = await getLoanForAction(actor, data.loanId);
   if (!loan)
     return { ok: false, errors: {}, error: "That loan no longer exists." };
+  // Ordered so the truer sentence wins: `can()` now refuses a write on a terminal loan
+  // as well (PLAN.md §6 invariant 8), and "this loan is funded" tells a processor more
+  // than a message about roles would.
+  const closed = closedLoanReason(loan, "Its needs list is closed.");
+  if (closed) return { ok: false, errors: {}, error: closed };
   if (!can(actor, "condition.manage", loan)) {
     return {
       ok: false,
@@ -89,8 +94,6 @@ export async function addCondition(
         "Only this loan's officer or a processor can change its needs list.",
     };
   }
-  const closed = closedLoanReason(loan, "Its needs list is closed.");
-  if (closed) return { ok: false, errors: {}, error: closed };
 
   await db().transaction(async (tx) => {
     const [created] = await tx
@@ -133,6 +136,11 @@ export async function editCondition(
   const loan = await getLoanForAction(actor, data.loanId);
   if (!loan)
     return { ok: false, errors: {}, error: "That loan no longer exists." };
+  // Ordered so the truer sentence wins: `can()` now refuses a write on a terminal loan
+  // as well (PLAN.md §6 invariant 8), and "this loan is funded" tells a processor more
+  // than a message about roles would.
+  const closed = closedLoanReason(loan, "Its needs list is closed.");
+  if (closed) return { ok: false, errors: {}, error: closed };
   if (!can(actor, "condition.manage", loan)) {
     return {
       ok: false,
@@ -141,8 +149,6 @@ export async function editCondition(
         "Only this loan's officer or a processor can change its needs list.",
     };
   }
-  const closed = closedLoanReason(loan, "Its needs list is closed.");
-  if (closed) return { ok: false, errors: {}, error: closed };
   const condition = await getCondition(actor, loan.id, data.conditionId);
   if (!condition) {
     return {
@@ -206,6 +212,11 @@ export async function deleteCondition(
   const loan = await getLoanForAction(actor, data.loanId);
   if (!loan)
     return { ok: false, errors: {}, error: "That loan no longer exists." };
+  // Ordered so the truer sentence wins: `can()` now refuses a write on a terminal loan
+  // as well (PLAN.md §6 invariant 8), and "this loan is funded" tells a processor more
+  // than a message about roles would.
+  const closed = closedLoanReason(loan, "Its needs list is closed.");
+  if (closed) return { ok: false, errors: {}, error: closed };
   if (!can(actor, "condition.manage", loan)) {
     return {
       ok: false,
@@ -214,8 +225,6 @@ export async function deleteCondition(
         "Only this loan's officer or a processor can change its needs list.",
     };
   }
-  const closed = closedLoanReason(loan, "Its needs list is closed.");
-  if (closed) return { ok: false, errors: {}, error: closed };
   const condition = await getCondition(actor, loan.id, data.conditionId);
   if (!condition) {
     return {
