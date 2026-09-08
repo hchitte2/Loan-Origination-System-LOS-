@@ -6,7 +6,7 @@ export default function StaffLoading() {
     <div
       role="status"
       aria-busy="true"
-      className="flex flex-col gap-4 px-6 py-6"
+      className="flex flex-col gap-4 px-6 pt-4 pb-6"
     >
       <span className="sr-only">Loading</span>
       <Skeleton className="h-7 w-40" />

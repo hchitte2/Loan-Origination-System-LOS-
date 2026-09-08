@@ -50,9 +50,7 @@ export function CreateUserDialog() {
     if (result?.ok) {
       setOpen(false);
       setRole("loan_officer");
-      toast.success(
-        `${result.name} was added. They can be viewed as from this list.`,
-      );
+      toast.success(`${result.name} added · ${roleLabel(result.role)}.`);
       return null;
     }
     return result;
@@ -74,8 +72,8 @@ export function CreateUserDialog() {
           <DialogHeader>
             <DialogTitle>Create user</DialogTitle>
             <DialogDescription className="sr-only">
-              Add a staff account to the demo. It signs in with the shared demo
-              password.
+              Add a staff account to the demo. Open it from this list with View
+              as.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">

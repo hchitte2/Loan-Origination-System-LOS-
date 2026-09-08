@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * assistive technology.
  */
 const SIZES = {
-  xs: "size-5 text-[10px]",
+  xs: "size-5 text-micro",
   sm: "size-7 text-tag",
   md: "size-9 text-control",
   lg: "size-11 text-body font-semibold",

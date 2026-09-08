@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 import type { ComponentProps } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "./ui/button";
@@ -19,7 +19,7 @@ export function SubmitButton({
     <Button type="submit" disabled={pending} aria-busy={pending} {...props}>
       {pending ? (
         <>
-          <Loader2
+          <Loader
             aria-hidden="true"
             className="animate-spin motion-reduce:animate-none"
           />

@@ -220,8 +220,14 @@
   --text-wordmark: 28px;
   --text-wordmark--line-height: 32px;
   --text-wordmark--font-weight: 600;
+  --text-wordmark-sm: 17px;
+  --text-wordmark-sm--line-height: 24px;
+  --text-wordmark-sm--font-weight: 600;
+  --text-micro: 10px;
+  --text-micro--line-height: 12px;
 
   /* Dialog and menu widths. */
+  --container-login: 520px;
   --container-dialog-confirm: 420px;
   --container-dialog-sm: 440px;
   --container-dialog-form: 560px;
@@ -259,5 +265,12 @@
     box-shadow:
       0 0 0 2px var(--card),
       0 0 0 4px var(--ring);
+  }
+}
+
+@layer components {
+  /* sonner toasts take the popover shadow; the class is set in components/ui/sonner.tsx. */
+  .cn-toast {
+    box-shadow: var(--shadow-popover);
   }
 }

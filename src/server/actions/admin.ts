@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { getEnv } from "@/lib/env";
-import { homeRoute } from "@/lib/roles";
+import { homeRoute, type Role } from "@/lib/roles";
 import { logActivity } from "../activity";
 import { requireActor } from "../actor";
 import { getAuth } from "../auth";
@@ -84,7 +84,7 @@ export async function stopImpersonation(): Promise<void> {
 export type CreateUserValues = Partial<Record<CreateUserField, string>>;
 
 export type CreateUserState =
-  | { ok: true; name: string }
+  | { ok: true; name: string; role: Role }
   | {
       ok: false;
       errors: Partial<Record<CreateUserField, string>>;
@@ -158,5 +158,5 @@ export async function createUser(
     throw error;
   }
   revalidatePath("/admin/users");
-  return { ok: true, name };
+  return { ok: true, name, role };
 }
