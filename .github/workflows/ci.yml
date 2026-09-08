@@ -10,7 +10,9 @@ concurrency:
 
 jobs:
   check:
-    name: biome · tsc · vitest · db
+    # The name is what branch protection requires on main; renaming it silently removes
+    # the required check and blocks every merge. The db project runs inside this job.
+    name: biome · tsc · vitest
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
