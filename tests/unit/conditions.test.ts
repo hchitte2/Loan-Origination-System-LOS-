@@ -4,6 +4,7 @@ import {
   type ConditionStatus,
   canClear,
   canDelete,
+  statusAfterDeletion,
   statusAfterRejection,
   statusAfterUpload,
 } from "@/lib/conditions";
@@ -36,6 +37,36 @@ describe("statusAfterUpload", () => {
   it("does not reopen a settled condition", () => {
     expect(statusAfterUpload("cleared")).toBeNull();
     expect(statusAfterUpload("waived")).toBeNull();
+  });
+});
+
+describe("statusAfterDeletion", () => {
+  it("reopens a received condition when its only document is taken back", () => {
+    expect(statusAfterDeletion("received", false)).toBe("requested");
+  });
+
+  it("leaves it received while any other document is still on it", () => {
+    // Unlike a rejection, this does not ask whether the survivor was accepted: a file
+    // sitting on the item means it is not back to being asked for.
+    expect(statusAfterDeletion("received", true)).toBeNull();
+    for (const status of CONDITION_STATUSES) {
+      expect(statusAfterDeletion(status, true)).toBeNull();
+    }
+  });
+
+  it("leaves a cleared condition cleared", () => {
+    // The difference from a rejection: clearing was a decision a person made, and an
+    // uploader taking back a file is not that decision being reversed. Only a pending
+    // document can be deleted, so a cleared item cannot reach here anyway.
+    expect(statusAfterDeletion("cleared", false)).toBeNull();
+  });
+
+  it("leaves a waived condition waived", () => {
+    expect(statusAfterDeletion("waived", false)).toBeNull();
+  });
+
+  it("changes nothing on a condition that was never answered", () => {
+    expect(statusAfterDeletion("requested", false)).toBeNull();
   });
 });
 

@@ -105,6 +105,29 @@ export function statusAfterRejection(
 }
 
 /**
+ * Where a condition lands when one of its documents is deleted.
+ *
+ * The mirror of `statusAfterUpload`, not of `statusAfterRejection`: a deletion is the
+ * upload being taken back, so the condition returns to `requested` only when nothing is
+ * left answering it. Any remaining document counts, reviewed or not — an item with a file
+ * still sitting on it has not gone back to being asked for.
+ *
+ * `cleared` and `waived` are left alone. Those were closed by a decision a person made,
+ * and a deletion by the uploader is not that decision being reversed.
+ *
+ * The caller does not restore `last_rejection_reason`. The upload cleared it, and the
+ * borrower reading "Needed" after a staff slip is better than being told again to resend
+ * something over a reason they already answered; the history is in the activity log.
+ */
+export function statusAfterDeletion(
+  current: ConditionStatus,
+  hasOtherDocument: boolean,
+): ConditionStatus | null {
+  if (hasOtherDocument) return null;
+  return current === "received" ? "requested" : null;
+}
+
+/**
  * May this condition be cleared? Clearing asserts a human looked at something, so it
  * needs an accepted document. Waiving is the way out when no document will ever arrive.
  */
