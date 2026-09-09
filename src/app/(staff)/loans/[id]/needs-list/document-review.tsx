@@ -1,13 +1,16 @@
 "use client";
 
-import { Check, CircleAlert, X } from "lucide-react";
-import { useActionState, useEffect, useId, useRef } from "react";
+import { Check, CircleAlert, Trash2, X } from "lucide-react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   acceptDocumentAction,
+  type DeleteDocumentState,
+  deleteDocumentAction,
   type ReviewDocumentState,
   rejectDocumentAction,
 } from "@/server/actions/documents";
@@ -182,5 +185,72 @@ export function RejectForm({
         </SubmitButton>
       </div>
     </form>
+  );
+}
+
+/**
+ * "Remove" on your own pending upload (the wrong file, caught before anyone reviewed it).
+ *
+ * A confirm rather than a bare button: the file goes from the store as well as the list,
+ * and unlike everything else on this screen it cannot be undone. The word is "Remove"
+ * rather than "Delete" because the sentence in the dialog is what carries the weight, and
+ * because the borrower's copy never says "delete" either.
+ *
+ * Rejecting is the other way a file leaves a condition, and it is the wrong one here: its
+ * reason is borrower-facing, so using it on a staff slip tells someone to resend a file
+ * they never sent.
+ */
+export function DeleteDocumentButton({
+  loanId,
+  document,
+}: {
+  loanId: string;
+  document: LoanDocument;
+}) {
+  const [confirming, setConfirming] = useState(false);
+
+  const [state, formAction] = useActionState<DeleteDocumentState, FormData>(
+    async (previous, formData) => {
+      const result = await deleteDocumentAction(previous, formData);
+      if (result?.ok) {
+        setConfirming(false);
+        toast.success(`${result.fileName} removed.`);
+        return null;
+      }
+      return result;
+    },
+    null,
+  );
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setConfirming(true)}
+      >
+        <Trash2 aria-hidden="true" />
+        Remove
+        <span className="sr-only"> {document.fileName}</span>
+      </Button>
+
+      {confirming ? (
+        <ConfirmDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setConfirming(false);
+          }}
+          title={`Remove ${document.fileName}?`}
+          description="The file is deleted and the item goes back to being requested. This cannot be undone."
+          cancelLabel="Keep the file"
+          confirmLabel="Remove file"
+          pendingLabel="Removing…"
+          action={formAction}
+          fields={{ loanId, documentId: document.id }}
+          error={state && !state.ok ? state.error : undefined}
+        />
+      ) : null}
+    </>
   );
 }

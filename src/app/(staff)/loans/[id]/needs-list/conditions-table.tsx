@@ -34,6 +34,7 @@ export function ConditionsTable({
   conditions,
   documents,
   permissions,
+  actorUserId,
   now,
 }: {
   loanId: string;
@@ -45,7 +46,10 @@ export function ConditionsTable({
     resolve: boolean;
     review: boolean;
     upload: boolean;
+    delete: boolean;
   };
+  /** Who is looking: only the person who sent a file may take it back. */
+  actorUserId: string;
   /** Taken on the server, so the ages do not shift between render and hydration. */
   now: string;
 }) {
@@ -167,6 +171,7 @@ export function ConditionsTable({
                       condition={condition}
                       documents={theirs}
                       permissions={permissions}
+                      actorUserId={actorUserId}
                       now={nowDate}
                     />
                   </TableCell>
