@@ -4,6 +4,7 @@ import { documents } from "@/db/schema";
 import { type SeedSummary, seedFixture } from "@/db/seed";
 import { getEnv } from "@/lib/env";
 import { UPLOAD_PREFIX } from "@/lib/uploads";
+import type { Actor } from "./actor";
 import { purgeUploads } from "./storage";
 
 /**
@@ -32,10 +33,11 @@ export type ResetSummary = SeedSummary & {
 };
 
 export async function resetDemo(
-  options: { now?: Date; database?: Db } = {},
+  options: { now?: Date; database?: Db; actor?: Actor } = {},
 ): Promise<ResetSummary> {
   const now = options.now ?? new Date();
   const database = options.database ?? db();
+  const { actor } = options;
   // Validates the whole environment before anything is destroyed: a reset that truncates
   // and then finds DEMO_PASSWORD missing would leave the demo empty.
   const env = getEnv();
@@ -52,6 +54,13 @@ export async function resetDemo(
     demoPassword: env.DEMO_PASSWORD,
     showcaseToken: env.DEMO_SHOWCASE_TOKEN,
     mode: "reset",
+    // The nightly cron passes no actor and the row stays a system event.
+    resetBy: actor
+      ? {
+          actorId: actor.actorUserId,
+          onBehalfOf: actor.impersonating ? actor.userId : null,
+        }
+      : undefined,
   });
 
   return { ...summary, blobsDeleted };
