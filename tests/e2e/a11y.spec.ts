@@ -105,6 +105,29 @@ for (const scheme of SCHEMES) {
       await expectNoSeriousViolations(page);
     });
 
+    test(`/dashboard has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "priya");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Dashboard" }),
+      ).toBeVisible();
+      // The bar chart's disclosure buttons, the aging bars and the attention table.
+      await expect(page.getByRole("table")).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`the loan officer's /dashboard has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "alex");
+      await page.goto("/dashboard");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "My dashboard" }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
     test(`/u/[token] has no serious or critical axe violations`, async ({
       page,
     }) => {

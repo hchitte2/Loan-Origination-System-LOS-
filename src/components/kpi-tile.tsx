@@ -22,7 +22,8 @@ export function KpiTile({
   label: string;
   value: string;
   unit?: string;
-  sub?: string;
+  /** The line under the value. A node, so a delta can carry its arrow and its tone. */
+  sub?: React.ReactNode;
   definition?: string;
 }) {
   const panelId = useId();
@@ -56,7 +57,9 @@ export function KpiTile({
           </span>
         ) : null}
       </p>
-      {sub ? <p className="text-caption text-muted-foreground">{sub}</p> : null}
+      {sub ? (
+        <div className="text-caption text-muted-foreground">{sub}</div>
+      ) : null}
       {definition && open ? (
         <p
           id={panelId}

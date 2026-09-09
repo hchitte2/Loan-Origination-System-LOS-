@@ -11,14 +11,21 @@ const TONES = ["bg-chart-2", "bg-chart-4", "bg-warning", "bg-destructive"];
 
 export function AgingBars({
   buckets,
+  className,
 }: {
   buckets: { label: string; count: number }[];
+  className?: string;
 }) {
   const largest = Math.max(1, ...buckets.map((bucket) => bucket.count));
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
 
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 shadow-card">
+    <div
+      className={cn(
+        "flex flex-col gap-1 rounded-lg border border-border bg-card p-4 shadow-card",
+        className,
+      )}
+    >
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-control font-normal text-muted-foreground">
           Conditions aging
@@ -27,7 +34,7 @@ export function AgingBars({
           {total} open
         </span>
       </div>
-      <dl className="mt-1 flex flex-col gap-1.5">
+      <dl className="mt-1 flex flex-1 flex-col justify-center gap-3">
         {buckets.map((bucket, index) => (
           <div key={bucket.label} className="flex items-center gap-2">
             <dt className="w-14 shrink-0 text-caption text-muted-foreground tabular-nums">
