@@ -1,9 +1,11 @@
-import { and, asc, count, eq, ne } from "drizzle-orm";
+import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { documents, loans, user } from "@/db/schema";
+import { conditions, documents, loans, user } from "@/db/schema";
 import type { DocType, ReviewStatus, UploadedVia } from "@/lib/doc-types";
+import { ACTIVE_STAGES } from "@/lib/stages";
 import type { Actor } from "../actor";
 import { assertCan, loanScope } from "../authz";
+import { familyName } from "./loans";
 
 /**
  * Document reads. `document.download` is `any` for all three staff roles (PLAN.md §2),
@@ -170,4 +172,65 @@ export async function getDocumentOnLoan(
     .where(and(eq(documents.id, documentId), eq(documents.loanId, loanId)))
     .limit(1);
   return row ?? null;
+}
+
+/** A document waiting on a reviewer, with the file it answers for. */
+export type QueueDocument = {
+  id: string;
+  fileName: string;
+  loanId: string;
+  /** "Chen" — the family name, which is how staff surfaces name a loan. */
+  familyName: string;
+  conditionTitle: string | null;
+  uploadedVia: UploadedVia;
+  uploadedByName: string | null;
+  /** The borrower's first name, for "via Maria's link". */
+  borrowerFirstName: string;
+  createdAt: Date;
+};
+
+/**
+ * The review queue (design frame 04-queue): every pending document on an active loan,
+ * oldest first, because the oldest is the one keeping someone waiting.
+ *
+ * Terminal loans are excluded — their documents are no longer reviewed (PLAN.md §6
+ * invariant 8), so a funded file must not put work back on the queue.
+ */
+export async function listReviewQueue(actor: Actor): Promise<QueueDocument[]> {
+  assertCan(actor, "document.download");
+  const rows = await db()
+    .select({
+      id: documents.id,
+      fileName: documents.fileName,
+      loanId: loans.id,
+      borrowerName: loans.borrowerName,
+      conditionTitle: conditions.title,
+      uploadedVia: documents.uploadedVia,
+      uploadedByName: user.name,
+      createdAt: documents.createdAt,
+    })
+    .from(documents)
+    .innerJoin(loans, eq(loans.id, documents.loanId))
+    .leftJoin(conditions, eq(conditions.id, documents.conditionId))
+    .leftJoin(user, eq(user.id, documents.uploadedBy))
+    .where(
+      and(
+        eq(documents.reviewStatus, "pending"),
+        inArray(loans.stage, [...ACTIVE_STAGES]),
+      ),
+    )
+    .orderBy(asc(documents.createdAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    fileName: row.fileName,
+    loanId: row.loanId,
+    familyName: familyName(row.borrowerName),
+    conditionTitle: row.conditionTitle,
+    uploadedVia: row.uploadedVia,
+    uploadedByName: row.uploadedByName,
+    borrowerFirstName:
+      row.borrowerName.trim().split(/\s+/)[0] ?? row.borrowerName,
+    createdAt: row.createdAt,
+  }));
 }
