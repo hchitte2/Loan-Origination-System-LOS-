@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ReviewPill } from "@/components/review-pill";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { UploadZone } from "@/components/upload-zone";
 import { canClear } from "@/lib/conditions";
 import { formatFileSize, formatRelative } from "@/lib/format";
@@ -102,23 +102,21 @@ export function ConditionPanel({
                 </span>
                 <span className="flex shrink-0 flex-wrap items-center gap-2">
                   <ReviewPill status={document.reviewStatus} />
-                  {/* A real link, so it opens in a tab and can be middle-clicked. The
-                      route authorizes before a byte is sent. */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    nativeButton={false}
-                    render={
-                      <a
-                        href={`/api/files/${document.id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      />
-                    }
+                  {/* A real link, so it opens in a tab, can be middle-clicked, and
+                      announces as a link. The route authorizes before a byte is sent. */}
+                  <a
+                    href={`/api/files/${document.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                    })}
                   >
                     <Download aria-hidden="true" />
                     Download
-                  </Button>
+                    <span className="sr-only"> {document.fileName}</span>
+                  </a>
                   {permissions.review ? (
                     <DocumentReview
                       loanId={loanId}

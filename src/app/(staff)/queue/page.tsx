@@ -6,7 +6,7 @@ import { AgingBars } from "@/components/aging-bars";
 import { EmptyState } from "@/components/empty-state";
 import { KpiTile } from "@/components/kpi-tile";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -143,20 +143,21 @@ export default async function QueuePage() {
                       {formatAge(document.createdAt, now)}
                     </TableCell>
                     <TableCell className="py-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        nativeButton={false}
-                        render={
-                          <Link href={`/loans/${document.loanId}/needs-list`} />
-                        }
+                      {/* A plain link wearing the button's clothes: this navigates, so
+                          it must announce as a link, not as a button. */}
+                      <Link
+                        href={`/loans/${document.loanId}/needs-list`}
+                        className={buttonVariants({
+                          variant: "outline",
+                          size: "sm",
+                        })}
                       >
                         Open
                         <ArrowRight aria-hidden="true" />
                         <span className="sr-only">
                           {document.familyName} · {document.fileName}
                         </span>
-                      </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
