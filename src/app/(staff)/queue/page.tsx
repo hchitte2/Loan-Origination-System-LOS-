@@ -34,6 +34,8 @@ export default async function QueuePage() {
   const actor = await requireActor();
   if (actor.role === "loan_officer") redirect("/pipeline");
   assertCan(actor, "loan.read");
+  // The queue draws the processor's analytics (PLAN.md §7), so it checks that action too.
+  assertCan(actor, "analytics.view");
 
   const now = new Date();
   const [queue, counts] = await Promise.all([

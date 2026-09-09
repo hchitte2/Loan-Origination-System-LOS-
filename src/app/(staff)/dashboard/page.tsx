@@ -29,9 +29,10 @@ export default async function DashboardPage() {
   if (actor.role === "processor") redirect("/queue");
   assertCan(actor, "analytics.view");
 
+  // Which tiles to draw. The row scope behind them is `getDashboardData`'s own decision.
   const mine = actor.role === "loan_officer";
   const now = new Date();
-  const data = await getDashboardData(actor, { mine }, now);
+  const data = await getDashboardData(actor, {}, now);
   const counts = mine ? null : await getQueueCounts(actor, now);
 
   const funded = data.fundedThisMonth;
