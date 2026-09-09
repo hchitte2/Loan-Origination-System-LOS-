@@ -1,12 +1,12 @@
 import { and, asc, count, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { conditions, loans } from "@/db/schema";
+import { agingBuckets } from "@/lib/analytics-math";
 import {
   type ConditionStatus,
   OPEN_CONDITION_STATUSES,
   type PriorTo,
 } from "@/lib/conditions";
-import { daysSince } from "@/lib/format";
 import { ACTIVE_STAGES } from "@/lib/stages";
 import type { Actor } from "../actor";
 import { assertCan } from "../authz";
@@ -161,14 +161,6 @@ export type QueueCounts = {
   aging: { label: string; count: number }[];
 };
 
-/** The buckets the design draws, in order. `maxDays` null means "and older". */
-const AGING_BUCKETS = [
-  { label: "0–3 d", maxDays: 3 },
-  { label: "4–7 d", maxDays: 7 },
-  { label: "8–14 d", maxDays: 14 },
-  { label: "15+ d", maxDays: null },
-] as const;
-
 /**
  * Counts for the queue tiles. One pass over the open conditions on active loans, because
  * three of the four numbers come from the same rows and the fourth is a loan count.
@@ -200,22 +192,12 @@ export async function getQueueCounts(
       .where(inArray(loans.stage, [...worked])),
   ]);
 
-  const aging = AGING_BUCKETS.map((bucket) => ({
-    label: bucket.label,
-    count: 0,
-  }));
-  for (const row of openRows) {
-    const age = daysSince(row.createdAt, now);
-    const index = AGING_BUCKETS.findIndex(
-      (bucket) => bucket.maxDays === null || age <= bucket.maxDays,
-    );
-    const target = aging[index];
-    if (target) target.count += 1;
-  }
-
   return {
+    aging: agingBuckets(
+      openRows.map((row) => row.createdAt),
+      now,
+    ),
     openConditions: openRows.length,
     activeFiles: activeRows[0]?.total ?? 0,
-    aging,
   };
 }
