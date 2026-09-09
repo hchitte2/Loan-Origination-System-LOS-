@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
+import { fileRejection, isInLoanPrefix, safeFileName } from "@/lib/uploads";
 import { type Actor, requireActor } from "../actor";
 import { can, closedLoanReason } from "../authz";
 import {
@@ -10,16 +11,11 @@ import {
   receiveCondition,
   rejectDocument,
 } from "../documents";
-import {
-  CAP_REACHED,
-  countUploadsToday,
-  fileRejection,
-  uploadCapReached,
-} from "../limits";
+import { CAP_REACHED, countUploadsToday, uploadCapReached } from "../limits";
 import { getCondition } from "../queries/conditions";
 import { getDocumentOnLoan, hasAcceptedDocument } from "../queries/documents";
 import { getLoanForAction } from "../queries/loans";
-import { isInLoanPrefix, safeFileName, statBlob } from "../storage";
+import { statBlob } from "../storage";
 import {
   AcceptDocumentSchema,
   RegisterDocumentSchema,

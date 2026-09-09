@@ -17,21 +17,6 @@ import { documents, loans } from "@/db/schema";
 /** New loans per day, all actors together. `createLoan` enforces it. */
 export const DAILY_LOAN_CAP = 30;
 
-/** One file. Also handed to Blob as `maximumSizeInBytes`, so the browser refuses early. */
-export const MAX_FILE_BYTES = 10 * 1024 * 1024;
-
-/**
- * The three types a mortgage file actually arrives as. Anything executable, archived or
- * scriptable is absent on purpose: this store is read back by people, not by a sandbox.
- */
-export const ALLOWED_CONTENT_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-] as const;
-
-export type AllowedContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
-
 /** Uploads one loan may receive per UTC day, whoever sends them. */
 export const PER_LOAN_UPLOAD_CAP = 10;
 
@@ -57,33 +42,6 @@ export function startOfUtcDay(now: Date = new Date()): Date {
  */
 export function loanCapReached(createdToday: number): boolean {
   return createdToday >= DAILY_LOAN_CAP;
-}
-
-/**
- * Why a file was refused, in words the person reading it can act on, or null when it is
- * fine. Size and type are enforced by the Blob token as well, so this is the check that
- * runs before one is issued and again when the document is registered.
- */
-export function fileRejection(
-  contentType: string,
-  sizeBytes: number,
-): string | null {
-  if (!isAllowedContentType(contentType)) {
-    return "That kind of file will not open on our side. Send a PDF, JPG or PNG.";
-  }
-  if (sizeBytes > MAX_FILE_BYTES) {
-    return `That file is too large. Keep it under ${MAX_FILE_BYTES / 1024 / 1024} MB and try again.`;
-  }
-  if (sizeBytes <= 0) {
-    return "That file came through empty. Try sending it again.";
-  }
-  return null;
-}
-
-export function isAllowedContentType(
-  contentType: string,
-): contentType is AllowedContentType {
-  return (ALLOWED_CONTENT_TYPES as readonly string[]).includes(contentType);
 }
 
 /** Is one more upload allowed — for this loan, and for the demo as a whole? */
