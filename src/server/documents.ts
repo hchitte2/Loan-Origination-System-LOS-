@@ -3,6 +3,7 @@ import type { Tx } from "@/db";
 import { conditions, documents } from "@/db/schema";
 import {
   type ConditionStatus,
+  statusAfterDeletion,
   statusAfterRejection,
   statusAfterUpload,
 } from "@/lib/conditions";
@@ -161,6 +162,60 @@ export async function rejectDocument(
       await tx
         .update(conditions)
         .set({ status: next, lastRejectionReason: input.reason })
+        .where(
+          and(
+            eq(conditions.id, input.condition.id),
+            eq(conditions.status, input.condition.status),
+          ),
+        );
+    }
+  }
+  await logActivity(tx, input.activity);
+  return true;
+}
+
+/**
+ * Delete a document and reopen the condition if it was the only thing on it.
+ *
+ * The row goes rather than being flagged, which is the one place this codebase removes
+ * history — so the `document.deleted` activity row is what survives, and `activity` is
+ * append-only, so it cannot be taken back afterwards.
+ *
+ * The compare-and-set on `review_status` is the important part: a processor accepting or
+ * rejecting in another tab between the caller's read and this write must win, because
+ * once a document has been reviewed it is a record of a decision and no longer the
+ * uploader's to withdraw. Returns false when that happened, and the caller says so.
+ */
+export async function deleteDocument(
+  tx: Tx,
+  input: {
+    documentId: string;
+    from: ReviewStatus;
+    condition: { id: string; status: ConditionStatus } | null;
+    hasOtherDocument: boolean;
+    activity: ActivityInput;
+  },
+): Promise<boolean> {
+  const removed = await tx
+    .delete(documents)
+    .where(
+      and(
+        eq(documents.id, input.documentId),
+        eq(documents.reviewStatus, input.from),
+      ),
+    )
+    .returning({ id: documents.id });
+  if (removed.length === 0) return false;
+
+  if (input.condition) {
+    const next = statusAfterDeletion(
+      input.condition.status,
+      input.hasOtherDocument,
+    );
+    if (next) {
+      await tx
+        .update(conditions)
+        .set({ status: next })
         .where(
           and(
             eq(conditions.id, input.condition.id),

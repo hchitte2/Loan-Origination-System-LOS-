@@ -98,6 +98,65 @@ export async function hasAcceptedDocument(
   return row !== undefined;
 }
 
+/**
+ * Does this condition still have any document on it, ignoring one? Deletion asks this
+ * rather than `hasAcceptedDocument`: a file sitting on an item means it has not gone back
+ * to being asked for, whether or not anyone has reviewed it yet.
+ */
+export async function hasOtherDocument(
+  actor: Actor,
+  conditionId: string,
+  exceptId: string,
+): Promise<boolean> {
+  assertCan(actor, "condition.read");
+  const [row] = await db()
+    .select({ id: documents.id })
+    .from(documents)
+    .where(
+      and(eq(documents.conditionId, conditionId), ne(documents.id, exceptId)),
+    )
+    .limit(1);
+  return row !== undefined;
+}
+
+/** What deciding whether a document may be deleted needs, plus the blob to remove. */
+export type DeletableDocument = {
+  id: string;
+  conditionId: string | null;
+  fileName: string;
+  reviewStatus: ReviewStatus;
+  uploadedBy: string | null;
+  uploadedVia: UploadedVia;
+  blobPathname: string;
+};
+
+/**
+ * One document on one loan, with who sent it and how. Separate from `getDocumentOnLoan`
+ * because deletion asks questions a review does not: whose upload this is, whether it
+ * came through the borrower's link, and which object to remove from the store.
+ */
+export async function getDocumentForDeletion(
+  actor: Actor,
+  loanId: string,
+  documentId: string,
+): Promise<DeletableDocument | null> {
+  assertCan(actor, "document.download");
+  const [row] = await db()
+    .select({
+      id: documents.id,
+      conditionId: documents.conditionId,
+      fileName: documents.fileName,
+      reviewStatus: documents.reviewStatus,
+      uploadedBy: documents.uploadedBy,
+      uploadedVia: documents.uploadedVia,
+      blobPathname: documents.blobPathname,
+    })
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.loanId, loanId)))
+    .limit(1);
+  return row ?? null;
+}
+
 export type DownloadableDocument = {
   id: string;
   loanId: string;

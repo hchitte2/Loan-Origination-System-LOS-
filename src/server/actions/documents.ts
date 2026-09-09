@@ -12,6 +12,7 @@ import { type Actor, requireActor } from "../actor";
 import { can, closedLoanReason } from "../authz";
 import {
   acceptDocument,
+  deleteDocument,
   insertDocument,
   receiveCondition,
   rejectDocument,
@@ -19,14 +20,17 @@ import {
 import { CAP_REACHED, uploadCapReached } from "../limits";
 import { getCondition } from "../queries/conditions";
 import {
+  getDocumentForDeletion,
   getDocumentOnLoan,
   hasAcceptedDocument,
+  hasOtherDocument,
   pathnameAlreadyRegistered,
 } from "../queries/documents";
 import { getLoanForAction } from "../queries/loans";
-import { countUploadsToday, statBlob } from "../storage";
+import { countUploadsToday, deleteUpload, statBlob } from "../storage";
 import {
   AcceptDocumentSchema,
+  DeleteDocumentSchema,
   RegisterDocumentSchema,
   RejectDocumentSchema,
 } from "./schemas";
@@ -328,4 +332,117 @@ export async function rejectDocumentAction(
     fileName: document.fileName,
     conditionTitle: condition?.title ?? null,
   };
+}
+
+export type DeleteDocumentState =
+  | { ok: true; fileName: string }
+  | { ok: false; error: string }
+  | null;
+
+/**
+ * Take back an upload of your own, before anyone has reviewed it.
+ *
+ * The gap this closes: a loan officer uploading the wrong file had no way out. Deletion
+ * did not exist, and `document.review` — the reject path that reopens the condition — is
+ * false for them, so the person most likely to mis-upload against their own loan was the
+ * one who could not correct it. Rejection was the wrong tool anyway: its reason is
+ * borrower-facing ("Needs another: …"), which tells someone to resend a file they never
+ * sent.
+ *
+ * Three conditions beyond the matrix cell, none of them expressible in it:
+ *
+ * - A staff upload. What the borrower sent is theirs, and a processor unhappy with it
+ *   rejects it with a reason they will read.
+ * - The uploader's own. `document.delete` is `any` for a processor and a superadmin so
+ *   they can undo their own slips, not each other's.
+ * - Still pending. Once accepted or rejected, the row is the record of a decision and no
+ *   longer the uploader's to withdraw; the compare-and-set in `deleteDocument` closes the
+ *   gap between this check and the write.
+ *
+ * Row first, then the blob: an orphaned object is swept by the nightly reset, whereas a
+ * row pointing at a deleted file is a download that 404s in front of someone.
+ */
+export async function deleteDocumentAction(
+  _previous: DeleteDocumentState,
+  formData: FormData,
+): Promise<DeleteDocumentState> {
+  const parsed = DeleteDocumentSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { ok: false, error: "That document was not understood." };
+  }
+  const { loanId, documentId } = parsed.data;
+
+  const actor = await requireActor();
+  const loan = await getLoanForAction(actor, loanId);
+  if (!loan) return { ok: false, error: "That loan no longer exists." };
+
+  const closed = closedLoanReason(loan, "Its documents can no longer change.");
+  if (closed) return { ok: false, error: closed };
+  if (!can(actor, "document.delete", loan)) {
+    return { ok: false, error: "You cannot remove documents on this loan." };
+  }
+
+  const document = await getDocumentForDeletion(actor, loan.id, documentId);
+  if (!document) {
+    return { ok: false, error: "That document is no longer on this loan." };
+  }
+  if (document.uploadedVia === "public_link") {
+    return {
+      ok: false,
+      error: `${document.fileName} came through the borrower link. Reject it with a reason instead, so they know to send another.`,
+    };
+  }
+  if (document.uploadedBy !== actor.userId) {
+    return {
+      ok: false,
+      error: `${document.fileName} was uploaded by someone else. Only whoever sent a file can take it back.`,
+    };
+  }
+  if (document.reviewStatus !== "pending") {
+    return {
+      ok: false,
+      error: `${document.fileName} has already been reviewed, so it stays on the file.`,
+    };
+  }
+
+  const condition = document.conditionId
+    ? await getCondition(actor, loan.id, document.conditionId)
+    : null;
+  const otherDocument = document.conditionId
+    ? await hasOtherDocument(actor, document.conditionId, document.id)
+    : false;
+
+  const removed = await db().transaction(async (tx) =>
+    deleteDocument(tx, {
+      documentId: document.id,
+      from: "pending",
+      condition: condition
+        ? { id: condition.id, status: condition.status }
+        : null,
+      hasOtherDocument: otherDocument,
+      activity: {
+        actor,
+        loanId: loan.id,
+        action: "document.deleted",
+        detail: {
+          documentId: document.id,
+          fileName: document.fileName,
+          conditionId: condition?.id ?? null,
+          conditionTitle: condition?.title ?? null,
+        },
+      },
+    }),
+  );
+  if (!removed) {
+    return {
+      ok: false,
+      error: `${document.fileName} was reviewed a moment ago. Reload and try again.`,
+    };
+  }
+
+  await deleteUpload(document.blobPathname);
+
+  revalidatePath(`/loans/${loan.id}`, "layout");
+  revalidatePath("/queue");
+  return { ok: true, fileName: document.fileName };
 }
