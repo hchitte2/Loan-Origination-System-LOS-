@@ -15,7 +15,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import { getEnv } from "@/lib/env";
-import { purgeUploads, putSpecimen } from "@/server/storage";
+import { resetDemo } from "@/server/reset";
+import { putSpecimen } from "@/server/storage";
 import { isProductionHost, parseProdHostFile } from "./guard";
 import { closeDb, db } from "./index";
 import {
@@ -93,7 +94,7 @@ async function runMigrate(databaseUrl: string): Promise<void> {
   }
 }
 
-async function runSeed(mode: "seed" | "reset"): Promise<void> {
+async function runSeed(): Promise<void> {
   // getEnv() validates the whole environment here, on purpose: the seed needs the demo
   // password and the showcase token, and a half-configured .env.local should fail loudly.
   const env = getEnv();
@@ -101,9 +102,9 @@ async function runSeed(mode: "seed" | "reset"): Promise<void> {
     now: new Date(),
     demoPassword: env.DEMO_PASSWORD,
     showcaseToken: env.DEMO_SHOWCASE_TOKEN,
-    mode,
+    mode: "seed",
   });
-  printSummary(mode, summary);
+  printSummary("seed", summary);
   await closeDb();
 }
 
@@ -198,17 +199,19 @@ async function main(): Promise<void> {
       await runMigrate(databaseUrl);
       return;
     case "seed":
-      await runSeed("seed");
+      await runSeed();
       return;
-    case "reset":
+    case "reset": {
       getEnv(); // validate everything before touching the database
       await runMigrate(databaseUrl);
-      // Blobs first: the reseed truncates `documents`, so anything still under
-      // `uploads/` afterwards is unreachable, and the upload caps count objects in the
-      // store rather than rows. Leaving them would spend tomorrow's budget on yesterday.
-      console.log(`  removed ${await purgeUploads()} uploaded file(s)`);
-      await runSeed("reset");
+      // The order — blobs, then truncate and reseed — lives in `resetDemo`, which the
+      // cron route and the superadmin button call too, so all three agree.
+      const summary = await resetDemo();
+      console.log(`  removed ${summary.blobsDeleted} uploaded file(s)`);
+      printSummary("reset", summary);
+      await closeDb();
       return;
+    }
     case "seed-files":
       await runSeedFiles();
       return;
