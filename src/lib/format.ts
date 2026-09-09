@@ -110,3 +110,13 @@ export function daysUntil(date: Date | string, now: Date = new Date()): number {
   );
   return Math.round((target.getTime() - from.getTime()) / DAY_MS);
 }
+
+/**
+ * A file size as a person reads it: "1.2 MB", "184 KB", "812 B". Decimal units, because
+ * that is what every operating system shows next to a downloaded file.
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1000) return `${bytes} B`;
+  if (bytes < 1000 * 1000) return `${Math.round(bytes / 1000)} KB`;
+  return `${(bytes / 1000 / 1000).toFixed(1)} MB`;
+}

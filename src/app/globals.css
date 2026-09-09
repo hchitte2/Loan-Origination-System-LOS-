@@ -247,6 +247,7 @@
   --spacing-tag: 20px;
   --spacing-touch: 44px;
   --spacing-banner: 40px;
+  --spacing-upload-zone: 72px;
 }
 
 @layer base {
@@ -277,6 +278,14 @@
 }
 
 @layer components {
+  /* The upload zone's file input is visually hidden, so its visible surface wears the
+     focus ring on its behalf — keyboard users must see where they are. */
+  .upload-zone:has(input:focus-visible) {
+    box-shadow:
+      0 0 0 2px var(--card),
+      0 0 0 4px var(--ring);
+  }
+
   /* sonner toasts take the popover shadow; the class is set in components/ui/sonner.tsx. */
   .cn-toast {
     box-shadow: var(--shadow-popover);
