@@ -327,7 +327,7 @@ Status: done · closed 2026-09-08 · PR merged, tag `phase-2` · coding chats ru
 **Verify:** run that sentence in the browser; `pnpm test`; axe via `/verify` in both themes.
 
 ### Phase 3 — Documents, public link, review loop, processor queue
-Status: active · branch `phase-3-documents` · 2–3 sessions
+Status: done · closed 2026-09-08 · PR merged, tag `phase-3`
 
 **Tasks:** `limits.ts` `DAILY_LOAN_CAP` enforced in `createLoan` with a `limits.test.ts` row **first**, since `createLoan` is already internet-facing · `server/storage.ts` · `/api/upload` with `handleUpload` (dual auth, types, 10 MB, prefix, caps) · `UploadZone` + `registerDocument` / `registerPublicDocument` · `/api/files/[documentId]` · Needs list tab: documents under their condition, accept, reject with reason, download, clear (with "Clear this condition?" prompt after accepting the last document), waive with reason · `/u/[token]` from artboard 5 with all drawn states, e-consent stored in the `document.uploaded` detail · `/queue` with KPI tiles and the review list · the upload and reset caps in `limits.ts` enforced and unit-tested · specimens uploaded once by `pnpm seed:files` · extend `a11y.spec.ts` with `/queue` and `/u/[token]`.
 **Done when:** in a private window with no session, Maria uploads a specimen PDF via the showcase link → Sam's queue shows it → reject with reason → Maria's page shows "Needs another: reason" → re-upload → accept → clear → Sam can advance the loan to clear to close only once every non-funding condition is cleared or waived, and the "Clear to close" button stays disabled until then; an 11 MB file and a `.exe` are refused kindly; a revoked link shows the designed expired page; a file URL in a logged-out tab returns 401.
@@ -335,19 +335,31 @@ Status: active · branch `phase-3-documents` · 2–3 sessions
 **.claude additions:** `public-upload.spec.ts` and `impersonation.spec.ts` join the Playwright suite.
 
 ### Phase 4 — Analytics
-Status: not started · 1–2 sessions
+Status: active · combined with Phase 5 on branch `phase-4-5-dashboards-and-reset`, deadline scope below
 
 **Tasks:** `lib/analytics-math.ts` with tests · `queries/analytics.ts` · `KpiTile`, `StageBarChart`, `AgingBarChart`, `AttentionTable` · three role compositions per Section 7 · click-throughs from tables to loans.
 **Done when:** every persona's dashboard matches Section 7 with non-empty seeded numbers; "Funded this month" reconciles with a hand count in the Closed list; axe reports no serious or critical issues in either theme; a chart is navigable by keyboard; tile definitions are reachable by keyboard.
 **Verify:** open all three dashboards; hand-check three numbers; tab through one chart; enable OS reduced motion and confirm no chart animation.
 
 ### Phase 5 — Reset, hardening, smoke tests, demo readiness
-Status: not started · 2 sessions
+Status: active · combined with Phase 4 on branch `phase-4-5-dashboards-and-reset`, deadline scope below
 
 **Tasks:** `api/cron/reset` (delete user-uploaded blobs by recorded `documents.blob_pathname` under `uploads/*`, never `seed/*` → truncate app tables → reseed relative to today → `demo.reset` row; blobs go first so a failure mid-run leaves the pathnames in the table for the next run) guarded by `CRON_SECRET`; `vercel.json` cron `0 8 * * *`; superadmin "Reset demo data" button with confirm and the 10-minute interval · security headers and `noindex` · loading/empty/error sweep with `ui-reviewer` · copy pass · Playwright suite (Section 11) green locally, including `demo-path.spec.ts` · `docs/DEMO.md` (Section 13) and `docs/RUNBOOK.md` (env, migrate, seed, reset, Neon wake, tunnel backup; note that Vercel marks secrets Sensitive so `vercel env pull` writes blanks for them and the values are pasted into `.env.production.local` by hand before `/release`; the six app secrets exist only in Production until someone adds them to the Preview environment) · README screenshots in both themes · rehearse the script twice on the prod URL.
 **Done when:** `curl -H "Authorization: Bearer $CRON_SECRET" <url>/api/cron/reset` restores the fixture in under 60 s and is idempotent when run twice; yesterday's uploads are gone after reset; the demo script runs clean twice in a row on the production URL; Lighthouse accessibility ≥ 95 on login, pipeline and the public page.
 **Verify:** hit the reset route; reload the dashboards; run the script with a timer; check the Vercel cron log the next morning.
 **.claude additions:** `demo-walker` agent drives Section 13 against the production URL via the Playwright MCP.
+
+#### Deadline scope for Phases 4 + 5 (set 2026-09-08)
+
+Phases 4 and 5 run as one branch `phase-4-5-dashboards-and-reset` and one pull request, closing at the Thursday 2026-09-10 target. **Build exactly this, nothing from Should or Stretch.**
+
+**Analytics.** `lib/analytics-math.ts` with unit tests (pull-through, cycle time, aging buckets, stalled thresholds) · `queries/analytics.ts` scoped by `loanScope()` · reuse the `KpiTile` and aging chart the queue already has, add `StageBarChart` and `AttentionTable` · superadmin `/dashboard` per `06-dashboard.png` (four tiles with keyboard-reachable definitions, two charts, Needs attention linking to loans) · loan-officer variant per `06-dashboard-lo.png` from the same components. Numbers reconcile with a hand count; axe clean in both themes.
+
+**Reset and hardening.** `/api/cron/reset` behind `CRON_SECRET` (delete uploaded blobs by recorded pathname under `uploads/`, never `seed/`, then truncate, reseed relative to today, write the `demo.reset` row; idempotent) · superadmin "Reset demo data" button with `ConfirmDialog` and the 10-minute interval · `noindex` and `frame-ancestors 'none'` headers.
+
+**Tests and docs.** `tests/e2e/demo-path.spec.ts` walking Section 13 end to end · the whole Playwright suite green locally · DEMO and RUNBOOK folded into README sections (how to run, hosting story, non-goals, the demo script, the release steps including the pasted-secrets caveat).
+
+**Cut on purpose:** the Lighthouse target, a full loading/empty/error sweep (only screens on the demo path are fixed), separate `docs/DEMO.md` and `docs/RUNBOOK.md`, README screenshots.
 
 **Total: 10–13 coding sessions across six phases.**
 
