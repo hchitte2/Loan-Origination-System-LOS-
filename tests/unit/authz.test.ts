@@ -45,7 +45,7 @@ const foreignLoan = {
 
 describe("POLICY shape", () => {
   it("has one row per matrix row and one cell per role", () => {
-    expect(ACTIONS).toHaveLength(25);
+    expect(ACTIONS).toHaveLength(26);
     for (const role of ROLES) {
       expect(Object.keys(POLICY[role]).sort()).toEqual([...ACTIONS].sort());
     }

@@ -68,6 +68,12 @@ export const ACTIONS = [
   "document.download",
   /** Documents: accept, reject with reason. */
   "document.review",
+  /**
+   * Take back an upload of your own. Whether *this* document may go is decided in
+   * `actions/documents.ts`: only a staff upload, only the uploader's own, and only while
+   * nobody has reviewed it. This cell is the loan-level half of that.
+   */
+  "document.delete",
   /** Withdrawn / denied reason. */
   "loan.edit_closed_reason",
   /** Public link: copy, regenerate. */
@@ -107,6 +113,7 @@ export const POLICY: Record<Role, Record<Action, Permission>> = {
     "document.upload": "own",
     "document.download": "any",
     "document.review": false,
+    "document.delete": "own",
     "loan.edit_closed_reason": "own",
     "loan.manage_link": "own",
     "activity.read_loan": "any",
@@ -136,6 +143,7 @@ export const POLICY: Record<Role, Record<Action, Permission>> = {
     "document.upload": "any",
     "document.download": "any",
     "document.review": "any",
+    "document.delete": "any",
     "loan.edit_closed_reason": "any",
     "loan.manage_link": "any",
     "activity.read_loan": "any",
@@ -163,6 +171,7 @@ export const POLICY: Record<Role, Record<Action, Permission>> = {
     "document.upload": "any",
     "document.download": "any",
     "document.review": "any",
+    "document.delete": "any",
     "loan.edit_closed_reason": "any",
     "loan.manage_link": "any",
     "activity.read_loan": "any",
@@ -194,6 +203,7 @@ export const LOAN_WRITE_ACTIONS = [
   "condition.edit_rejection_reason",
   "document.upload",
   "document.review",
+  "document.delete",
   "loan.edit_closed_reason",
   "loan.manage_link",
 ] as const satisfies readonly Action[];
