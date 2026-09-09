@@ -1,4 +1,3 @@
-import path from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { enterAs, type PersonaKey } from "./helpers/personas";
 
@@ -9,10 +8,35 @@ import { enterAs, type PersonaKey } from "./helpers/personas";
  * direct POST — so what these check is that a file only leaves when the person asking is
  * the person who sent it and nobody has ruled on it yet.
  */
-const SPECIMEN = path.join(process.cwd(), "src/db/specimens/specimen-w2.pdf");
-const FILE = "specimen-w2.pdf";
+/**
+ * A file name no other spec uses. The suite runs `fullyParallel` against one database,
+ * and every upload lands in the same processor queue — a name shared with another spec
+ * makes both specs' row selectors match two rows.
+ */
+const FILE = "alex-wrong-file.pdf";
+const SPECIMEN = {
+  name: FILE,
+  mimeType: "application/pdf",
+  buffer: Buffer.from("%PDF-1.4\n% a stand-in for the wrong document\n"),
+};
 
 test.describe.configure({ mode: "serial" });
+
+/**
+ * Expand one condition by name, whatever state it starts in. The toggle's label carries
+ * the document count, so matching on it exactly makes the test depend on a number another
+ * worker may still be writing; `aria-expanded` is the honest signal.
+ */
+async function expandCondition(page: Page, title: string): Promise<void> {
+  await page.getByRole("table").waitFor();
+  const toggle = page
+    .getByRole("button", { name: new RegExp(`documents for ${title}`) })
+    .first();
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") {
+    await toggle.click();
+  }
+}
 
 /** Open a loan of Alex's and expand one condition that has nothing on it yet. */
 async function openEmptyCondition(
@@ -94,6 +118,9 @@ test("the uploader can take back a pending file, and the condition reopens", asy
 test("a colleague sees no Remove on someone else's upload", async ({
   browser,
 }) => {
+  // Two contexts and two personas against a dev server the rest of the suite is also
+  // compiling for.
+  test.slow();
   // A context per persona: signing in again in the same one is a redirect home, not a
   // second login card.
   const alexContext = await browser.newContext();
@@ -113,9 +140,7 @@ test("a colleague sees no Remove on someone else's upload", async ({
   const sam = await samContext.newPage();
   await enterAs(sam, "sam");
   await sam.goto(`${loan}/needs-list`);
-  await sam
-    .getByRole("button", { name: `Show documents for ${title} · 1` })
-    .click();
+  await expandCondition(sam, title);
   const asSam = sam.locator("li").filter({ hasText: FILE });
   await expect(asSam.getByText("Pending")).toBeVisible();
   await expect(
@@ -132,11 +157,7 @@ test("a colleague sees no Remove on someone else's upload", async ({
   await expect(asSam.getByText(/Rejected ·/)).toBeVisible();
 
   await alex.reload();
-  await alex.getByRole("table").waitFor();
-  await alex
-    .getByRole("button", { name: new RegExp(`documents for ${title}`) })
-    .first()
-    .click();
+  await expandCondition(alex, title);
   await expect(
     alex
       .locator("li")

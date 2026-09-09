@@ -109,8 +109,12 @@ export function statusAfterRejection(
  *
  * The mirror of `statusAfterUpload`, not of `statusAfterRejection`: a deletion is the
  * upload being taken back, so the condition returns to `requested` only when nothing is
- * left answering it. Any remaining document counts, reviewed or not — an item with a file
- * still sitting on it has not gone back to being asked for.
+ * left answering it.
+ *
+ * A pending or accepted survivor counts; a rejected one does not, and the caller is what
+ * decides that. Leaving a rejected file to hold an item at `received` strands it: the
+ * borrower gets no upload zone and reads "Received, under review", and a pending-only
+ * queue shows it to no reviewer.
  *
  * `cleared` and `waived` are left alone. Those were closed by a decision a person made,
  * and a deletion by the uploader is not that decision being reversed.
