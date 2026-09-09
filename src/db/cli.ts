@@ -15,7 +15,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import { getEnv } from "@/lib/env";
-import { putSpecimen } from "@/server/storage";
+import { purgeUploads, putSpecimen } from "@/server/storage";
 import { isProductionHost, parseProdHostFile } from "./guard";
 import { closeDb, db } from "./index";
 import {
@@ -203,6 +203,10 @@ async function main(): Promise<void> {
     case "reset":
       getEnv(); // validate everything before touching the database
       await runMigrate(databaseUrl);
+      // Blobs first: the reseed truncates `documents`, so anything still under
+      // `uploads/` afterwards is unreachable, and the upload caps count objects in the
+      // store rather than rows. Leaving them would spend tomorrow's budget on yesterday.
+      console.log(`  removed ${await purgeUploads()} uploaded file(s)`);
       await runSeed("reset");
       return;
     case "seed-files":

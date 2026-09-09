@@ -9,9 +9,10 @@ import {
   safeFileName,
 } from "@/lib/uploads";
 import { insertDocument, receiveCondition } from "../documents";
-import { CAP_REACHED, countUploadsToday, uploadCapReached } from "../limits";
+import { CAP_REACHED, uploadCapReached } from "../limits";
+import { pathnameAlreadyRegistered } from "../queries/documents";
 import { getPublicCondition, resolveUploadToken } from "../queries/public";
-import { statBlob } from "../storage";
+import { countUploadsToday, statBlob } from "../storage";
 import { RegisterPublicDocumentSchema } from "./schemas";
 
 /**
@@ -55,6 +56,13 @@ export async function registerPublicDocument(
 
   if (!isInLoanPrefix(data.blobPathname, loan.id)) {
     return { ok: false, error: "That file did not go through. Try again." };
+  }
+
+  if (await pathnameAlreadyRegistered(data.blobPathname)) {
+    return {
+      ok: false,
+      error: "We already have that file. Nothing more to do.",
+    };
   }
 
   const blob = await statBlob(data.blobPathname);
