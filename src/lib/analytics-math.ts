@@ -1,5 +1,10 @@
 import { daysSince, daysUntil } from "./format";
-import { type ActiveStage, isActiveStage, type Stage } from "./stages";
+import {
+  type ActiveStage,
+  isActiveStage,
+  type Stage,
+  staffLabel,
+} from "./stages";
 
 /**
  * Pure analytics formulas (PLAN.md §7). Phase 2 needs only the "needs attention" rule,
@@ -215,4 +220,34 @@ export function startOfUtcMonth(now: Date = new Date(), offset = 0): Date {
   return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1),
   );
+}
+
+/**
+ * The reasons the dashboard's Needs attention table lists (PLAN.md §7): a file that has
+ * stopped moving, or one closing inside two weeks that is not yet clear to close.
+ *
+ * A document waiting on a reviewer is deliberately not one of them — that is the
+ * processor's queue, and repeating it here would fill the table with rows nobody on this
+ * screen is going to action.
+ */
+export function dashboardAttention(
+  loan: Omit<AttentionInput, "pendingDocuments">,
+  now: Date = new Date(),
+): Attention | null {
+  const reasons = attentionsFor({ ...loan, pendingDocuments: 0 }, now);
+  return reasons.find((reason) => reason.kind !== "needs_review") ?? null;
+}
+
+/** The sentence the table's reason chip shows. */
+export function attentionReason(attention: Attention): string {
+  switch (attention.kind) {
+    case "stalled":
+      return `Stalled ${attention.days} d in ${staffLabel(attention.stage)}`;
+    case "closing_soon":
+      return `Closing in ${attention.days} d, not yet clear to close`;
+    case "needs_review":
+      return attention.pendingDocuments === 1
+        ? "1 document waiting on review"
+        : `${attention.pendingDocuments} documents waiting on review`;
+  }
 }

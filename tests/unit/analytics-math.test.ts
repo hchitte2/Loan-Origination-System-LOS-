@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   type AttentionInput,
   agingBuckets,
+  attentionReason,
   attentionsFor,
   avgCycleTimeDays,
   CLOSING_SOON_DAYS,
   type CohortLoan,
+  dashboardAttention,
   primaryAttention,
   pullThrough,
   STALLED_AFTER_DAYS,
@@ -264,6 +266,63 @@ describe("startOfUtcMonth", () => {
     const january = new Date("2026-01-14T09:00:00Z");
     expect(startOfUtcMonth(january, -1).toISOString()).toBe(
       "2025-12-01T00:00:00.000Z",
+    );
+  });
+});
+
+describe("dashboardAttention", () => {
+  it("ignores documents waiting on review — that is the queue's job", () => {
+    const busy = {
+      stage: "processing" as Stage,
+      stageEnteredAt: daysAgo(2),
+      targetCloseDate: null,
+    };
+    expect(dashboardAttention(busy, NOW)).toBeNull();
+  });
+
+  it("still reports a stalled file and a close date coming up", () => {
+    expect(
+      dashboardAttention(
+        {
+          stage: "processing",
+          stageEnteredAt: daysAgo(STALLED_AFTER_DAYS.processing + 2),
+          targetCloseDate: null,
+        },
+        NOW,
+      ),
+    ).toEqual({
+      kind: "stalled",
+      stage: "processing",
+      days: STALLED_AFTER_DAYS.processing + 2,
+    });
+
+    expect(
+      dashboardAttention(
+        {
+          stage: "processing",
+          stageEnteredAt: daysAgo(1),
+          targetCloseDate: calendarDaysFromNow(9),
+        },
+        NOW,
+      ),
+    ).toEqual({ kind: "closing_soon", days: 9 });
+  });
+});
+
+describe("attentionReason", () => {
+  it("says why, in the words the design frame uses", () => {
+    expect(
+      attentionReason({ kind: "stalled", stage: "processing", days: 12 }),
+    ).toBe("Stalled 12 d in Processing");
+    expect(
+      attentionReason({
+        kind: "stalled",
+        stage: "conditional_approval",
+        days: 9,
+      }),
+    ).toBe("Stalled 9 d in Conditional approval");
+    expect(attentionReason({ kind: "closing_soon", days: 9 })).toBe(
+      "Closing in 9 d, not yet clear to close",
     );
   });
 });
