@@ -52,10 +52,19 @@ describe("statusAfterRejection", () => {
     }
   });
 
-  it("changes nothing on a status that was not received", () => {
-    for (const status of OTHERS("received")) {
-      expect(statusAfterRejection(status, false)).toBeNull();
-    }
+  it("reopens a cleared condition when its last accepted document is rejected", () => {
+    // Clearing rests on an accepted document. Taking that away takes away what the
+    // clearance stood on, so the borrower is asked again.
+    expect(statusAfterRejection("cleared", false)).toBe("requested");
+  });
+
+  it("leaves a waived condition waived", () => {
+    // It was closed on a decision, not on a document, so no document changes it.
+    expect(statusAfterRejection("waived", false)).toBeNull();
+  });
+
+  it("changes nothing on a condition that was never answered", () => {
+    expect(statusAfterRejection("requested", false)).toBeNull();
   });
 });
 

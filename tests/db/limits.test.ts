@@ -3,8 +3,8 @@ import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { beforeAll, describe, expect, it } from "vitest";
 import * as schema from "@/db/schema";
-import { documents, loans, user } from "@/db/schema";
-import { countLoansCreatedToday, countUploadsToday } from "@/server/limits";
+import { loans, user } from "@/db/schema";
+import { countLoansCreatedToday } from "@/server/limits";
 
 /**
  * The cap decision is unit-tested; what needs a database is the count itself — that the
@@ -34,19 +34,6 @@ function loanAt(createdAt: Date, token: string) {
     loanOfficerId: OFFICER,
     referralSource: "online" as const,
     uploadToken: token,
-    createdAt,
-  };
-}
-
-/** One document row on `loanId`, created at `createdAt`. */
-function docAt(loanId: string, createdAt: Date, key: string) {
-  return {
-    loanId,
-    uploadedVia: "public_link" as const,
-    fileName: `${key}.pdf`,
-    blobPathname: `uploads/${loanId}/${key}.pdf`,
-    contentType: "application/pdf",
-    sizeBytes: 1024,
     createdAt,
   };
 }
@@ -114,66 +101,5 @@ describe("countLoansCreatedToday", () => {
   it("moves the window with the day it is asked about", async () => {
     const tomorrow = new Date("2026-09-09T08:00:00.000Z");
     expect(await countLoansCreatedToday(tomorrow, db)).toBe(0);
-  });
-});
-
-describe("countUploadsToday", () => {
-  // A second loan, so the per-loan count and the day count can disagree.
-  const A = "aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa";
-  const B = "bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb";
-
-  beforeAll(async () => {
-    await db.insert(loans).values([
-      {
-        ...loanAt(new Date("2026-09-01T10:00:00.000Z"), "A".repeat(32)),
-        id: A,
-      },
-      {
-        ...loanAt(new Date("2026-09-01T10:00:00.000Z"), "B".repeat(32)),
-        id: B,
-      },
-    ]);
-    await db.insert(documents).values([
-      docAt(A, new Date("2026-09-08T08:00:00.000Z"), "a1"),
-      docAt(A, new Date("2026-09-08T09:00:00.000Z"), "a2"),
-      docAt(B, new Date("2026-09-08T09:30:00.000Z"), "b1"),
-      // Yesterday: outside the window, for both counts.
-      docAt(A, new Date("2026-09-07T23:59:59.999Z"), "a-yesterday"),
-      docAt(B, new Date("2026-09-07T12:00:00.000Z"), "b-yesterday"),
-    ]);
-  });
-
-  it("counts this loan's uploads and the whole day's in one answer", async () => {
-    expect(await countUploadsToday(A, NOW, db)).toEqual({
-      forLoan: 2,
-      forDay: 3,
-    });
-  });
-
-  it("scopes forLoan to the loan asked about", async () => {
-    expect(await countUploadsToday(B, NOW, db)).toEqual({
-      forLoan: 1,
-      forDay: 3,
-    });
-  });
-
-  it("returns zero for a loan with nothing today, while the day still counts", async () => {
-    const untouched = "cccccccc-3333-4333-8333-cccccccccccc";
-    expect(await countUploadsToday(untouched, NOW, db)).toEqual({
-      forLoan: 0,
-      forDay: 3,
-    });
-  });
-
-  it("takes midnight UTC as the left edge, like the loan cap", async () => {
-    // One document exactly on the boundary counts; the one before it does not. The
-    // window has no right edge on purpose — the app only ever asks about now.
-    await db
-      .insert(documents)
-      .values(docAt(A, new Date("2026-09-08T00:00:00.000Z"), "a-midnight"));
-    expect(await countUploadsToday(A, NOW, db)).toEqual({
-      forLoan: 3,
-      forDay: 4,
-    });
   });
 });

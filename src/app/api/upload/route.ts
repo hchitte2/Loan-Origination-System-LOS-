@@ -1,3 +1,4 @@
+import { BlobError } from "@vercel/blob";
 import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
 import { z } from "zod";
 import { getEnv } from "@/lib/env";
@@ -8,13 +9,10 @@ import {
 } from "@/lib/uploads";
 import { getActor } from "@/server/actor";
 import { can } from "@/server/authz";
-import {
-  CAP_REACHED,
-  countUploadsToday,
-  uploadCapReached,
-} from "@/server/limits";
+import { CAP_REACHED, uploadCapReached } from "@/server/limits";
 import { getLoanForAction } from "@/server/queries/loans";
 import { resolveUploadToken } from "@/server/queries/public";
+import { countUploadsToday } from "@/server/storage";
 
 /**
  * The client-upload token endpoint (PLAN.md §5 "File storage").
@@ -131,6 +129,12 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     if (error instanceof UploadRefusal) {
       return Response.json({ error: error.message }, { status: error.status });
+    }
+    // handleUpload throws for a malformed or unsigned body — a POST claiming to be an
+    // upload-completed callback, for instance. That is a bad request from a stranger,
+    // not a fault of ours, and a public route should not answer one with a 500.
+    if (error instanceof BlobError) {
+      return Response.json({ error: "Malformed request." }, { status: 400 });
     }
     throw error;
   }

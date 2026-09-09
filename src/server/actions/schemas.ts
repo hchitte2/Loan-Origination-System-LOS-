@@ -185,8 +185,12 @@ export const RegisterPublicDocumentSchema = z.object({
   conditionId: z.uuid(),
   blobPathname: z.string().trim().min(1).max(400),
   fileName: z.string().trim().min(1).max(255),
-  /** The e-consent box, stored in the activity detail with the first upload. */
-  econsent: z.coerce.boolean(),
+  /**
+   * The e-consent box, stored in the activity detail with the upload. A plain boolean,
+   * not a coercion: `z.coerce.boolean()` reads the string "false" as true, and the log
+   * has to be able to say consent was withheld.
+   */
+  econsent: z.boolean(),
 });
 
 /**

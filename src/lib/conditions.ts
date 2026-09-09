@@ -89,13 +89,19 @@ export function statusAfterUpload(
  * The status a condition takes when one of its documents is rejected. It reopens only if
  * nothing accepted is left to stand on: a condition holding an accepted pay stub and a
  * rejected duplicate is still answered.
+ *
+ * A `cleared` condition reopens too. Clearing asserts an accepted document exists, so
+ * rejecting the last one takes away the thing the clearance rested on — PLAN.md §6
+ * invariant 3 says "if no other accepted document remains", without qualifying which
+ * status it was in. A waived one stays waived: it was closed on a decision, not on a
+ * document.
  */
 export function statusAfterRejection(
   current: ConditionStatus,
   hasOtherAcceptedDocument: boolean,
 ): ConditionStatus | null {
   if (hasOtherAcceptedDocument) return null;
-  return current === "received" ? "requested" : null;
+  return current === "received" || current === "cleared" ? "requested" : null;
 }
 
 /**

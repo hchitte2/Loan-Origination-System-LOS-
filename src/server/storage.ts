@@ -1,6 +1,7 @@
-import { BlobNotFoundError, get, head, put } from "@vercel/blob";
+import { BlobNotFoundError, del, get, head, list, put } from "@vercel/blob";
 import { getEnv } from "@/lib/env";
-import { SEED_PREFIX } from "@/lib/uploads";
+import { SEED_PREFIX, uploadPrefix } from "@/lib/uploads";
+import { startOfUtcDay } from "./limits";
 
 /**
  * The one module that talks to Vercel Blob (`.claude/rules/server.md`). Everything else
@@ -18,6 +19,69 @@ import { SEED_PREFIX } from "@/lib/uploads";
  * The store is private: nothing here ever hands out a blob URL. Bytes reach a browser
  * only through `/api/files/[documentId]`, which authorizes first.
  */
+
+/**
+ * How many objects were written under `uploads/` since midnight UTC, and how many of
+ * those belong to one loan.
+ *
+ * The caps have to be counted here rather than from the `documents` table, because a
+ * `documents` row only exists after the browser calls a register action — a separate
+ * request, made after the upload has already happened. A caller who takes a token,
+ * writes the file and never registers it would increment nothing and could repeat that
+ * forever, which is exactly the put budget the caps exist to protect (PLAN.md §4).
+ *
+ * `list` is a basic Blob operation, not an advanced one, so paying for it on every token
+ * request costs nothing against the budget it is defending. `seed/` is outside the
+ * prefix, so the specimens never count.
+ */
+export async function countUploadsToday(
+  loanId: string,
+  now?: Date,
+): Promise<{ forLoan: number; forDay: number }> {
+  const since = startOfUtcDay(now);
+  const token = getEnv().BLOB_READ_WRITE_TOKEN;
+  const prefix = uploadPrefix(loanId);
+
+  let cursor: string | undefined;
+  let forLoan = 0;
+  let forDay = 0;
+  do {
+    const page = await list({ prefix: "uploads/", cursor, token });
+    for (const blob of page.blobs) {
+      if (blob.uploadedAt < since) continue;
+      forDay += 1;
+      if (blob.pathname.startsWith(prefix)) forLoan += 1;
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+
+  return { forLoan, forDay };
+}
+
+/**
+ * Delete everything under `uploads/`, leaving `seed/` alone. Returns how many went.
+ *
+ * The reset truncates `documents`, so every object under that prefix is orphaned by
+ * definition once it runs. Deleting by prefix rather than by recorded pathname also
+ * clears uploads that were written but never registered — which would otherwise survive
+ * every reset and, because the caps count objects rather than rows, keep counting
+ * against the day's budget forever.
+ */
+export async function purgeUploads(): Promise<number> {
+  const token = getEnv().BLOB_READ_WRITE_TOKEN;
+  let cursor: string | undefined;
+  let removed = 0;
+  do {
+    const page = await list({ prefix: "uploads/", cursor, token });
+    const pathnames = page.blobs.map((blob) => blob.pathname);
+    if (pathnames.length > 0) {
+      await del(pathnames, { token });
+      removed += pathnames.length;
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return removed;
+}
 
 /**
  * Put one specimen at a fixed `seed/` pathname. Overwrites on purpose and adds no random

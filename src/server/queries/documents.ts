@@ -234,3 +234,19 @@ export async function listReviewQueue(actor: Actor): Promise<QueueDocument[]> {
     createdAt: row.createdAt,
   }));
 }
+
+/**
+ * Is this pathname already recorded? `documents.blob_pathname` is unique for `uploads/*`,
+ * so a repeated registration — a double submit, a retry, a deliberate replay — would
+ * otherwise raise inside the transaction and escape as a 500 rather than a sentence.
+ */
+export async function pathnameAlreadyRegistered(
+  blobPathname: string,
+): Promise<boolean> {
+  const [row] = await db()
+    .select({ id: documents.id })
+    .from(documents)
+    .where(eq(documents.blobPathname, blobPathname))
+    .limit(1);
+  return row !== undefined;
+}

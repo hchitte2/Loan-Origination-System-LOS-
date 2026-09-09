@@ -1,7 +1,11 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { cache } from "react";
 import { db } from "@/db";
 import { conditions, documents, loans, user } from "@/db/schema";
-import type { ConditionStatus } from "@/lib/conditions";
+import {
+  type ConditionStatus,
+  OPEN_CONDITION_STATUSES,
+} from "@/lib/conditions";
 import { isTerminalStage, type Stage } from "@/lib/stages";
 import { type PublicLoanView, redactForPublic } from "../authz";
 
@@ -53,9 +57,13 @@ export type PublicCondition = {
 };
 
 /**
- * A condition the borrower may upload against: on this loan, and borrower-facing
- * (PLAN.md §6 invariant 5). An internal condition is invisible here, so a token holder
- * cannot answer one by guessing its id — it returns null exactly as a foreign id does.
+ * A condition the borrower may upload against: on this loan, borrower-facing (PLAN.md §6
+ * invariant 5), and still open.
+ *
+ * All three are checked here rather than in the component, because the register action is
+ * a Server Action and accepts a direct POST — the page not drawing an upload box on a
+ * cleared item is presentation, not protection. An internal or settled condition returns
+ * null exactly as a foreign id does, so a token holder cannot tell them apart.
  */
 export async function getPublicCondition(
   loanId: string,
@@ -73,6 +81,7 @@ export async function getPublicCondition(
         eq(conditions.id, conditionId),
         eq(conditions.loanId, loanId),
         eq(conditions.borrowerFacing, true),
+        inArray(conditions.status, [...OPEN_CONDITION_STATUSES]),
       ),
     )
     .limit(1);
@@ -82,68 +91,71 @@ export async function getPublicCondition(
 /**
  * Everything `/u/[token]` renders, or null when the link is dead.
  *
+ * Wrapped in `cache()` because both the layout (for the loan officer's line) and the page
+ * ask for it: one render, one set of queries rather than two.
+ *
  * The page calls only this. It loads the rows and hands them straight to
  * `redactForPublic`, so nothing outside `PublicLoanView` is ever in scope to leak into
  * the serialised payload — the rule in `.claude/rules/public.md` that a Server Component
  * serialises what it fetches, not what it draws.
  */
-export async function getPublicLoanView(
-  token: string,
-): Promise<PublicLoanView | null> {
-  const ref = await resolveUploadToken(token);
-  if (!ref) return null;
+export const getPublicLoanView = cache(
+  async (token: string): Promise<PublicLoanView | null> => {
+    const ref = await resolveUploadToken(token);
+    if (!ref) return null;
 
-  const [row] = await db()
-    .select({
-      id: loans.id,
-      borrowerName: loans.borrowerName,
-      propertyStreet: loans.propertyStreet,
-      propertyCity: loans.propertyCity,
-      propertyState: loans.propertyState,
-      amount: loans.amount,
-      purpose: loans.purpose,
-      loanType: loans.loanType,
-      stage: loans.stage,
-      targetCloseDate: loans.targetCloseDate,
-      officerName: user.name,
-      officerPhone: user.phone,
-    })
-    .from(loans)
-    .innerJoin(user, eq(user.id, loans.loanOfficerId))
-    .where(eq(loans.id, ref.id))
-    .limit(1);
-  if (!row) return null;
-
-  const [conditionRows, documentRows] = await Promise.all([
-    db()
+    const [row] = await db()
       .select({
-        id: conditions.id,
-        title: conditions.title,
-        instructions: conditions.instructions,
-        status: conditions.status,
-        borrowerFacing: conditions.borrowerFacing,
-        lastRejectionReason: conditions.lastRejectionReason,
+        id: loans.id,
+        borrowerName: loans.borrowerName,
+        propertyStreet: loans.propertyStreet,
+        propertyCity: loans.propertyCity,
+        propertyState: loans.propertyState,
+        amount: loans.amount,
+        purpose: loans.purpose,
+        loanType: loans.loanType,
+        stage: loans.stage,
+        targetCloseDate: loans.targetCloseDate,
+        officerName: user.name,
+        officerPhone: user.phone,
       })
-      .from(conditions)
-      .where(eq(conditions.loanId, ref.id))
-      .orderBy(asc(conditions.createdAt)),
-    db()
-      .select({
-        conditionId: documents.conditionId,
-        fileName: documents.fileName,
-        createdAt: documents.createdAt,
-        uploadedVia: documents.uploadedVia,
-      })
-      .from(documents)
-      .where(eq(documents.loanId, ref.id))
-      .orderBy(asc(documents.createdAt)),
-  ]);
+      .from(loans)
+      .innerJoin(user, eq(user.id, loans.loanOfficerId))
+      .where(eq(loans.id, ref.id))
+      .limit(1);
+    if (!row) return null;
 
-  const { officerName, officerPhone, ...loan } = row;
-  return redactForPublic({
-    loan,
-    loanOfficer: { name: officerName, phone: officerPhone },
-    conditions: conditionRows,
-    documents: documentRows,
-  });
-}
+    const [conditionRows, documentRows] = await Promise.all([
+      db()
+        .select({
+          id: conditions.id,
+          title: conditions.title,
+          instructions: conditions.instructions,
+          status: conditions.status,
+          borrowerFacing: conditions.borrowerFacing,
+          lastRejectionReason: conditions.lastRejectionReason,
+        })
+        .from(conditions)
+        .where(eq(conditions.loanId, ref.id))
+        .orderBy(asc(conditions.createdAt)),
+      db()
+        .select({
+          conditionId: documents.conditionId,
+          fileName: documents.fileName,
+          createdAt: documents.createdAt,
+          uploadedVia: documents.uploadedVia,
+        })
+        .from(documents)
+        .where(eq(documents.loanId, ref.id))
+        .orderBy(asc(documents.createdAt)),
+    ]);
+
+    const { officerName, officerPhone, ...loan } = row;
+    return redactForPublic({
+      loan,
+      loanOfficer: { name: officerName, phone: officerPhone },
+      conditions: conditionRows,
+      documents: documentRows,
+    });
+  },
+);

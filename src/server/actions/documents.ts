@@ -16,11 +16,15 @@ import {
   receiveCondition,
   rejectDocument,
 } from "../documents";
-import { CAP_REACHED, countUploadsToday, uploadCapReached } from "../limits";
+import { CAP_REACHED, uploadCapReached } from "../limits";
 import { getCondition } from "../queries/conditions";
-import { getDocumentOnLoan, hasAcceptedDocument } from "../queries/documents";
+import {
+  getDocumentOnLoan,
+  hasAcceptedDocument,
+  pathnameAlreadyRegistered,
+} from "../queries/documents";
 import { getLoanForAction } from "../queries/loans";
-import { statBlob } from "../storage";
+import { countUploadsToday, statBlob } from "../storage";
 import {
   AcceptDocumentSchema,
   RegisterDocumentSchema,
@@ -78,6 +82,10 @@ export async function registerDocument(
     : null;
   if (data.conditionId && !condition) {
     return { ok: false, error: "That condition is no longer on this loan." };
+  }
+
+  if (await pathnameAlreadyRegistered(data.blobPathname)) {
+    return { ok: false, error: "That file was already added to this loan." };
   }
 
   const blob = await statBlob(data.blobPathname);

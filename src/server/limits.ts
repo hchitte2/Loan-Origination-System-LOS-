@@ -1,14 +1,18 @@
-import { count, gte, sql } from "drizzle-orm";
+import { count, gte } from "drizzle-orm";
 import { type Db, db } from "@/db";
-import { documents, loans } from "@/db/schema";
+import { loans } from "@/db/schema";
 
 /**
  * Abuse caps for a demo whose write surfaces face the open internet (PLAN.md §5).
  *
- * Every cap is counted from rows that already exist — there is no counters table and no
- * per-IP tracking — so a cap costs one aggregate query and survives the nightly reset
- * without extra bookkeeping. The window is the UTC day: a fixed boundary everyone can
- * reason about, rather than a rolling window that would need a timestamp per actor.
+ * Every cap is counted from what already exists — there is no counters table and no
+ * per-IP tracking — so a cap survives the nightly reset without extra bookkeeping. The
+ * window is the UTC day: a fixed boundary everyone can reason about, rather than a
+ * rolling window that would need a timestamp per actor.
+ *
+ * The decisions live here; the loan count is a query below, and the upload count is in
+ * `storage.ts`, because what an upload cap has to bound is objects in the store, not
+ * rows in `documents` — a row appears only if the browser comes back to register.
  *
  * The decisions are pure functions over a count so `tests/unit/limits.test.ts` can walk
  * the boundary without a database; the queries beside them only supply the number.
@@ -52,25 +56,6 @@ export function uploadCapReached(counts: {
   return (
     counts.forLoan >= PER_LOAN_UPLOAD_CAP || counts.forDay >= DAILY_UPLOAD_CAP
   );
-}
-
-/**
- * Documents registered since midnight UTC: for one loan, and across the demo. Both come
- * from one round trip, because every upload has to ask about both.
- */
-export async function countUploadsToday(
-  loanId: string,
-  now?: Date,
-  database: Db = db(),
-): Promise<{ forLoan: number; forDay: number }> {
-  const [row] = await database
-    .select({
-      forLoan: count(sql`case when ${documents.loanId} = ${loanId} then 1 end`),
-      forDay: count(),
-    })
-    .from(documents)
-    .where(gte(documents.createdAt, startOfUtcDay(now)));
-  return { forLoan: row?.forLoan ?? 0, forDay: row?.forDay ?? 0 };
 }
 
 /**

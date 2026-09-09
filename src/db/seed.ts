@@ -325,6 +325,18 @@ const LOANS: readonly LoanFixture[] = [
         instructions: "The signed contract for 412 Maple Ave.",
       },
       { title: "Homeowners insurance binder", ageDays: 6, status: "requested" },
+      {
+        // Internal, so the showcase loan proves invariant 5 on the surface the demo
+        // actually drives: this never appears on Maria's page, and a token holder
+        // cannot answer it by guessing its id (tests/e2e/public-scope.spec.ts).
+        title: "Title commitment ordered",
+        ageDays: 5,
+        status: "received",
+        borrowerFacing: false,
+        priorTo: "docs",
+        instructions:
+          "Internal only — ordered from the title company on Sep 3.",
+      },
     ],
     documents: [
       {
@@ -1688,10 +1700,15 @@ export function fixtureLoans(stages?: readonly Stage[]) {
   return LOANS.filter((l) => !stages || stages.includes(l.stage)).map((l) => ({
     key: l.key,
     borrowerName: l.borrowerName,
+    // Contact details of record and the needs list, so `public-scope.spec.ts` can assert
+    // on what must NOT be in the borrower's payload without hard-coding it.
+    borrowerEmail: l.borrowerEmail,
+    borrowerPhone: l.borrowerPhone,
     street: l.street,
     amount: l.amount,
     stage: l.stage,
     loanOfficer: l.loanOfficer,
+    conditions: l.conditions,
   }));
 }
 
