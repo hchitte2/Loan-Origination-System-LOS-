@@ -105,6 +105,23 @@ for (const scheme of SCHEMES) {
       await expectNoSeriousViolations(page);
     });
 
+    test(`/admin/activity and its reset confirm have no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "priya");
+      await page.goto("/admin/activity");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Activity log" }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+
+      // The confirm only; pressing it through would truncate the database this suite
+      // is reading in parallel.
+      await page.getByRole("button", { name: "Reset demo data" }).click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
     test(`/dashboard has no serious or critical axe violations`, async ({
       page,
     }) => {

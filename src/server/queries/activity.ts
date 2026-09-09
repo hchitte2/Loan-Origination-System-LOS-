@@ -149,3 +149,21 @@ export async function listLoanActivity(
     };
   });
 }
+
+/**
+ * When the demo was last reset, or null if it never has been.
+ *
+ * The reset truncates `activity` and the reseed writes exactly one `demo.reset` row, so
+ * there is never more than one to find — but the reset also runs on a fresh database that
+ * was only ever seeded, which has none. That is the null.
+ */
+export async function lastDemoResetAt(actor: Actor): Promise<Date | null> {
+  assertCan(actor, "admin.reset_demo");
+  const [row] = await db()
+    .select({ createdAt: activity.createdAt })
+    .from(activity)
+    .where(eq(activity.action, "demo.reset"))
+    .orderBy(desc(activity.createdAt))
+    .limit(1);
+  return row?.createdAt ?? null;
+}

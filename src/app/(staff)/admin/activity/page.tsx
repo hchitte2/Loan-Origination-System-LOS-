@@ -26,6 +26,7 @@ import { requireActor } from "@/server/actor";
 import { can } from "@/server/authz";
 import { listGlobalActivity } from "@/server/queries/activity";
 import { ActivityIcon } from "./activity-icon";
+import { ResetDemoButton } from "./reset-button";
 
 export const metadata: Metadata = { title: "Activity log" };
 
@@ -61,7 +62,10 @@ export default async function ActivityPage({
 
   return (
     <>
-      <PageHeader title="Activity log" />
+      <PageHeader
+        title="Activity log"
+        action={can(actor, "admin.reset_demo") ? <ResetDemoButton /> : null}
+      />
       <div className="flex flex-col gap-4 px-6 pb-6">
         <nav aria-label="Filter by type" className="flex flex-wrap gap-2">
           {ACTIVITY_FILTERS.map((value) => {

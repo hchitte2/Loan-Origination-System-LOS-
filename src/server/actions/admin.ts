@@ -12,7 +12,10 @@ import { requireActor } from "../actor";
 import { getAuth } from "../auth";
 import { assertCan } from "../authz";
 import { endImpersonation } from "../impersonation";
+import { resetCooldownMinutes } from "../limits";
+import { lastDemoResetAt } from "../queries/activity";
 import { getUserSummary } from "../queries/users";
+import { resetDemo } from "../reset";
 import {
   type CreateUserField,
   CreateUserSchema,
@@ -159,4 +162,37 @@ export async function createUser(
   }
   revalidatePath("/admin/users");
   return { ok: true, name, role };
+}
+
+export type ResetDemoState = { ok: true } | { ok: false; error: string } | null;
+
+/**
+ * Restore the fixture from the superadmin's own screen (design frame 07-reset-confirm).
+ *
+ * The interval is enforced here rather than by disabling the button, because a Server
+ * Action accepts a direct POST and a hidden control is never the control. It is a
+ * refusal, not a bug: the demo is intact, it was simply reset a moment ago, so it comes
+ * back as a sentence in the dialog instead of an exception.
+ *
+ * The whole app is revalidated because the reset replaces every row in it.
+ */
+export async function resetDemoData(
+  _previous: ResetDemoState,
+  _formData: FormData,
+): Promise<ResetDemoState> {
+  const actor = await requireActor();
+  assertCan(actor, "admin.reset_demo");
+
+  const now = new Date();
+  const wait = resetCooldownMinutes(await lastDemoResetAt(actor), now);
+  if (wait > 0) {
+    return {
+      ok: false,
+      error: `The demo was reset a moment ago. Try again in ${wait} ${wait === 1 ? "minute" : "minutes"}.`,
+    };
+  }
+
+  await resetDemo({ now, actor });
+  revalidatePath("/", "layout");
+  return { ok: true };
 }

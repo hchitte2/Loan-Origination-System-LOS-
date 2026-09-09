@@ -28,6 +28,23 @@ export const PER_LOAN_UPLOAD_CAP = 10;
 export const DAILY_UPLOAD_CAP = 40;
 
 /**
+ * How long the demo must be left alone between manual resets.
+ *
+ * The reset truncates and reseeds, so a second one on top of the first destroys whatever
+ * the first was meant to show. Ten minutes is longer than the demo script takes to walk,
+ * which is the thing the button exists to recover from.
+ */
+export const RESET_INTERVAL_MINUTES = 10;
+
+/** Whole minutes still to wait, or 0 when the reset is allowed. `since` is null if never. */
+export function resetCooldownMinutes(since: Date | null, now: Date): number {
+  if (since === null) return 0;
+  const elapsedMinutes = (now.getTime() - since.getTime()) / 60_000;
+  if (elapsedMinutes >= RESET_INTERVAL_MINUTES) return 0;
+  return Math.max(1, Math.ceil(RESET_INTERVAL_MINUTES - elapsedMinutes));
+}
+
+/**
  * What a visitor sees when a cap is reached. Not an error: the demo is intact, it has
  * simply had enough for today, and tomorrow it works again.
  */

@@ -1324,6 +1324,12 @@ export type SeedOptions = {
   showcaseToken: string;
   /** `reset` also records a `demo.reset` activity row. */
   mode: "seed" | "reset";
+  /**
+   * Who pressed the button, when a person did. The nightly cron leaves it unset and the
+   * row is a system event; the superadmin's button sets it, so the one row that survives
+   * the truncate says who did this (CLAUDE.md: record the human).
+   */
+  resetBy?: { actorId: string; onBehalfOf?: string | null };
 };
 
 export type SeedSummary = {
@@ -1667,7 +1673,8 @@ export async function seedFixture(
     if (mode === "reset") {
       record({
         action: "demo.reset",
-        actorKind: "system",
+        actorId: options.resetBy?.actorId,
+        onBehalfOf: options.resetBy?.onBehalfOf ?? null,
         detail: {},
         createdAt: now,
       });

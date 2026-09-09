@@ -11,6 +11,8 @@ import {
   DAILY_UPLOAD_CAP,
   loanCapReached,
   PER_LOAN_UPLOAD_CAP,
+  RESET_INTERVAL_MINUTES,
+  resetCooldownMinutes,
   startOfUtcDay,
   uploadCapReached,
 } from "@/server/limits";
@@ -163,5 +165,43 @@ describe("uploadCapReached", () => {
 describe("CAP_REACHED", () => {
   it("reads as a limit, not as a failure", () => {
     expect(CAP_REACHED).toBe("Demo limit reached, try again tomorrow");
+  });
+});
+
+describe("resetCooldownMinutes", () => {
+  const now = new Date("2026-09-08T15:00:00Z");
+  const minutesAgo = (n: number) => new Date(now.getTime() - n * 60_000);
+
+  it("allows the first reset, when nothing has been reset yet", () => {
+    expect(resetCooldownMinutes(null, now)).toBe(0);
+  });
+
+  it("refuses a second reset inside the interval", () => {
+    expect(resetCooldownMinutes(minutesAgo(0), now)).toBe(
+      RESET_INTERVAL_MINUTES,
+    );
+    expect(resetCooldownMinutes(minutesAgo(1), now)).toBe(9);
+    expect(resetCooldownMinutes(minutesAgo(9), now)).toBe(1);
+  });
+
+  it("allows it again exactly on the boundary", () => {
+    expect(resetCooldownMinutes(minutesAgo(RESET_INTERVAL_MINUTES), now)).toBe(
+      0,
+    );
+    expect(
+      resetCooldownMinutes(minutesAgo(RESET_INTERVAL_MINUTES + 1), now),
+    ).toBe(0);
+  });
+
+  it("never reports a wait of zero minutes while it is still waiting", () => {
+    // 9 minutes and 30 seconds in: rounding down would say "try again in 0 minutes".
+    const since = new Date(now.getTime() - 9.5 * 60_000);
+    expect(resetCooldownMinutes(since, now)).toBe(1);
+  });
+
+  it("treats a clock that has gone backwards as a fresh interval", () => {
+    expect(resetCooldownMinutes(new Date(now.getTime() + 60_000), now)).toBe(
+      RESET_INTERVAL_MINUTES + 1,
+    );
   });
 });
