@@ -75,7 +75,7 @@ Attention tags: Needs review `file-text` · Stalled `flag` · Closing soon `cale
 - Loading: skeleton blocks matching the layout (charts: grey bars). Errors: plain sentence and a retry.
 - `ConfirmDialog` (420 px) for destructive or irreversible actions; forms in 560 px dialogs; Cancel left, primary right.
 - Tables for staff lists (amounts right-aligned), cards for the pipeline board and the public page. Hover raises the card border to `muted-foreground`.
-- Charts: shadcn `ChartContainer` + Recharts 3, stage colours `chart-1..6`, aging buckets `chart-2`, `chart-4`, `warning`, `destructive`; `accessibilityLayer` on; visually hidden summary sentence.
+- Charts: token-driven CSS bars (stage colours `chart-1..6`; aging buckets `chart-2`, `chart-4`, `warning`, `destructive`); every bar is a keyboard-reachable disclosure button carrying its data point, plus a visually hidden summary sentence. Recharts is deferred (Should).
 - Upload zone: idle 72 px min, dashed `primary`, `upload` icon, "Tap to upload" / "PDF, JPG or PNG · up to 10 MB"; drag-over 2 px dashed + 8 % tint, "Drop to upload"; error destructive border "That file is too large".
 - Motion: 150 ms ease-out fades, slides ≤ 8 px. Under `prefers-reduced-motion`: no transitions, no skeleton shimmer, static spinner.
 

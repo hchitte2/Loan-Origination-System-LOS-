@@ -29,7 +29,7 @@ paths:
 
 ## Seed and reset
 - `src/db/seed.ts` is deterministic (fixed seed for any random generator) and relative to `new Date()` so dashboards are populated on any day. Shape: PLAN.md §6 "Seed fixture".
-- The same module implements the reset: delete user-uploaded blobs by recorded pathname → `TRUNCATE` app tables → reseed → write one `demo.reset` activity row. Idempotent: running it twice yields the same state.
+- The same module implements the reset: delete user-uploaded blobs by recorded pathname, then sweep orphaned `uploads/` objects from earlier UTC days that no row names (`list()` is a basic Blob op, allowed here and nowhere in a page request) → `TRUNCATE` app tables → reseed → write one `demo.reset` activity row. Idempotent: running it twice yields the same state.
 - Seed specimens live at Blob paths `seed/*` and are uploaded once by `pnpm seed:files`; the reset never deletes them.
 - `pnpm db:reset`, `db:seed`, `db:migrate` and their `:prod` variants (`db:migrate:prod`, `db:seed:prod`) read `DATABASE_URL`, compare its host with `.claude/prod-db-host`, and exit non-zero on a match unless `CLEARLINE_RELEASE=1` is set. The guard lives once in `src/db/cli.ts` (`migrate | seed | reset | seed-files`, optional `--env <file>`); the `:prod` scripts pass `--env .env.production.local` into that same entry point, never a bare `drizzle-kit migrate`. The hook only sees command strings and never sees the host inside `pnpm db:*:prod`.
 

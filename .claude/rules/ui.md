@@ -31,7 +31,7 @@ Read `.claude/skills/design-system/SKILL.md` before building or restyling a scre
 - One `h1` per page; per-route `<title>` ("Pipeline · Clearline").
 - Dialogs trap focus and return it on close. After a stage move or upload, move focus to the updated element or announce it.
 - Motion under 200 ms, opacity/transform only, respects `prefers-reduced-motion`.
-- Charts: keep Recharts `accessibilityLayer`; add a visually hidden text summary.
+- Charts: CSS bars from tokens; each bar a keyboard-reachable disclosure with its data point; a visually hidden text summary. No chart library unless the plan adds one.
 
 ## Impersonation banner
 Fixed top bar on every staff page while impersonating: amber background with dark text (AA in both themes), `role="status"`, copy "Viewing as Sam Okafor · Processor · Exit view". Exit is a real button and the first tab stop after the skip link. Superadmin nav is hidden while impersonating.

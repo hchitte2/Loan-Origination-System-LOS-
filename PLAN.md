@@ -2,6 +2,8 @@
 
 v2 approved · 2026-09-06 · Owner: the planning chat · Executor: the coding chat.
 
+**Delivered 2026-09-09.** All phases merged (PRs #1–#4, tags `phase-1` … `phase-5`); production at `clearline-gilt.vercel.app`, migrated and seeded with the final fixture; the §13 script rehearsed twice clean. Remaining: confirm the first 08:00 UTC cron run in the Activity page (filter Resets), then Should items if time allows.
+
 This document is the spec. The coding chat starts every session by reading the **active phase** block (Section 9), proposes a short plan, builds, verifies, commits. The planning chat owns this file, `CLAUDE.md` and `.claude/`. When code and this plan disagree, the coding chat says so in its end-of-phase summary and the planning chat updates the plan. Section 14 records the decisions already made; do not reopen them in a coding session.
 
 Facts about hosting limits, package versions, Claude Code syntax and mortgage vocabulary were verified on 2026-09-06. The prior brainstorm in `demo-los-kit/` is superseded.
@@ -67,7 +69,7 @@ The seed adds two more loan officers and one more processor without login cards 
 | Users list, create user, impersonate | – | – | W | – |
 | Global activity log (incl. impersonation events) | – | – | R | – |
 | Reset demo data | – | – | W | – |
-| Analytics | own | ops | everything | – |
+| Analytics | own (scoped in the query, not a POLICY cell) | ops | everything | – |
 
 This table is transcribed 1:1 into a role × action table in `src/server/authz.ts` (cell values `any`, `own`, or `false`), and `authz.test.ts` is driven from that same table. Docs, code and tests cannot drift silently. The public page renders only the output of `redactForPublic()`, which returns a distinct TypeScript type, so a component cannot type-check access to a hidden field.
 
@@ -110,7 +112,7 @@ Requirements: $0/month, reachable by anyone at any time, private file uploads, a
 | D. Laptop backend (M1 Air) + Cloudflare Tunnel | **No** | Free and unlimited bandwidth, but the link dies whenever the lid closes, the Mac sleeps, Wi-Fi drops or macOS restarts. `caffeinate` cannot prevent lid-close sleep; cloudflared has a documented macOS no-reconnect-after-sleep bug; ngrok's free tier shows an interstitial warning page to every visitor. | Live-presentation backup only |
 | Netlify Free, Render Free, Fly, Railway, Koyeb, GitHub Pages | No | Netlify pauses all sites when monthly credits hit zero; Render sleeps after 15 min and its free Postgres expires after 30 days; Fly, Railway and Koyeb have no free tier any more; GitHub Pages is static only. | Rejected |
 
-**Decision: everything online on Option A; the laptop is for development only.** Rules that keep it free forever: browser-direct uploads to a private Blob store · file metadata in Postgres, never `list()` at runtime · a global cap of 40 uploads per day (about 1,200 puts per month, under the 2,000 advanced-ops budget) and 10 MB per file · a once-a-day idempotent reset that purges user uploads · no keep-alive pinger against Neon (a 24/7 poller would burn ~180 CU-hours a month and suspend compute) · repo under the personal GitHub account (already true: `hchitte2/Loan-Origination-System-LOS-`, public).
+**Decision: everything online on Option A; the laptop is for development only.** Rules that keep it free forever: browser-direct uploads to a private Blob store · file metadata in Postgres; `list()` is a basic Blob operation (not one of the 2,000 advanced ops) and runs only in the daily reset's orphan sweep and the upload-count check, never in a page request · a global cap of 40 uploads per day (about 1,200 puts per month, under the 2,000 advanced-ops budget) and 10 MB per file · a once-a-day idempotent reset that purges user uploads · no keep-alive pinger against Neon (a 24/7 poller would burn ~180 CU-hours a month and suspend compute) · repo under the personal GitHub account (already true: `hchitte2/Loan-Origination-System-LOS-`, public).
 
 **Commercial-use hedge.** Frame the deployment as a personal portfolio demo. If Vercel ever flags it, either pay $20 for one month of Pro while actively selling, or move the app to Cloudflare Workers via OpenNext; Neon, the schema and the code stay, and storage swaps behind the one-file storage module.
 
@@ -125,7 +127,7 @@ Requirements: $0/month, reachable by anyone at any time, private file uploads, a
 | Layer | Choice | Why |
 |---|---|---|
 | Framework | Next.js 16.3 (App Router, Turbopack, `proxy.ts`), React 19.2, TypeScript 5.9 | Server Components and Server Actions cover every read and write; one language, one repo, one deploy |
-| Styling / UI | Tailwind 4.3 (CSS-first `@theme` tokens), shadcn/ui (CLI 4), Recharts 3 via shadcn `ChartContainer`, `next-themes` | Design tokens from Claude Design map 1:1; shadcn's `.dark` class convention gives both themes from one token set; Recharts 3 ships `accessibilityLayer` on by default |
+| Styling / UI | Tailwind 4.3 (CSS-first `@theme` tokens), shadcn/ui (CLI 4), `next-themes`; charts are token-driven CSS bars whose every bar is a keyboard-reachable disclosure with its data point, plus a visually hidden summary (Recharts deferred to Should, decided 2026-09-09) | Design tokens from Claude Design map 1:1; shadcn's `.dark` class convention gives both themes from one token set; CSS bars needed no dependency and pass axe in both themes |
 | Database | Neon Postgres Free, Drizzle ORM 0.45 + drizzle-kit 0.31 SQL migrations, `drizzle-orm/neon-serverless` on Vercel and `pg` locally | The Neon HTTP driver has no transactions; "write + activity row atomically" needs them |
 | Auth | Better Auth 1.7 with the **admin plugin**, Drizzle adapter, `nextCookies()` as the last plugin | Impersonation is first class: `impersonateUser`, `stopImpersonating`, `session.impersonatedBy` |
 | Files | Vercel Blob private store, client-direct uploads, authenticated streaming download route | Bypasses the 4.5 MB function body cap; private by default |
@@ -256,7 +258,7 @@ Eight tables: four owned by Better Auth (`user`, `session`, `account`, `verifica
 
 ## 7. Analytics dashboard
 
-One `queries/analytics.ts` takes `loanScope(actor)` and returns numbers; pure formulas live in `lib/analytics-math.ts` (tested with fixed rows). Four shared components compose every dashboard: `KpiTile` (value, delta, a focusable definition disclosure, tabular numerals), `StageBarChart`, `AgingBarChart`, `AttentionTable`. Every chart keeps Recharts' `accessibilityLayer`, has a visually hidden text summary, and has designed loading and empty states once, on the component. Chart colours come from theme tokens so both modes work.
+One `queries/analytics.ts` takes `loanScope(actor)` and returns numbers; pure formulas live in `lib/analytics-math.ts` (tested with fixed rows). Four shared components compose every dashboard: `KpiTile` (value, delta, a focusable definition disclosure, tabular numerals), `StageBarChart`, `AgingBarChart`, `AttentionTable`. Every chart is a set of token-coloured CSS bars, each bar a keyboard-reachable disclosure carrying its data point, with a visually hidden text summary and designed loading and empty states once, on the component. Chart colours come from theme tokens so both modes work. Recharts is a Should item, not a requirement.
 
 **Definitions.**
 - **Active pipeline**: count and `sum(amount)` of loans in the six active stages.
@@ -327,7 +329,7 @@ Status: done · closed 2026-09-08 · PR merged, tag `phase-2` · coding chats ru
 **Verify:** run that sentence in the browser; `pnpm test`; axe via `/verify` in both themes.
 
 ### Phase 3 — Documents, public link, review loop, processor queue
-Status: done · closed 2026-09-08 · PR merged, tag `phase-3`
+Status: done · closed 2026-09-08 · PR #3 merged, tag `phase-3`, released
 
 **Tasks:** `limits.ts` `DAILY_LOAN_CAP` enforced in `createLoan` with a `limits.test.ts` row **first**, since `createLoan` is already internet-facing · `server/storage.ts` · `/api/upload` with `handleUpload` (dual auth, types, 10 MB, prefix, caps) · `UploadZone` + `registerDocument` / `registerPublicDocument` · `/api/files/[documentId]` · Needs list tab: documents under their condition, accept, reject with reason, download, clear (with "Clear this condition?" prompt after accepting the last document), waive with reason · `/u/[token]` from artboard 5 with all drawn states, e-consent stored in the `document.uploaded` detail · `/queue` with KPI tiles and the review list · the upload and reset caps in `limits.ts` enforced and unit-tested · specimens uploaded once by `pnpm seed:files` · extend `a11y.spec.ts` with `/queue` and `/u/[token]`.
 **Done when:** in a private window with no session, Maria uploads a specimen PDF via the showcase link → Sam's queue shows it → reject with reason → Maria's page shows "Needs another: reason" → re-upload → accept → clear → Sam can advance the loan to clear to close only once every non-funding condition is cleared or waived, and the "Clear to close" button stays disabled until then; an 11 MB file and a `.exe` are refused kindly; a revoked link shows the designed expired page; a file URL in a logged-out tab returns 401.
@@ -335,14 +337,14 @@ Status: done · closed 2026-09-08 · PR merged, tag `phase-3`
 **.claude additions:** `public-upload.spec.ts` and `impersonation.spec.ts` join the Playwright suite.
 
 ### Phase 4 — Analytics
-Status: active · combined with Phase 5 on branch `phase-4-5-dashboards-and-reset`, deadline scope below
+Status: done · closed 2026-09-09 · combined with Phase 5 in PR #4, deadline scope
 
 **Tasks:** `lib/analytics-math.ts` with tests · `queries/analytics.ts` · `KpiTile`, `StageBarChart`, `AgingBarChart`, `AttentionTable` · three role compositions per Section 7 · click-throughs from tables to loans.
 **Done when:** every persona's dashboard matches Section 7 with non-empty seeded numbers; "Funded this month" reconciles with a hand count in the Closed list; axe reports no serious or critical issues in either theme; a chart is navigable by keyboard; tile definitions are reachable by keyboard.
 **Verify:** open all three dashboards; hand-check three numbers; tab through one chart; enable OS reduced motion and confirm no chart animation.
 
 ### Phase 5 — Reset, hardening, smoke tests, demo readiness
-Status: active · combined with Phase 4 on branch `phase-4-5-dashboards-and-reset`, deadline scope below
+Status: done · closed 2026-09-09 · PR #4 merged, tag `phase-5`, released and reseeded; §13 rehearsed twice on production (17.8 s and 11.2 s machine time)
 
 **Tasks:** `api/cron/reset` (delete user-uploaded blobs by recorded `documents.blob_pathname` under `uploads/*`, never `seed/*` → truncate app tables → reseed relative to today → `demo.reset` row; blobs go first so a failure mid-run leaves the pathnames in the table for the next run) guarded by `CRON_SECRET`; `vercel.json` cron `0 8 * * *`; superadmin "Reset demo data" button with confirm and the 10-minute interval · security headers and `noindex` · loading/empty/error sweep with `ui-reviewer` · copy pass · Playwright suite (Section 11) green locally, including `demo-path.spec.ts` · `docs/DEMO.md` (Section 13) and `docs/RUNBOOK.md` (env, migrate, seed, reset, Neon wake, tunnel backup; note that Vercel marks secrets Sensitive so `vercel env pull` writes blanks for them and the values are pasted into `.env.production.local` by hand before `/release`; the six app secrets exist only in Production until someone adds them to the Preview environment) · README screenshots in both themes · rehearse the script twice on the prod URL.
 **Done when:** `curl -H "Authorization: Bearer $CRON_SECRET" <url>/api/cron/reset` restores the fixture in under 60 s and is idempotent when run twice; yesterday's uploads are gone after reset; the demo script runs clean twice in a row on the production URL; Lighthouse accessibility ≥ 95 on login, pipeline and the public page.
@@ -436,7 +438,7 @@ Minimal but real, one layer per concern.
 | Risk | Mitigation |
 |---|---|
 | Vercel Hobby non-commercial clause | Personal portfolio framing; $20 Pro for a selling month; Cloudflare Workers fallback behind the one-file storage module |
-| Blob 2,000 advanced ops per month | Global 40 uploads/day cap, no runtime `list()`, specimens reused across resets, avoid browsing the Blob dashboard |
+| Blob 2,000 advanced ops per month | Global 40 uploads/day cap, `list()` only in the daily orphan sweep and the upload count (basic ops), specimens reused across resets, avoid browsing the Blob dashboard |
 | Neon cold start after 5 min idle reads as slowness | Login page performs a trivial query on render; pre-warm before demos; no retry wrappers that hide real errors; no keep-alive pinger |
 | Neon 100 CU-hours/month | Polling only while the tab is visible and stops after 10 idle minutes; local dev on the `dev` branch is fine (a 3-hour session ≈ 0.75 CU-hours) |
 | Hobby cron fires ±59 min, may skip or double-fire | Reset is idempotent; superadmin button is the manual path; nothing depends on exact timing |
@@ -454,7 +456,7 @@ Minimal but real, one layer per concern.
 
 1. **Login (20 s).** "Three roles, one loan file, one superadmin who can be anyone. Everything is synthetic and resets nightly."
 2. **Priya, superadmin (60 s).** Enter as Priya. Dashboard: pipeline by stage, funded this month, pull-through, needs attention. Users → View as Alex. The amber banner appears.
-3. **As Alex, loan officer (90 s).** Pipeline. New loan "Chen · 412 Maple Ave", $485,000, conventional purchase. Move it to Application, then to Processing. Open the loan: six needs-list items were created. Copy Maria's link.
+3. **As Alex, loan officer (90 s).** Pipeline. New loan "Nakamura · 88 Willow Bend", $455,000, conventional purchase (never "Chen · 412 Maple Ave": that is the seeded showcase loan and typing it again puts two identical Chen rows on the board). Move it to Application, then to Processing; six needs-list items appear. Then open the showcase loan "Chen · 412 Maple Ave", already in Processing with a half-complete needs list, and copy Maria's link.
 4. **Maria, borrower, phone or private window (60 s).** "No account, no app to install." Upload the specimen pay stub against Pay stubs. Status flips to "Received, under review".
 5. **Exit view → View as Sam, processor (90 s).** Queue shows the upload. Reject: "Only one stub; we need 30 days." Maria's page: "Needs another: …". Re-upload, accept, "Clear this condition?" → yes. Submit to underwriting → Issue conditional approval. Point at the tooltip.
 6. **Exit view, back as Priya (45 s).** Loan Activity tab: "Priya Nair (viewing as Sam Okafor) rejected Pay stubs …". Activity page filtered to impersonation. "Append-only, enforced in the database, impersonation is honest." Flip to dark mode. Close on the Needs attention table.
