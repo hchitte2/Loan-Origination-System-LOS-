@@ -120,3 +120,18 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1000 * 1000) return `${Math.round(bytes / 1000)} KB`;
   return `${(bytes / 1000 / 1000).toFixed(1)} MB`;
 }
+
+/**
+ * How old something is, in the queue's compact form: "1 h", "6 h", "2 d". Hours below a
+ * day, days above it — a reviewer scanning a column wants the magnitude, not a sentence.
+ */
+export function formatAge(date: Date, now: Date = new Date()): string {
+  const minutes = Math.max(
+    0,
+    Math.floor((now.getTime() - date.getTime()) / 60_000),
+  );
+  if (minutes < 60) return `${minutes} m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} h`;
+  return `${Math.floor(hours / 24)} d`;
+}

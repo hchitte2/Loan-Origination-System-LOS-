@@ -1,11 +1,13 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { conditions } from "@/db/schema";
+import { conditions, loans } from "@/db/schema";
 import {
   type ConditionStatus,
   OPEN_CONDITION_STATUSES,
   type PriorTo,
 } from "@/lib/conditions";
+import { daysSince } from "@/lib/format";
+import { ACTIVE_STAGES } from "@/lib/stages";
 import type { Actor } from "../actor";
 import { assertCan } from "../authz";
 import type { ConditionForGate } from "../transitions";
@@ -147,4 +149,73 @@ export async function getCondition(
     .where(and(eq(conditions.id, conditionId), eq(conditions.loanId, loanId)))
     .limit(1);
   return row ?? null;
+}
+
+/** The numbers on the queue's tiles (design frame 04-queue). */
+export type QueueCounts = {
+  /** Open conditions across active files. */
+  openConditions: number;
+  /** Loans in Processing or later — the files actually being worked. */
+  activeFiles: number;
+  /** Open conditions by age, in the four drawn buckets. */
+  aging: { label: string; count: number }[];
+};
+
+/** The buckets the design draws, in order. `maxDays` null means "and older". */
+const AGING_BUCKETS = [
+  { label: "0–3 d", maxDays: 3 },
+  { label: "4–7 d", maxDays: 7 },
+  { label: "8–14 d", maxDays: 14 },
+  { label: "15+ d", maxDays: null },
+] as const;
+
+/**
+ * Counts for the queue tiles. One pass over the open conditions on active loans, because
+ * three of the four numbers come from the same rows and the fourth is a loan count.
+ *
+ * "Active files" is Processing or later, not every active stage: a lead with no documents
+ * is not a file anyone is working.
+ */
+export async function getQueueCounts(
+  actor: Actor,
+  now: Date = new Date(),
+): Promise<QueueCounts> {
+  assertCan(actor, "condition.read");
+  const worked = ACTIVE_STAGES.slice(ACTIVE_STAGES.indexOf("processing"));
+
+  const [openRows, activeRows] = await Promise.all([
+    db()
+      .select({ createdAt: conditions.createdAt })
+      .from(conditions)
+      .innerJoin(loans, eq(loans.id, conditions.loanId))
+      .where(
+        and(
+          inArray(conditions.status, [...OPEN_CONDITION_STATUSES]),
+          inArray(loans.stage, [...ACTIVE_STAGES]),
+        ),
+      ),
+    db()
+      .select({ total: count() })
+      .from(loans)
+      .where(inArray(loans.stage, [...worked])),
+  ]);
+
+  const aging = AGING_BUCKETS.map((bucket) => ({
+    label: bucket.label,
+    count: 0,
+  }));
+  for (const row of openRows) {
+    const age = daysSince(row.createdAt, now);
+    const index = AGING_BUCKETS.findIndex(
+      (bucket) => bucket.maxDays === null || age <= bucket.maxDays,
+    );
+    const target = aging[index];
+    if (target) target.count += 1;
+  }
+
+  return {
+    openConditions: openRows.length,
+    activeFiles: activeRows[0]?.total ?? 0,
+    aging,
+  };
 }
