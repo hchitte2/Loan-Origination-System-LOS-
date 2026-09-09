@@ -2,7 +2,7 @@
 
 v2 approved · 2026-09-06 · Owner: the planning chat · Executor: the coding chat.
 
-**Delivered 2026-09-09.** All phases merged (PRs #1–#4, tags `phase-1` … `phase-5`); production at `clearline-gilt.vercel.app`, migrated and seeded with the final fixture; the §13 script rehearsed twice clean. Remaining: confirm the first 08:00 UTC cron run in the Activity page (filter Resets), then Should items if time allows.
+**Delivered 2026-09-09.** All phases merged (PRs #1–#4, tags `phase-1` … `phase-5`); production at `clearline-gilt.vercel.app`, migrated and seeded with the final fixture; the §13 script rehearsed twice clean. Post-delivery: PR #5 (2026-09-09) lets a staff member remove their own unreviewed upload and fixed a crash when removing seeded documents. Remaining: confirm the first 08:00 UTC cron run in the Activity page (filter Resets), then Should items if time allows.
 
 This document is the spec. The coding chat starts every session by reading the **active phase** block (Section 9), proposes a short plan, builds, verifies, commits. The planning chat owns this file, `CLAUDE.md` and `.claude/`. When code and this plan disagree, the coding chat says so in its end-of-phase summary and the planning chat updates the plan. Section 14 records the decisions already made; do not reopen them in a coding session.
 
@@ -63,6 +63,7 @@ The seed adds two more loan officers and one more processor without login cards 
 | Documents: upload | W (own) | W | W | W (own loan) |
 | Documents: download file | R | R | R | – (status only) |
 | Documents: accept, reject with reason | – | W | W | – |
+| Documents: remove your own unreviewed upload (staff upload, uploader's own, still pending; the row goes, the blob waits for the nightly sweep) | W (own loan) | W (any loan) | W | – |
 | Withdrawn / denied reason | W (own) | W | W | R (borrower label) |
 | Public link: copy, regenerate | W (own) | W | W | – |
 | Loan activity log | R | R | R | – |
@@ -237,7 +238,7 @@ Eight tables: four owned by Better Auth (`user`, `session`, `account`, `verifica
 | `documents` | `id` · `loan_id cascade` · `condition_id? → conditions` · `uploaded_by? → user` (null for public link) · `uploaded_via` · `file_name` · `blob_pathname unique` · `content_type` · `size_bytes` · `doc_type?` · `review_status default 'pending'` · `review_reason?` · `reviewed_by?` · `reviewed_at?` · `created_at` |
 | `activity` | `id bigint identity` · `loan_id? → loans cascade` (null for admin and system events) · `actor_id? → user` · `on_behalf_of? → user` · `actor_kind` · `action text` · `detail jsonb default '{}'` · `created_at`. Indexes `(loan_id, created_at desc)`, `(action, created_at desc)`. Triggers `activity_no_update`, `activity_no_delete` raise. |
 
-**Action names (dot-namespaced).** `loan.created`, `loan.updated`, `loan.stage_changed {from,to,reason?}`, `loan.link_regenerated`, `loan.link_copied`, `condition.created`, `condition.updated`, `condition.cleared`, `condition.waived {reason}`, `condition.deleted`, `document.uploaded {via, econsent?}`, `document.accepted`, `document.rejected {reason}`, `admin.user_created`, `admin.impersonation_started {target}`, `admin.impersonation_ended {target}`, `demo.reset`.
+**Action names (dot-namespaced).** `loan.created`, `loan.updated`, `loan.stage_changed {from,to,reason?}`, `loan.link_regenerated`, `loan.link_copied`, `condition.created`, `condition.updated`, `condition.cleared`, `condition.waived {reason}`, `condition.deleted`, `document.uploaded {via, econsent?}`, `document.accepted`, `document.rejected {reason}`, `document.deleted {fileName, conditionId}`, `admin.user_created`, `admin.impersonation_started {target}`, `admin.impersonation_ended {target}`, `demo.reset`.
 
 `loan.link_copied` is written by a fire-and-forget server action fired after the clipboard write on the loan Overview; it adds no UI beyond the existing toast, and a failure to log never blocks the copy.
 
