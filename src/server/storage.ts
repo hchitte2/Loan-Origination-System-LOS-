@@ -102,19 +102,6 @@ export async function purgeUploads(
 }
 
 /**
- * Delete one uploaded blob — an upload its sender is taking back before anyone reviewed
- * it. Refuses anything outside `uploads/` for the same reason `purgeUploads` does.
- *
- * The store is the second write of a deletion, after the row. If it fails, the row is
- * already gone and the object is an orphan, which the nightly reset's sweep reclaims —
- * the other order would leave a row pointing at a file that no longer exists, and that is
- * a download that 404s in front of someone.
- */
-export async function deleteUpload(pathname: string): Promise<void> {
-  await purgeUploads([pathname]);
-}
-
-/**
  * Delete uploaded blobs the database has no row for, written before `since`. Returns how
  * many went.
  *

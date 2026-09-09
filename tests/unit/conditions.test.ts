@@ -45,9 +45,10 @@ describe("statusAfterDeletion", () => {
     expect(statusAfterDeletion("received", false)).toBe("requested");
   });
 
-  it("leaves it received while any other document is still on it", () => {
-    // Unlike a rejection, this does not ask whether the survivor was accepted: a file
-    // sitting on the item means it is not back to being asked for.
+  it("leaves it received while another document is still answering it", () => {
+    // A pending or accepted survivor holds the item. A rejected one does not, and the
+    // caller excludes those before asking — a condition left at `received` by a rejected
+    // file is stranded: no upload zone for the borrower, no row in a pending-only queue.
     expect(statusAfterDeletion("received", true)).toBeNull();
     for (const status of CONDITION_STATUSES) {
       expect(statusAfterDeletion(status, true)).toBeNull();

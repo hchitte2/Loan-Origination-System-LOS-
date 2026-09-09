@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import type { Tx } from "@/db";
 import { conditions, documents } from "@/db/schema";
 import {
@@ -192,7 +192,6 @@ export async function deleteDocument(
     documentId: string;
     from: ReviewStatus;
     condition: { id: string; status: ConditionStatus } | null;
-    hasOtherDocument: boolean;
     activity: ActivityInput;
   },
 ): Promise<boolean> {
@@ -208,9 +207,26 @@ export async function deleteDocument(
   if (removed.length === 0) return false;
 
   if (input.condition) {
+    // Asked here, from `tx`, after the row is gone: a second upload landing between the
+    // caller's read and this write would otherwise reopen a condition that still has a
+    // pending file on it, and ask the borrower again for something already in the queue.
+    //
+    // Rejected rows do not count. They are not answering the condition — leaving one to
+    // hold it at `received` strands it where the borrower has no upload zone and no
+    // reviewer sees it in a pending-only queue.
+    const [other] = await tx
+      .select({ id: documents.id })
+      .from(documents)
+      .where(
+        and(
+          eq(documents.conditionId, input.condition.id),
+          ne(documents.reviewStatus, "rejected"),
+        ),
+      )
+      .limit(1);
     const next = statusAfterDeletion(
       input.condition.status,
-      input.hasOtherDocument,
+      other !== undefined,
     );
     if (next) {
       await tx

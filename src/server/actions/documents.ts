@@ -23,11 +23,10 @@ import {
   getDocumentForDeletion,
   getDocumentOnLoan,
   hasAcceptedDocument,
-  hasOtherDocument,
   pathnameAlreadyRegistered,
 } from "../queries/documents";
 import { getLoanForAction } from "../queries/loans";
-import { countUploadsToday, deleteUpload, statBlob } from "../storage";
+import { countUploadsToday, statBlob } from "../storage";
 import {
   AcceptDocumentSchema,
   DeleteDocumentSchema,
@@ -359,8 +358,17 @@ export type DeleteDocumentState =
  *   longer the uploader's to withdraw; the compare-and-set in `deleteDocument` closes the
  *   gap between this check and the write.
  *
- * Row first, then the blob: an orphaned object is swept by the nightly reset, whereas a
- * row pointing at a deleted file is a download that 404s in front of someone.
+ * The row goes; the object stays until the nightly reset sweeps it.
+ *
+ * That is deliberate, and it is the whole reason this does not call the store. The upload
+ * caps are counted from the store rather than from `documents` — `countUploadsToday`
+ * lists what was written under `uploads/` since midnight UTC — so deleting the object
+ * would hand back a slot, and upload-remove-upload would be an unbounded loop of `put`
+ * operations against a budget whose exhaustion disables Blob for a month.
+ *
+ * Nothing can reach the bytes in the meantime: `/api/files/[documentId]` resolves the
+ * pathname from the row, and the row is gone. `purgeOrphanedUploads` reclaims the object
+ * on the next nightly run, which is the job it exists for.
  */
 export async function deleteDocumentAction(
   _previous: DeleteDocumentState,
@@ -408,18 +416,14 @@ export async function deleteDocumentAction(
   const condition = document.conditionId
     ? await getCondition(actor, loan.id, document.conditionId)
     : null;
-  const otherDocument = document.conditionId
-    ? await hasOtherDocument(actor, document.conditionId, document.id)
-    : false;
 
   const removed = await db().transaction(async (tx) =>
     deleteDocument(tx, {
       documentId: document.id,
-      from: "pending",
+      from: document.reviewStatus,
       condition: condition
         ? { id: condition.id, status: condition.status }
         : null,
-      hasOtherDocument: otherDocument,
       activity: {
         actor,
         loanId: loan.id,
@@ -439,8 +443,6 @@ export async function deleteDocumentAction(
       error: `${document.fileName} was reviewed a moment ago. Reload and try again.`,
     };
   }
-
-  await deleteUpload(document.blobPathname);
 
   revalidatePath(`/loans/${loan.id}`, "layout");
   revalidatePath("/queue");

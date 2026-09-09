@@ -98,27 +98,6 @@ export async function hasAcceptedDocument(
   return row !== undefined;
 }
 
-/**
- * Does this condition still have any document on it, ignoring one? Deletion asks this
- * rather than `hasAcceptedDocument`: a file sitting on an item means it has not gone back
- * to being asked for, whether or not anyone has reviewed it yet.
- */
-export async function hasOtherDocument(
-  actor: Actor,
-  conditionId: string,
-  exceptId: string,
-): Promise<boolean> {
-  assertCan(actor, "condition.read");
-  const [row] = await db()
-    .select({ id: documents.id })
-    .from(documents)
-    .where(
-      and(eq(documents.conditionId, conditionId), ne(documents.id, exceptId)),
-    )
-    .limit(1);
-  return row !== undefined;
-}
-
 /** What deciding whether a document may be deleted needs, plus the blob to remove. */
 export type DeletableDocument = {
   id: string;
