@@ -1,6 +1,6 @@
 import { BlobNotFoundError, del, get, head, list, put } from "@vercel/blob";
 import { getEnv } from "@/lib/env";
-import { SEED_PREFIX, uploadPrefix } from "@/lib/uploads";
+import { SEED_PREFIX, UPLOAD_PREFIX, uploadPrefix } from "@/lib/uploads";
 import { startOfUtcDay } from "./limits";
 
 /**
@@ -46,7 +46,7 @@ export async function countUploadsToday(
   let forLoan = 0;
   let forDay = 0;
   do {
-    const page = await list({ prefix: "uploads/", cursor, token });
+    const page = await list({ prefix: UPLOAD_PREFIX, cursor, token });
     for (const blob of page.blobs) {
       if (blob.uploadedAt < since) continue;
       forDay += 1;
@@ -58,29 +58,47 @@ export async function countUploadsToday(
   return { forLoan, forDay };
 }
 
+/** How many pathnames one `del` call may carry. The API allows more; this stays modest. */
+const DELETE_BATCH = 100;
+
 /**
- * Delete everything under `uploads/`, leaving `seed/` alone. Returns how many went.
+ * Delete the given uploaded blobs. Returns how many went.
  *
- * The reset truncates `documents`, so every object under that prefix is orphaned by
- * definition once it runs. Deleting by prefix rather than by recorded pathname also
- * clears uploads that were written but never registered — which would otherwise survive
- * every reset and, because the caps count objects rather than rows, keep counting
- * against the day's budget forever.
+ * The caller passes the pathnames recorded in `documents.blob_pathname` (PLAN.md §5), not
+ * a prefix: a delete is only ever issued for an object the database has a row for. That
+ * is the reason to prefer it over a `list({ prefix: "uploads/" })` sweep — the sweep is
+ * one unscoped call away from taking anything that happens to be filed under `uploads/`,
+ * whereas this cannot delete what it was not told about.
+ *
+ * `seed/` is refused rather than filtered quietly. Nothing should ever ask, and a caller
+ * that did would be a bug worth seeing: those three specimens are what the fixture points
+ * at, and losing them means reseeding costs uploads.
+ *
+ * What this does not clear is an upload that was written but never registered. Those
+ * survive the reset and hold storage until someone empties the store by hand. They do not
+ * spend the next day's put budget: `countUploadsToday` counts only objects written since
+ * midnight UTC, so yesterday's orphans are outside every cap window by the time the
+ * nightly reset runs.
  */
-export async function purgeUploads(): Promise<number> {
+export async function purgeUploads(
+  pathnames: readonly string[],
+): Promise<number> {
+  const targets = [...new Set(pathnames)];
+  const stray = targets.filter(
+    (pathname) => !pathname.startsWith(UPLOAD_PREFIX),
+  );
+  if (stray.length > 0) {
+    throw new Error(
+      `Refusing to delete outside ${UPLOAD_PREFIX}: ${stray.join(", ")}`,
+    );
+  }
+  if (targets.length === 0) return 0;
+
   const token = getEnv().BLOB_READ_WRITE_TOKEN;
-  let cursor: string | undefined;
-  let removed = 0;
-  do {
-    const page = await list({ prefix: "uploads/", cursor, token });
-    const pathnames = page.blobs.map((blob) => blob.pathname);
-    if (pathnames.length > 0) {
-      await del(pathnames, { token });
-      removed += pathnames.length;
-    }
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor);
-  return removed;
+  for (let i = 0; i < targets.length; i += DELETE_BATCH) {
+    await del(targets.slice(i, i + DELETE_BATCH), { token });
+  }
+  return targets.length;
 }
 
 /**

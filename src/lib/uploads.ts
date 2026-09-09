@@ -74,9 +74,12 @@ export function rejectionSentence(rejection: FileRejection): string {
 /** Where the fixture's specimen documents live. Never deleted by a reset. */
 export const SEED_PREFIX = "seed/";
 
+/** Where everything a visitor sends lives. The nightly reset deletes only from here. */
+export const UPLOAD_PREFIX = "uploads/";
+
 /** Everything one loan's uploads share. The upload route pins the token to this. */
 export function uploadPrefix(loanId: string): string {
-  return `uploads/${loanId}/`;
+  return `${UPLOAD_PREFIX}${loanId}/`;
 }
 
 /**
