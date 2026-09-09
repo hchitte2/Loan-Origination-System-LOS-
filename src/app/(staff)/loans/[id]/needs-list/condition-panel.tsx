@@ -13,7 +13,11 @@ import { uploadPrefix } from "@/lib/uploads";
 import { registerDocument } from "@/server/actions/documents";
 import type { ConditionRow } from "@/server/queries/conditions";
 import type { LoanDocument } from "@/server/queries/documents";
-import { DocumentReview, RejectForm } from "./document-review";
+import {
+  DeleteDocumentButton,
+  DocumentReview,
+  RejectForm,
+} from "./document-review";
 import {
   ClearConditionButton,
   ClearConditionDialog,
@@ -34,6 +38,7 @@ export function ConditionPanel({
   condition,
   documents,
   permissions,
+  actorUserId,
   now,
 }: {
   id: string;
@@ -46,7 +51,9 @@ export function ConditionPanel({
     resolve: boolean;
     review: boolean;
     upload: boolean;
+    delete: boolean;
   };
+  actorUserId: string;
   now: Date;
 }) {
   const router = useRouter();
@@ -117,6 +124,12 @@ export function ConditionPanel({
                     Download
                     <span className="sr-only"> {document.fileName}</span>
                   </a>
+                  {permissions.delete &&
+                  document.uploadedVia !== "public_link" &&
+                  document.uploadedById === actorUserId &&
+                  document.reviewStatus === "pending" ? (
+                    <DeleteDocumentButton loanId={loanId} document={document} />
+                  ) : null}
                   {permissions.review ? (
                     <DocumentReview
                       loanId={loanId}

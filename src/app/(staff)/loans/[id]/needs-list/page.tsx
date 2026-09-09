@@ -45,6 +45,10 @@ export default async function NeedsListPage({
     resolve: can(actor, "condition.resolve", loan),
     review: can(actor, "document.review", loan),
     upload: can(actor, "document.upload", loan),
+    // The loan-level half. Whether *this* file may go also depends on who sent it and
+    // whether anyone has reviewed it, which the panel checks against `actorUserId` and
+    // the action re-checks against the row.
+    delete: can(actor, "document.delete", loan),
   };
   const mayManage = permissions.manage;
   const open = conditions.filter((c) => isOpenCondition(c.status)).length;
@@ -90,6 +94,7 @@ export default async function NeedsListPage({
           conditions={conditions}
           documents={documents}
           permissions={permissions}
+          actorUserId={actor.userId}
           now={now.toISOString()}
         />
       )}
