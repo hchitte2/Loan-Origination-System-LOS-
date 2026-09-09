@@ -174,6 +174,11 @@ export type ResetDemoState = { ok: true } | { ok: false; error: string } | null;
  * refusal, not a bug: the demo is intact, it was simply reset a moment ago, so it comes
  * back as a sentence in the dialog instead of an exception.
  *
+ * The check is a read then a write, not an atomic claim: two direct POSTs arriving
+ * together would both pass it. That is left alone on purpose — the reset is idempotent,
+ * so the cost is a wasted reset rather than damage, and serialising it would mean a lock
+ * table for a demo button.
+ *
  * The whole app is revalidated because the reset replaces every row in it.
  */
 export async function resetDemoData(

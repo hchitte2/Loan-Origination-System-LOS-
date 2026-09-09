@@ -28,7 +28,17 @@ function secretMatches(presented: string, expected: string): boolean {
 
 export async function GET(request: Request): Promise<Response> {
   const header = request.headers.get("authorization") ?? "";
-  if (!secretMatches(header, `Bearer ${getEnv().CRON_SECRET}`)) {
+  // `getEnv()` validates the whole schema, so a deployment missing any variable would
+  // throw a 500 here and tell a prober that its environment is incomplete. Refusing
+  // instead keeps the endpoint silent about itself — and a preview deployment, which has
+  // none of the six app secrets, answers 401 like every other unauthorized caller.
+  let expected: string;
+  try {
+    expected = getEnv().CRON_SECRET;
+  } catch {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  if (!secretMatches(header, `Bearer ${expected}`)) {
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -38,6 +48,7 @@ export async function GET(request: Request): Promise<Response> {
     ok: true,
     ms: Date.now() - startedAt,
     blobsDeleted: summary.blobsDeleted,
+    orphansDeleted: summary.orphansDeleted,
     users: summary.users,
     loans: summary.loans,
     conditions: summary.conditions,
