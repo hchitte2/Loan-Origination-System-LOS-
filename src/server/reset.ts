@@ -5,7 +5,8 @@ import { type SeedSummary, seedFixture } from "@/db/seed";
 import { getEnv } from "@/lib/env";
 import { UPLOAD_PREFIX } from "@/lib/uploads";
 import type { Actor } from "./actor";
-import { purgeUploads } from "./storage";
+import { startOfUtcDay } from "./limits";
+import { purgeOrphanedUploads, purgeUploads } from "./storage";
 
 /**
  * Put the demo back to the fixture (PLAN.md §5 "Demo reset").
@@ -15,7 +16,7 @@ import { purgeUploads } from "./storage";
  * point — the sequence below is not arbitrary.
  *
  * 1. Read the uploaded pathnames out of `documents`.
- * 2. Delete those blobs.
+ * 2. Delete those blobs, then sweep any from a previous day that no row ever named.
  * 3. Truncate and reseed relative to `now`, which writes the `demo.reset` activity row.
  *
  * Blobs go first because the reseed truncates `documents`. If the delete fails halfway,
@@ -30,6 +31,8 @@ import { purgeUploads } from "./storage";
 export type ResetSummary = SeedSummary & {
   /** Uploaded blobs deleted. Zero on a demo nobody has uploaded to since the last reset. */
   blobsDeleted: number;
+  /** Blobs with no `documents` row, from a previous day. Normally zero. */
+  orphansDeleted: number;
 };
 
 export async function resetDemo(
@@ -47,14 +50,24 @@ export async function resetDemo(
     .from(documents)
     .where(like(documents.blobPathname, `${UPLOAD_PREFIX}%`));
 
-  const blobsDeleted = await purgeUploads(uploaded.map((row) => row.pathname));
+  const pathnames = uploaded.map((row) => row.pathname);
+  const blobsDeleted = await purgeUploads(pathnames);
+  // What the rows never knew about: uploads written but never registered. Bounded to
+  // objects from a previous UTC day, so an upload in flight right now is never touched.
+  const orphansDeleted = await purgeOrphanedUploads(
+    startOfUtcDay(now),
+    new Set(pathnames),
+  );
 
   const summary = await seedFixture(database, {
     now,
     demoPassword: env.DEMO_PASSWORD,
     showcaseToken: env.DEMO_SHOWCASE_TOKEN,
     mode: "reset",
-    // The nightly cron passes no actor and the row stays a system event.
+    // The nightly cron passes no actor and the row stays a system event. The
+    // impersonation branch is defensive rather than reachable: `admin.reset_demo` is
+    // false for both non-superadmin roles and `assertCan` runs against the effective
+    // user, so nobody can reset the demo while viewing as someone else.
     resetBy: actor
       ? {
           actorId: actor.actorUserId,
@@ -63,5 +76,5 @@ export async function resetDemo(
       : undefined,
   });
 
-  return { ...summary, blobsDeleted };
+  return { ...summary, blobsDeleted, orphansDeleted };
 }

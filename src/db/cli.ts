@@ -207,7 +207,12 @@ async function main(): Promise<void> {
       // The order — blobs, then truncate and reseed — lives in `resetDemo`, which the
       // cron route and the superadmin button call too, so all three agree.
       const summary = await resetDemo();
-      console.log(`  removed ${summary.blobsDeleted} uploaded file(s)`);
+      console.log(
+        `  removed ${summary.blobsDeleted} uploaded file(s)` +
+          (summary.orphansDeleted > 0
+            ? `, and ${summary.orphansDeleted} unregistered`
+            : ""),
+      );
       printSummary("reset", summary);
       await closeDb();
       return;

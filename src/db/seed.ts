@@ -1364,7 +1364,19 @@ export async function seedFixture(
 
     // Staff: drop anyone a visitor created (nothing references them once the app tables
     // are empty; sessions and accounts cascade), then restore the six accounts.
-    await tx.delete(user).where(notInArray(user.id, Object.values(USER_ID)));
+    //
+    // Whoever pressed the button is kept: `activity.actor_id` is a foreign key to `user`,
+    // so deleting a superadmin created at runtime and then writing their `demo.reset` row
+    // would violate it, roll the whole transaction back, and leave the demo unreset with
+    // its blobs already gone. Their session survives too, which is what you want.
+    await tx
+      .delete(user)
+      .where(
+        notInArray(user.id, [
+          ...Object.values(USER_ID),
+          ...(options.resetBy ? [options.resetBy.actorId] : []),
+        ]),
+      );
     for (const u of DEMO_USERS) {
       const createdAt = ago(now, u.createdDaysAgo);
       const row = {

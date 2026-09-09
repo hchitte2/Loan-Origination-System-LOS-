@@ -102,6 +102,42 @@ export async function purgeUploads(
 }
 
 /**
+ * Delete uploaded blobs the database has no row for, written before `since`. Returns how
+ * many went.
+ *
+ * `purgeUploads` can only delete what it was told about, so an upload that was written
+ * and never registered — a caller who takes a token, puts the file and never comes back —
+ * would otherwise survive every reset forever. That is not a cap problem, because
+ * `countUploadsToday` counts only objects written since midnight UTC; it is a storage
+ * problem, and 40 × 10 MB a day of permanent residue fills a 1 GB store in under three
+ * days, after which real uploads fail.
+ *
+ * `since` is midnight UTC, so nothing being uploaded right now is at risk: only objects
+ * from a previous day, whose rows the reset has already truncated, are considered. An
+ * orphan written today is reclaimed by tomorrow's reset.
+ */
+export async function purgeOrphanedUploads(
+  since: Date,
+  known: ReadonlySet<string>,
+): Promise<number> {
+  const token = getEnv().BLOB_READ_WRITE_TOKEN;
+  let cursor: string | undefined;
+  let removed = 0;
+  do {
+    const page = await list({ prefix: UPLOAD_PREFIX, cursor, token });
+    const stale = page.blobs
+      .filter((blob) => blob.uploadedAt < since && !known.has(blob.pathname))
+      .map((blob) => blob.pathname);
+    for (let i = 0; i < stale.length; i += DELETE_BATCH) {
+      await del(stale.slice(i, i + DELETE_BATCH), { token });
+      removed += stale.slice(i, i + DELETE_BATCH).length;
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return removed;
+}
+
+/**
  * Put one specimen at a fixed `seed/` pathname. Overwrites on purpose and adds no random
  * suffix: the fixture points at these exact pathnames, `pnpm seed:files` is re-runnable,
  * and re-running it must not leave a second copy behind.
