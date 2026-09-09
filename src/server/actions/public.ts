@@ -2,15 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
+import { fileRejection, isInLoanPrefix, safeFileName } from "@/lib/uploads";
 import { insertDocument, receiveCondition } from "../documents";
-import {
-  CAP_REACHED,
-  countUploadsToday,
-  fileRejection,
-  uploadCapReached,
-} from "../limits";
+import { CAP_REACHED, countUploadsToday, uploadCapReached } from "../limits";
 import { getPublicCondition, resolveUploadToken } from "../queries/public";
-import { isInLoanPrefix, safeFileName, statBlob } from "../storage";
+import { statBlob } from "../storage";
 import { RegisterPublicDocumentSchema } from "./schemas";
 
 /**

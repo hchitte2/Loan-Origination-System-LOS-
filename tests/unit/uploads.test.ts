@@ -5,7 +5,7 @@ import {
   SEED_PREFIX,
   safeFileName,
   uploadPrefix,
-} from "@/server/storage";
+} from "@/lib/uploads";
 
 /**
  * The pathname is the security boundary of the upload route: the browser proposes it, so

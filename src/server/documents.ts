@@ -7,8 +7,8 @@ import {
   statusAfterUpload,
 } from "@/lib/conditions";
 import type { ReviewStatus, UploadedVia } from "@/lib/doc-types";
+import { safeFileName } from "@/lib/uploads";
 import { type ActivityInput, logActivity } from "./activity";
-import { safeFileName } from "./storage";
 
 /**
  * The document service: the review pipeline's writes — a document arriving, being

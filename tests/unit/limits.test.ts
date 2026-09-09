@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   ALLOWED_CONTENT_TYPES,
+  fileRejection,
+  MAX_FILE_BYTES,
+} from "@/lib/uploads";
+import {
   CAP_REACHED,
   DAILY_LOAN_CAP,
   DAILY_UPLOAD_CAP,
-  fileRejection,
   loanCapReached,
-  MAX_FILE_BYTES,
   PER_LOAN_UPLOAD_CAP,
   startOfUtcDay,
   uploadCapReached,

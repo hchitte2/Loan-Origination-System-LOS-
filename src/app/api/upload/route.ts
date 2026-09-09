@@ -1,18 +1,20 @@
 import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
 import { z } from "zod";
 import { getEnv } from "@/lib/env";
+import {
+  ALLOWED_CONTENT_TYPES,
+  isInLoanPrefix,
+  MAX_FILE_BYTES,
+} from "@/lib/uploads";
 import { getActor } from "@/server/actor";
 import { can } from "@/server/authz";
 import {
-  ALLOWED_CONTENT_TYPES,
   CAP_REACHED,
   countUploadsToday,
-  MAX_FILE_BYTES,
   uploadCapReached,
 } from "@/server/limits";
 import { getLoanForAction } from "@/server/queries/loans";
 import { resolveUploadToken } from "@/server/queries/public";
-import { isInLoanPrefix } from "@/server/storage";
 
 /**
  * The client-upload token endpoint (PLAN.md §5 "File storage").
