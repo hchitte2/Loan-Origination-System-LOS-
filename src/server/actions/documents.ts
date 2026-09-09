@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { fileRejection, isInLoanPrefix, safeFileName } from "@/lib/uploads";
+import {
+  fileRejection,
+  isInLoanPrefix,
+  rejectionSentence,
+  safeFileName,
+} from "@/lib/uploads";
 import { type Actor, requireActor } from "../actor";
 import { can, closedLoanReason } from "../authz";
 import {
@@ -79,7 +84,7 @@ export async function registerDocument(
   if (!blob)
     return { ok: false, error: "That upload did not arrive. Try again." };
   const rejection = fileRejection(blob.contentType, blob.size);
-  if (rejection) return { ok: false, error: rejection };
+  if (rejection) return { ok: false, error: rejectionSentence(rejection) };
 
   if (uploadCapReached(await countUploadsToday(loan.id))) {
     return { ok: false, error: CAP_REACHED };

@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { UploadZone } from "@/components/upload-zone";
 import { canClear } from "@/lib/conditions";
 import { formatFileSize, formatRelative } from "@/lib/format";
+import { uploadPrefix } from "@/lib/uploads";
 import { registerDocument } from "@/server/actions/documents";
 import type { ConditionRow } from "@/server/queries/conditions";
 import type { LoanDocument } from "@/server/queries/documents";
-import { DocumentReview } from "./document-review";
+import { DocumentReview, RejectForm } from "./document-review";
 import {
   ClearConditionButton,
   ClearConditionDialog,
@@ -52,6 +53,8 @@ export function ConditionPanel({
   // After accepting the last outstanding file, the design asks whether the condition
   // itself is done. It is a separate decision, so it is a separate prompt.
   const [clearPrompt, setClearPrompt] = useState<string | null>(null);
+  // Which document's reason field is open. One at a time: the form is about one file.
+  const [rejecting, setRejecting] = useState<string | null>(null);
 
   const accepted = documents.some((d) => d.reviewStatus === "accepted");
   const settled =
@@ -63,7 +66,6 @@ export function ConditionPanel({
     <div id={id} className="bg-muted px-4 py-3 pl-12">
       {condition.instructions ? (
         <p className="mb-3 text-body text-muted-foreground">
-          <span className="text-foreground">{borrowerFirstName} is asked:</span>{" "}
           {condition.instructions}
         </p>
       ) : null}
@@ -92,18 +94,18 @@ export function ConditionPanel({
                     <span className="block text-caption text-muted-foreground">
                       {document.uploadedVia === "public_link"
                         ? `uploaded via ${borrowerFirstName}'s link`
-                        : "uploaded by staff"}{" "}
+                        : `uploaded by ${document.uploadedByName ?? "a colleague"}`}{" "}
                       · {formatRelative(document.createdAt, now)} ·{" "}
                       {formatFileSize(document.sizeBytes)}
                     </span>
                   </span>
                 </span>
-                <span className="flex shrink-0 items-center gap-2">
+                <span className="flex shrink-0 flex-wrap items-center gap-2">
                   <ReviewPill status={document.reviewStatus} />
                   {/* A real link, so it opens in a tab and can be middle-clicked. The
                       route authorizes before a byte is sent. */}
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     nativeButton={false}
                     render={
@@ -117,6 +119,21 @@ export function ConditionPanel({
                     <Download aria-hidden="true" />
                     Download
                   </Button>
+                  {permissions.review ? (
+                    <DocumentReview
+                      loanId={loanId}
+                      document={document}
+                      rejecting={rejecting === document.id}
+                      onRejectingChange={(next) =>
+                        setRejecting(next ? document.id : null)
+                      }
+                      onAccepted={() => {
+                        // Only ask about the condition while it is still open: an
+                        // already cleared item has nothing to prompt about.
+                        if (!settled) setClearPrompt(document.fileName);
+                      }}
+                    />
+                  ) : null}
                 </span>
               </div>
 
@@ -126,16 +143,12 @@ export function ConditionPanel({
                 </p>
               ) : null}
 
-              {permissions.review ? (
-                <DocumentReview
+              {rejecting === document.id ? (
+                <RejectForm
                   loanId={loanId}
                   document={document}
                   borrowerFirstName={borrowerFirstName}
-                  onAccepted={() => {
-                    // Only ask about the condition while it is still open: an already
-                    // cleared item has nothing to prompt about.
-                    if (!settled) setClearPrompt(document.fileName);
-                  }}
+                  onClose={() => setRejecting(null)}
                 />
               ) : null}
             </li>
@@ -164,7 +177,7 @@ export function ConditionPanel({
           {permissions.upload ? (
             <div className="max-w-sm">
               <UploadZone
-                loanId={loanId}
+                pathnamePrefix={uploadPrefix(loanId)}
                 clientPayload={{ loanId }}
                 label={`Upload a file for ${condition.title}`}
                 register={async (file) => {
@@ -196,7 +209,7 @@ export function ConditionPanel({
           loanId={loanId}
           condition={condition}
           borrowerFirstName={borrowerFirstName}
-          description={`${condition.title} has an accepted document (${clearPrompt}). ${borrowerFirstName} will see it as Accepted.`}
+          description={`${condition.title} has one accepted document. ${borrowerFirstName} will see it as Accepted.`}
           onClose={() => setClearPrompt(null)}
         />
       ) : null}

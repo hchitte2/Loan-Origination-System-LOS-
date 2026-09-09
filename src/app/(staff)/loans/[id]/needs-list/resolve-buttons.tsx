@@ -58,7 +58,7 @@ export function ClearConditionDialog({
       title="Clear this condition?"
       description={
         description ??
-        `${condition.title} has an accepted document. ${borrowerFirstName} will see it as Accepted.`
+        `${condition.title} has one accepted document. ${borrowerFirstName} will see it as Accepted.`
       }
       cancelLabel="Keep open"
       confirmLabel="Clear condition"
@@ -135,7 +135,7 @@ export function WaiveConditionButton({
             if (!next) setOpen(false);
           }}
           title="Waive this condition?"
-          description={`${condition.title} stops being asked for. ${borrowerFirstName} sees "No longer needed" and no upload box — they are not shown the reason.`}
+          description={`${condition.title} stops being asked for. ${borrowerFirstName} sees "No longer needed", not the reason.`}
           cancelLabel="Keep asking"
           confirmLabel="Waive condition"
           pendingLabel="Waiving…"
