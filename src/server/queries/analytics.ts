@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { loans, user } from "@/db/schema";
+import { loans } from "@/db/schema";
 import {
   type Attention,
   avgCycleTimeDays,
@@ -89,6 +89,12 @@ export async function getDashboardData(
 ): Promise<DashboardData> {
   assertCan(actor, "analytics.view");
 
+  // PLAN.md §2 gives a loan officer `own` analytics. It cannot be an `"own"` POLICY cell,
+  // because those resolve against a loan and a dashboard has none, so the scope is decided
+  // here rather than by the caller: `getDashboardData(actor)` must not hand a loan officer
+  // the firm's numbers because a page forgot to ask. `options.mine` only overrides it.
+  const mine = options.mine ?? actor.role === "loan_officer";
+
   const rows = await db()
     .select({
       id: loans.id,
@@ -102,11 +108,10 @@ export async function getDashboardData(
       fundedAt: loans.fundedAt,
     })
     .from(loans)
-    .innerJoin(user, eq(user.id, loans.loanOfficerId))
     .where(
       and(
         loanScope(actor, "read"),
-        options.mine ? eq(loans.loanOfficerId, actor.userId) : undefined,
+        mine ? eq(loans.loanOfficerId, actor.userId) : undefined,
       ),
     );
 
