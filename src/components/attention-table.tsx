@@ -1,4 +1,4 @@
-import { Calendar, CircleCheck, Flag } from "lucide-react";
+import { Calendar, CircleCheck, FileText, Flag } from "lucide-react";
 import Link from "next/link";
 import { attentionReason } from "@/lib/analytics-math";
 import { formatDate } from "@/lib/format";
@@ -27,7 +27,7 @@ import {
 const REASON_ICONS = {
   stalled: Flag,
   closing_soon: Calendar,
-  needs_review: Flag,
+  needs_review: FileText,
 };
 
 export function AttentionTable({ rows }: { rows: AttentionRow[] }) {
@@ -65,11 +65,11 @@ export function AttentionTable({ rows }: { rows: AttentionRow[] }) {
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} className="relative">
               <TableCell className="py-2">
                 <Link
                   href={`/loans/${row.id}`}
-                  className="rounded-lg font-medium text-foreground outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-sm font-medium text-foreground outline-none after:absolute after:inset-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                 >
                   {row.familyName}
                   <span className="font-normal text-muted-foreground">

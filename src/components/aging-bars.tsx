@@ -9,12 +9,19 @@ import { cn } from "@/lib/utils";
  */
 const TONES = ["bg-chart-2", "bg-chart-4", "bg-warning", "bg-destructive"];
 
+/**
+ * Two weights, because the card sits at two levels. On the Queue (04-queue) it is one of
+ * four tiles and its title is a tile label; on the Dashboard (06-dashboard) it is a
+ * section beside the stage chart and its title matches "Needs attention" below it.
+ */
 export function AgingBars({
   buckets,
   className,
+  variant = "tile",
 }: {
   buckets: { label: string; count: number }[];
   className?: string;
+  variant?: "tile" | "card";
 }) {
   const largest = Math.max(1, ...buckets.map((bucket) => bucket.count));
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
@@ -27,11 +34,17 @@ export function AgingBars({
       )}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-control font-normal text-muted-foreground">
+        <span
+          className={
+            variant === "card"
+              ? "text-section text-foreground"
+              : "text-control font-normal text-muted-foreground"
+          }
+        >
           Conditions aging
         </span>
         <span className="text-caption text-muted-foreground tabular-nums">
-          {total} open
+          {total} open{variant === "card" ? " conditions" : null}
         </span>
       </div>
       <dl className="mt-1 flex flex-1 flex-col justify-center gap-3">
