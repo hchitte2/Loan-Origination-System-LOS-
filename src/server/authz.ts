@@ -1,12 +1,23 @@
 import { eq, inArray, type SQL } from "drizzle-orm";
 import { loans } from "@/db/schema";
+import { type ConditionStatus, conditionBorrowerLabel } from "@/lib/conditions";
+import {
+  type LoanType,
+  loanTypeLabel,
+  type Purpose,
+  purposeLabel,
+} from "@/lib/loan-facts";
 import type { Role } from "@/lib/roles";
 import {
   ACTIVE_STAGES,
+  borrowerLabel,
+  isActiveStage,
   isTerminalStage,
   type Stage,
   staffLabel,
+  stageIndex,
 } from "@/lib/stages";
+import { uploadPrefix } from "@/lib/uploads";
 import type { Actor } from "./actor";
 
 /**
@@ -278,4 +289,141 @@ export function loanScope(
     case "processor":
       return inArray(loans.stage, [...ACTIVE_STAGES]);
   }
+}
+
+/**
+ * The borrower's view of their own loan (PLAN.md §2, "Public link" column).
+ *
+ * This is the whole of what `/u/[token]` may render. The rule in `.claude/rules/public.md`
+ * is that the page never fetches more and hides it in a component — a Server Component
+ * serialises what it fetches, so anything loaded is in the HTML whether or not it is
+ * drawn. So the shape is built here, once, and the public components accept only it.
+ *
+ * Absent on purpose: the borrower's own email and phone of record, every staff name but
+ * the loan officer's, internal conditions, document ids and download links, the activity
+ * log, the upload token, and every enum value.
+ */
+export type PublicLoanView = {
+  /**
+   * The Blob folder this loan's uploads belong in — `uploads/<loanId>/`. It reaches the
+   * browser because the upload has to be addressed somewhere, and the loan id is not a
+   * secret from the person already holding a link to the loan: every staff route needs a
+   * session, and the route re-derives the loan from the token regardless. Nothing renders
+   * it.
+   */
+  uploadPrefix: string;
+  borrowerFirstName: string;
+  /** "412 Maple Ave, Austin TX" — street and city, never the ZIP. */
+  property: string;
+  amount: number;
+  /** "Conventional purchase". */
+  programLabel: string;
+  /** The borrower's words for the stage, never `processing`. */
+  stageLabel: string;
+  /** Where the tracker's marker sits, 0–5. */
+  stageIndex: number;
+  targetCloseDate: string | null;
+  loanOfficer: { firstName: string; name: string; phone: string | null };
+  conditions: PublicConditionView[];
+};
+
+export type PublicConditionView = {
+  id: string;
+  title: string;
+  /** The borrower-facing wording. Hidden once the item is accepted. */
+  instructions: string | null;
+  status: ConditionStatus;
+  /** "Needed", "Received, under review", "Accepted", "Needs another: <reason>". */
+  statusLabel: string;
+  /** Whether an upload box belongs under it. */
+  acceptsUploads: boolean;
+  /** What this borrower has sent for it. File names and dates only — never bytes. */
+  documents: { fileName: string; sentOn: Date }[];
+};
+
+/** The rows `redactForPublic` reduces. Loaded by `queries/public.ts`, never by a page. */
+export type PublicSource = {
+  loan: {
+    id: string;
+    borrowerName: string;
+    propertyStreet: string;
+    propertyCity: string;
+    propertyState: string;
+    amount: number;
+    purpose: Purpose;
+    loanType: LoanType;
+    stage: Stage;
+    targetCloseDate: string | null;
+  };
+  loanOfficer: { name: string; phone: string | null };
+  conditions: {
+    id: string;
+    title: string;
+    instructions: string | null;
+    status: ConditionStatus;
+    borrowerFacing: boolean;
+    lastRejectionReason: string | null;
+  }[];
+  documents: {
+    conditionId: string | null;
+    fileName: string;
+    createdAt: Date;
+    uploadedVia: "staff" | "public_link";
+  }[];
+};
+
+export function redactForPublic(source: PublicSource): PublicLoanView {
+  const { loan } = source;
+  return {
+    uploadPrefix: uploadPrefix(loan.id),
+    borrowerFirstName: firstName(loan.borrowerName),
+    property: `${loan.propertyStreet}, ${loan.propertyCity} ${loan.propertyState}`,
+    amount: loan.amount,
+    programLabel: `${loanTypeLabel(loan.loanType)} ${purposeLabel(loan.purpose).toLowerCase()}`,
+    stageLabel: borrowerLabel(loan.stage),
+    // A public page only ever resolves from a live token, which refuses terminal loans,
+    // so the stage is always one of the six the tracker draws.
+    stageIndex: isActiveStage(loan.stage) ? stageIndex(loan.stage) : 0,
+    targetCloseDate: loan.targetCloseDate,
+    loanOfficer: {
+      firstName: firstName(source.loanOfficer.name),
+      name: source.loanOfficer.name,
+      phone: source.loanOfficer.phone,
+    },
+    conditions: source.conditions
+      .filter((condition) => condition.borrowerFacing)
+      .map((condition) => ({
+        id: condition.id,
+        title: condition.title,
+        // An accepted item needs no instructions; the frame drops them once it is done.
+        instructions:
+          condition.status === "cleared" ? null : condition.instructions,
+        status: condition.status,
+        statusLabel: conditionBorrowerLabel(
+          condition.status,
+          condition.lastRejectionReason,
+        ),
+        // Only an item still being asked for gets a box. One under review already has
+        // what it needs — frame 05-public-desktop draws the W-2 card with its file and
+        // no zone — and a cleared or waived one is done.
+        acceptsUploads: condition.status === "requested",
+        documents: source.documents
+          .filter(
+            (document) =>
+              document.conditionId === condition.id &&
+              // Their own uploads only. A file a processor added on their behalf is not
+              // something the borrower sent, and showing it would confuse "what I sent".
+              document.uploadedVia === "public_link",
+          )
+          .map((document) => ({
+            fileName: document.fileName,
+            sentOn: document.createdAt,
+          })),
+      })),
+  };
+}
+
+/** "Maria Chen" → "Maria". The public page addresses people by first name. */
+function firstName(name: string): string {
+  return name.trim().split(/\s+/)[0] ?? name;
 }

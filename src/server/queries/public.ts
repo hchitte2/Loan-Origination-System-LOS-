@@ -1,8 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { conditions, loans } from "@/db/schema";
+import { conditions, documents, loans, user } from "@/db/schema";
 import type { ConditionStatus } from "@/lib/conditions";
 import { isTerminalStage, type Stage } from "@/lib/stages";
+import { type PublicLoanView, redactForPublic } from "../authz";
 
 /**
  * Reads for the borrower's page (`/u/[token]`). There is no session here, so the token
@@ -76,4 +77,73 @@ export async function getPublicCondition(
     )
     .limit(1);
   return row ?? null;
+}
+
+/**
+ * Everything `/u/[token]` renders, or null when the link is dead.
+ *
+ * The page calls only this. It loads the rows and hands them straight to
+ * `redactForPublic`, so nothing outside `PublicLoanView` is ever in scope to leak into
+ * the serialised payload — the rule in `.claude/rules/public.md` that a Server Component
+ * serialises what it fetches, not what it draws.
+ */
+export async function getPublicLoanView(
+  token: string,
+): Promise<PublicLoanView | null> {
+  const ref = await resolveUploadToken(token);
+  if (!ref) return null;
+
+  const [row] = await db()
+    .select({
+      id: loans.id,
+      borrowerName: loans.borrowerName,
+      propertyStreet: loans.propertyStreet,
+      propertyCity: loans.propertyCity,
+      propertyState: loans.propertyState,
+      amount: loans.amount,
+      purpose: loans.purpose,
+      loanType: loans.loanType,
+      stage: loans.stage,
+      targetCloseDate: loans.targetCloseDate,
+      officerName: user.name,
+      officerPhone: user.phone,
+    })
+    .from(loans)
+    .innerJoin(user, eq(user.id, loans.loanOfficerId))
+    .where(eq(loans.id, ref.id))
+    .limit(1);
+  if (!row) return null;
+
+  const [conditionRows, documentRows] = await Promise.all([
+    db()
+      .select({
+        id: conditions.id,
+        title: conditions.title,
+        instructions: conditions.instructions,
+        status: conditions.status,
+        borrowerFacing: conditions.borrowerFacing,
+        lastRejectionReason: conditions.lastRejectionReason,
+      })
+      .from(conditions)
+      .where(eq(conditions.loanId, ref.id))
+      .orderBy(asc(conditions.createdAt)),
+    db()
+      .select({
+        conditionId: documents.conditionId,
+        fileName: documents.fileName,
+        createdAt: documents.createdAt,
+        uploadedVia: documents.uploadedVia,
+      })
+      .from(documents)
+      .where(eq(documents.loanId, ref.id))
+      .orderBy(asc(documents.createdAt)),
+  ]);
+
+  const { officerName, officerPhone, ...loan } = row;
+  return redactForPublic({
+    loan,
+    loanOfficer: { name: officerName, phone: officerPhone },
+    conditions: conditionRows,
+    documents: documentRows,
+  });
 }
