@@ -31,6 +31,7 @@ const ICONS: Record<ActivityAction, LucideIcon> = {
   "document.uploaded": Upload,
   "document.accepted": CircleCheck,
   "document.rejected": CircleX,
+  "document.deleted": Trash2,
   "admin.user_created": Users,
   "admin.impersonation_started": Eye,
   "admin.impersonation_ended": Eye,

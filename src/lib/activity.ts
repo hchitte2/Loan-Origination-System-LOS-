@@ -23,6 +23,7 @@ export const ACTIVITY_ACTIONS = [
   "document.uploaded",
   "document.accepted",
   "document.rejected",
+  "document.deleted",
   "admin.user_created",
   "admin.impersonation_started",
   "admin.impersonation_ended",
@@ -100,7 +101,12 @@ export function actionsForFilter(
     case "stage_changes":
       return ["loan.stage_changed"];
     case "documents":
-      return ["document.uploaded", "document.accepted", "document.rejected"];
+      return [
+        "document.uploaded",
+        "document.accepted",
+        "document.rejected",
+        "document.deleted",
+      ];
     case "conditions":
       return [
         "condition.created",

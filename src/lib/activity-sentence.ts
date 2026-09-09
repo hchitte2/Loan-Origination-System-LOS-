@@ -93,6 +93,8 @@ export function activityText(row: ActivityLike): string {
       return `accepted ${text(detail, "fileName") ?? "a document"}`;
     case "document.rejected":
       return withReason(`rejected ${text(detail, "fileName") ?? "a document"}`);
+    case "document.deleted":
+      return `deleted ${text(detail, "fileName") ?? "a document"} before review`;
     case "admin.user_created": {
       const name = text(detail, "name") ?? "a user";
       const role = detail.role;
