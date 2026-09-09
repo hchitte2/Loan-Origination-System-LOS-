@@ -213,6 +213,11 @@ export const RejectDocumentSchema = z.object({
     .max(300, "Keep the reason under 300 characters."),
 });
 
+export const DeleteDocumentSchema = z.object({
+  loanId: z.uuid(),
+  documentId: z.uuid(),
+});
+
 export const ClearConditionSchema = z.object({
   loanId: z.uuid(),
   conditionId: z.uuid(),
