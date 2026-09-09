@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   type AttentionInput,
+  agingBuckets,
   attentionsFor,
+  avgCycleTimeDays,
   CLOSING_SOON_DAYS,
+  type CohortLoan,
   primaryAttention,
+  pullThrough,
   STALLED_AFTER_DAYS,
+  startOfUtcMonth,
 } from "../../src/lib/analytics-math";
 import type { Stage } from "../../src/lib/stages";
 
@@ -148,5 +153,117 @@ describe("attentionsFor", () => {
 
   it("has no primary reason when nothing is wrong", () => {
     expect(primaryAttention(loan(), NOW)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Dashboard formulas (PLAN.md §7 "Definitions")
+// ---------------------------------------------------------------------------------------
+
+describe("agingBuckets", () => {
+  it("puts each age in the bucket whose upper edge it reaches first", () => {
+    const ages = [0, 3, 4, 7, 8, 14, 15, 400].map(daysAgo);
+    expect(agingBuckets(ages, NOW)).toEqual([
+      { label: "0–3 d", count: 2 },
+      { label: "4–7 d", count: 2 },
+      { label: "8–14 d", count: 2 },
+      { label: "15+ d", count: 2 },
+    ]);
+  });
+
+  it("returns every bucket at zero rather than an empty list", () => {
+    expect(agingBuckets([], NOW).map((bucket) => bucket.count)).toEqual([
+      0, 0, 0, 0,
+    ]);
+  });
+});
+
+describe("pullThrough", () => {
+  function applied(daysBefore: number, funded: boolean): CohortLoan {
+    return {
+      applicationDate: calendarDaysFromNow(-daysBefore),
+      fundedAt: funded ? daysAgo(1) : null,
+    };
+  }
+
+  it("counts funded over the applications started 60 to 180 days ago", () => {
+    const rows = [
+      applied(70, true),
+      applied(90, true),
+      applied(120, true),
+      applied(150, false),
+    ];
+    expect(pullThrough(rows, NOW)).toEqual({
+      cohort: 4,
+      funded: 3,
+      percent: 75,
+    });
+  });
+
+  it("includes both edges of the window and excludes just outside it", () => {
+    const rows = [
+      applied(60, true),
+      applied(180, true),
+      applied(59, false),
+      applied(181, false),
+    ];
+    expect(pullThrough(rows, NOW)).toMatchObject({ cohort: 2, funded: 2 });
+  });
+
+  it("ignores loans that never reached application", () => {
+    const rows: CohortLoan[] = [
+      { applicationDate: null, fundedAt: null },
+      applied(90, true),
+    ];
+    expect(pullThrough(rows, NOW)).toMatchObject({ cohort: 1, funded: 1 });
+  });
+
+  it("has no percentage at all when the cohort is empty", () => {
+    // A rate over nothing is not 0 %; the tile shows an em dash instead.
+    expect(pullThrough([], NOW)).toEqual({
+      cohort: 0,
+      funded: 0,
+      percent: null,
+    });
+  });
+});
+
+describe("avgCycleTimeDays", () => {
+  function fundedLoan(appliedDaysAgo: number, fundedDaysAgo: number) {
+    return {
+      applicationDate: calendarDaysFromNow(-appliedDaysAgo),
+      fundedAt: daysAgo(fundedDaysAgo),
+    };
+  }
+
+  it("averages application to funding over the loans funded in the last 90 days", () => {
+    const rows = [fundedLoan(40, 10), fundedLoan(50, 10)];
+    expect(avgCycleTimeDays(rows, NOW)).toBe(35);
+  });
+
+  it("ignores loans funded before the window and loans still open", () => {
+    const rows = [
+      fundedLoan(40, 10),
+      fundedLoan(400, 91),
+      { applicationDate: calendarDaysFromNow(-20), fundedAt: null },
+    ];
+    expect(avgCycleTimeDays(rows, NOW)).toBe(30);
+  });
+
+  it("is null when nothing funded in the window", () => {
+    expect(avgCycleTimeDays([], NOW)).toBeNull();
+  });
+});
+
+describe("startOfUtcMonth", () => {
+  it("returns midnight UTC on the first of the month", () => {
+    expect(startOfUtcMonth(NOW).toISOString()).toBe("2026-09-01T00:00:00.000Z");
+  });
+
+  it("steps back across a year boundary", () => {
+    const january = new Date("2026-01-14T09:00:00Z");
+    expect(startOfUtcMonth(january, -1).toISOString()).toBe(
+      "2025-12-01T00:00:00.000Z",
+    );
   });
 });
