@@ -14,6 +14,7 @@ export const ACTIVITY_ACTIONS = [
   "loan.updated",
   "loan.stage_changed",
   "loan.link_regenerated",
+  "loan.link_copied",
   "condition.created",
   "condition.updated",
   "condition.cleared",
@@ -90,7 +91,12 @@ export function actionsForFilter(
     case "all":
       return ACTIVITY_ACTIONS;
     case "loans":
-      return ["loan.created", "loan.updated", "loan.link_regenerated"];
+      return [
+        "loan.created",
+        "loan.updated",
+        "loan.link_regenerated",
+        "loan.link_copied",
+      ];
     case "stage_changes":
       return ["loan.stage_changed"];
     case "documents":
