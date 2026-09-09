@@ -4,9 +4,9 @@ A demo loan origination system ("CRM for LOS") for a small US mortgage shop: a l
 
 Portfolio-grade and deliberately small: production craft at demo scope, synthetic data only, $0/month to run.
 
-**Status:** Phase 0 (repo, tooling, guardrails, placeholder deploy). `PLAN.md` is the spec and records every decision.
+**Status:** complete through Phase 5 — pipeline, needs list, borrower page, dashboards, demo reset. `PLAN.md` is the spec and records every decision.
 
-## What it will do
+## What it does
 
 - Pipeline board by stage, loan record, conditions and documents (the needs list)
 - Per-loan public upload link for the borrower, no account required
@@ -32,7 +32,7 @@ Everything runs online on **Vercel Hobby + Neon Free + Vercel Blob**; the laptop
 |---|---|
 | Vercel Hobby | 4.5 MB request body, so uploads go browser-direct to Blob; one cron a day, fired within ±59 minutes; personal, non-commercial use, which is what a portfolio demo is |
 | Neon Free | Compute scales to zero after five idle minutes and wakes in a few hundred milliseconds; no keep-alive pinger, because a 24/7 poller would burn the monthly compute budget. Local development uses the `dev` branch, production uses `main` |
-| Vercel Blob | 2,000 "advanced operations" per month, so uploads are capped at 40 per day globally and 10 per loan, the app never calls `list()` at runtime, and seed specimens are uploaded once and reused across resets |
+| Vercel Blob | 2,000 "advanced operations" per month, so uploads are capped at 40 per day globally and 10 per loan, and seed specimens are uploaded once and reused across resets. `list()` is a *basic* operation, so the two places that use it — counting the day's uploads, and sweeping unregistered files during the reset — cost nothing against that budget |
 
 Fallback if Vercel ever objects: Cloudflare Workers via OpenNext. Neon, the schema and the code stay; storage swaps behind the one-file storage module.
 
@@ -72,9 +72,46 @@ src/components   shadcn primitives and the shared Clearline components
 tests            unit / db / e2e
 drizzle          committed SQL migrations
 design           Claude Design brief and reference exports (reference only, never imported)
-docs             decisions parking lot, demo script, runbook
+docs             decisions parking lot (the demo script and runbook are in this file)
 .claude          rules, skills, agents and hooks for the Claude Code workflow
 ```
+
+## The demo, in five minutes
+
+Six seeded staff accounts, and no passwords typed: the login screen carries a card for the three the script uses. Everything is synthetic, and the whole database is restored every morning at 08:00 UTC.
+
+1. **Login.** Three roles, one loan file, one superadmin who can be anyone.
+2. **Priya, superadmin.** The dashboard: pipeline by stage, funded this month, pull-through, and the files that need a decision today. Users → **View as Alex**; the amber banner appears and the superadmin's own navigation disappears.
+3. **As Alex, loan officer.** Pipeline → **New loan**, $485,000, conventional purchase. Move it to Application, then Processing — always through the stage machine, never by setting a column. Opening the loan shows the six needs-list items that creating it generated. Copy Maria's link.
+4. **Maria, borrower**, on a phone or in a private window. No account, no app to install. She uploads a pay stub; the item flips to "Received, under review". She never sees a stage name or the word "pending".
+5. **Exit view → View as Sam, processor.** The queue has the upload. Reject it: *"Only one stub; we need 30 days."* Maria's page now reads **"Needs another: only one stub…"**. She sends another; Sam accepts it and is asked whether the condition itself is done. Submit to underwriting → issue conditional approval.
+6. **Exit view, back as Priya.** The loan's Activity tab reads **"Priya Nair (viewing as Sam Okafor) rejected Pay stubs"** — the log records the human, not the costume. The activity page filters to impersonation. Flip to dark mode. Close on the Needs attention table.
+7. **For engineering audiences.** `CLAUDE.md`, the `.claude/` tree, `src/server/limits.ts`, and the Stop hook: plan, small verified diffs, reviewer agents, and a hook that refuses to end a turn on a broken build.
+
+`tests/e2e/demo-path.spec.ts` walks this exact path end to end, so a change that breaks the demo breaks CI first. One deliberate difference: the spec creates its loan at a different address, because the script's "412 Maple Ave" is the address the seed fixture already uses for its showcase loan — type it live and you get two identical rows on the pipeline.
+
+## Resetting the demo
+
+The fixture is restored three ways, all of which run the same code in `src/server/reset.ts`: read the uploaded blob pathnames out of `documents`, delete those blobs, sweep any from a previous day that no row ever named, then truncate and reseed relative to today. It is idempotent — running it twice leaves exactly what running it once leaves.
+
+| How | When |
+|---|---|
+| `vercel.json` cron → `GET /api/cron/reset` | 08:00 UTC daily, authorized by `Authorization: Bearer $CRON_SECRET` and nothing else |
+| "Reset demo data" on the activity log | Superadmin only, behind a confirm, at most once every ten minutes |
+| `pnpm db:reset` | Locally, against the Neon `dev` branch |
+
+Blobs are deleted before the truncate on purpose: the reseed empties the table that names them, so the other order would orphan every remaining object with no record of its pathname. `seed/` — the three specimen PDFs the fixture points at — is never touched, so reseeding costs no uploads.
+
+## Releasing
+
+Deploys happen on push to `main`; production is Vercel + the Neon `main` branch. Only the `/release` procedure touches production data, and `src/db/cli.ts` refuses the production host unless `CLEARLINE_RELEASE=1` is set.
+
+1. **Pre-flight.** Working tree clean, on `main`, everything pushed, CI green, `/verify` green.
+2. **Environment.** `vercel env pull .env.production.local --environment production`. **Vercel marks the six app secrets Sensitive, so this writes blanks for them** — paste those values into the file by hand before the next step, or the migration runs against nothing. The six exist only in the Production environment; preview deployments do not have them, which is why a preview answers 401 on the cron route.
+3. **Migrate.** `CLEARLINE_RELEASE=1 pnpm db:migrate:prod`. Seed only on a first release or when the fixture itself changed: `CLEARLINE_RELEASE=1 pnpm db:seed:prod`.
+4. **Smoke.** `/login` returns 200, `/api/cron/reset` returns 401 without the secret, and signing in as Priya renders the dashboard with numbers — which also wakes Neon before anyone watches.
+
+Committed migrations are never edited and `drizzle-kit push` is never used; `pnpm db:generate` writes a new migration instead.
 
 ## Built with Claude Code
 
