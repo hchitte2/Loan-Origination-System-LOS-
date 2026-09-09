@@ -71,6 +71,8 @@ export function activityText(row: ActivityLike): string {
     }
     case "loan.link_regenerated":
       return "regenerated the borrower link";
+    case "loan.link_copied":
+      return "copied the borrower link";
     case "condition.created":
       return `added ${text(detail, "title") ?? "a condition"}`;
     case "condition.updated":

@@ -297,3 +297,35 @@ export async function regenerateLink(
   revalidatePath(`/loans/${loan.id}`, "layout");
   return { ok: true };
 }
+
+/**
+ * Record that someone copied the borrower's link (PLAN.md §6, `loan.link_copied`).
+ *
+ * Fire-and-forget: the clipboard write has already happened by the time this is called,
+ * so a failure here must not turn a successful copy into an error message. It returns
+ * nothing and swallows a refusal — the log is a record of what happened, and if it
+ * cannot be written the copy still did.
+ *
+ * `loan.manage_link` is the matrix row (§2, "Public link: copy, regenerate"), so a loan
+ * officer looking at someone else's file logs nothing, and neither does anyone on a
+ * closed loan — which is also why no control offers it there.
+ */
+export async function logLinkCopied(loanId: string): Promise<void> {
+  const parsed = RegenerateLinkSchema.safeParse({ loanId });
+  if (!parsed.success) return;
+
+  const actor = await requireActor();
+  const loan = await getLoanForAction(actor, parsed.data.loanId);
+  if (!loan) return;
+  if (closedLoanReason(loan, "")) return;
+  if (!can(actor, "loan.manage_link", loan)) return;
+
+  await db().transaction(async (tx) => {
+    await logActivity(tx, {
+      actor,
+      loanId: loan.id,
+      action: "loan.link_copied",
+    });
+  });
+  revalidatePath(`/loans/${loan.id}/activity`);
+}

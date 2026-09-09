@@ -7,6 +7,7 @@ import { Card } from "@/components/card";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
+  logLinkCopied,
   type RegenerateLinkState,
   regenerateLink,
 } from "@/server/actions/loans";
@@ -62,6 +63,9 @@ export function BorrowerLink({
       await navigator.clipboard.writeText(`${origin}${path}`);
       setCopied(true);
       toast.success(`${firstName}'s link copied.`);
+      // Fire and forget. The copy has already happened; a log that will not write must
+      // not turn it into an error the person has to read.
+      void logLinkCopied(loanId).catch(() => {});
     } catch {
       toast.error(
         "Your browser would not let us copy. Select the link instead.",
