@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { canDelete } from "@/lib/conditions";
 import {
   type ConditionState,
   deleteCondition,
@@ -21,26 +22,30 @@ import { ConditionForm } from "./condition-form";
 
 /**
  * Edit and remove, on a needs-list row (design frame 03-loan-detail). Clearing and
- * waiving arrive with documents in Phase 3.
+ * waiving live in the expanded panel, beside the documents they are about.
  *
- * A resolved condition cannot be removed — the append-only log would be left describing
- * a row that no longer exists — so the item is simply absent rather than present and
- * failing.
+ * A condition that was answered, or that anything was ever uploaded against, cannot be
+ * removed — the append-only log would be left describing a row that no longer exists,
+ * and a rejected upload is still something the borrower sent. Waive it instead.
  */
 export function ConditionMenu({
   loanId,
   condition,
   borrowerFirstName,
+  documentCount,
 }: {
   loanId: string;
   condition: ConditionRow;
   /** The confirm speaks the borrower's name, as the frame's confirm does. */
   borrowerFirstName: string;
+  /** How many documents hang on this condition; invariant 9 refuses a delete past zero. */
+  documentCount: number;
 }) {
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  // Matches deleteCondition: from `received` on, a document points at this row.
-  const removable = condition.status === "requested";
+  // The same rule deleteCondition applies (PLAN.md §6 invariant 9), so the item is
+  // absent rather than present and failing. Waiving is the way out for everything else.
+  const removable = canDelete(condition.status, documentCount);
 
   const [state, formAction] = useActionState<ConditionState, FormData>(
     async (previous, formData) => {
