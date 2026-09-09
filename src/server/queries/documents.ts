@@ -1,6 +1,6 @@
 import { and, asc, count, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { documents, loans } from "@/db/schema";
+import { documents, loans, user } from "@/db/schema";
 import type { DocType, ReviewStatus, UploadedVia } from "@/lib/doc-types";
 import type { Actor } from "../actor";
 import { assertCan, loanScope } from "../authz";
@@ -27,6 +27,8 @@ export type LoanDocument = {
   uploadedVia: UploadedVia;
   /** The staff member who uploaded it; null when the borrower did, through the link. */
   uploadedById: string | null;
+  /** Their name, so a row can say "uploaded by Sam Okafor" instead of "by staff". */
+  uploadedByName: string | null;
   createdAt: Date;
 };
 
@@ -48,9 +50,11 @@ export async function listLoanDocuments(
       reviewReason: documents.reviewReason,
       uploadedVia: documents.uploadedVia,
       uploadedById: documents.uploadedBy,
+      uploadedByName: user.name,
       createdAt: documents.createdAt,
     })
     .from(documents)
+    .leftJoin(user, eq(user.id, documents.uploadedBy))
     .where(eq(documents.loanId, loanId))
     .orderBy(asc(documents.createdAt));
 }

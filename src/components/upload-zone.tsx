@@ -1,13 +1,14 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import { Upload } from "lucide-react";
+import { CircleAlert, Upload } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { formatFileSize } from "@/lib/format";
 import {
   ALLOWED_CONTENT_TYPES,
-  blobPathnameFor,
+  type FileRejection,
   fileRejection,
+  safeFileName,
 } from "@/lib/uploads";
 import { cn } from "@/lib/utils";
 
@@ -29,15 +30,19 @@ import { cn } from "@/lib/utils";
  * register action refuses them again from what the store actually holds.
  */
 export function UploadZone({
-  loanId,
+  pathnamePrefix,
   clientPayload,
   register,
   label,
   disabled,
   onUploaded,
 }: {
-  /** The folder the file belongs in. The route pins the token to this prefix. */
-  loanId: string;
+  /**
+   * The folder the file belongs in, from `uploadPrefix(loanId)`. The zone is handed the
+   * folder rather than the loan it belongs to: the borrower's page has no loan id to
+   * give, and this way the route's prefix check is the only thing that has to know.
+   */
+  pathnamePrefix: string;
   /** `{ loanId }` for staff, `{ token }` for the borrower's page. */
   clientPayload: Record<string, string>;
   /** Records the upload once Blob has it. Returns the sentence to show, or null. */
@@ -53,7 +58,7 @@ export function UploadZone({
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FileRejection | null>(null);
   const [progress, setProgress] = useState<{
     name: string;
     percent: number;
@@ -73,37 +78,43 @@ export function UploadZone({
 
     setProgress({ name: file.name, percent: 0, sent: 0, total: file.size });
     try {
-      const result = await upload(blobPathnameFor(loanId, file.name), file, {
-        access: "private",
-        handleUploadUrl: "/api/upload",
-        clientPayload: JSON.stringify(clientPayload),
-        contentType: file.type,
-        onUploadProgress: ({ percentage, loaded, total }) => {
-          setProgress({
-            name: file.name,
-            percent: Math.round(percentage),
-            sent: loaded,
-            total,
-          });
+      const result = await upload(
+        `${pathnamePrefix}${safeFileName(file.name)}`,
+        file,
+        {
+          access: "private",
+          handleUploadUrl: "/api/upload",
+          clientPayload: JSON.stringify(clientPayload),
+          contentType: file.type,
+          onUploadProgress: ({ percentage, loaded, total }) => {
+            setProgress({
+              name: file.name,
+              percent: Math.round(percentage),
+              sent: loaded,
+              total,
+            });
+          },
         },
-      });
+      );
       const failed = await register({
         blobPathname: result.pathname,
         fileName: file.name,
       });
       if (failed) {
-        setError(failed);
+        setError({ title: failed, hint: "Try again." });
         return;
       }
       onUploaded?.();
     } catch (caught) {
       // The route's refusals arrive as the message on a thrown BlobError. They are
       // written to be read by whoever is looking at this zone.
-      setError(
-        caught instanceof Error && caught.message
-          ? caught.message.replace(/^Vercel Blob:\s*/, "")
-          : "That upload did not go through. Try again.",
-      );
+      setError({
+        title:
+          caught instanceof Error && caught.message
+            ? caught.message.replace(/^Vercel Blob:\s*/, "").replace(/\.$/, "")
+            : "That upload did not go through",
+        hint: "Try again.",
+      });
     } finally {
       setProgress(null);
       if (inputRef.current) inputRef.current.value = "";
@@ -112,7 +123,7 @@ export function UploadZone({
 
   if (busy) {
     return (
-      <div className="rounded-lg bg-muted p-3">
+      <div className="rounded-lg border border-border bg-card p-3">
         <div className="flex items-baseline justify-between gap-3">
           <span className="truncate text-body text-foreground">
             {progress.name}
@@ -151,7 +162,15 @@ export function UploadZone({
           event.preventDefault();
           setDragging(true);
         }}
-        onDragLeave={() => setDragging(false)}
+        onDragLeave={(event) => {
+          // Moving over a child fires dragleave on the parent; ignore those.
+          if (
+            event.currentTarget.contains(event.relatedTarget as Node | null)
+          ) {
+            return;
+          }
+          setDragging(false);
+        }}
         onDrop={(event) => {
           event.preventDefault();
           setDragging(false);
@@ -163,13 +182,15 @@ export function UploadZone({
         <label
           htmlFor={inputId}
           className={cn(
-            "upload-zone flex min-h-upload-zone cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-3 text-center transition-colors duration-150 ease-out motion-reduce:transition-none",
+            // A 2 px border at rest as well as on drag-over, so becoming a drop target
+            // changes the colour and not the layout.
+            "upload-zone flex min-h-18 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-3 text-center transition-colors duration-150 ease-out motion-reduce:transition-none",
             disabled && "cursor-not-allowed opacity-50",
             error
-              ? "border-destructive bg-destructive-soft"
+              ? "border-destructive"
               : dragging
-                ? "border-2 border-primary bg-primary-soft"
-                : "border-primary bg-primary-soft/40 hover:bg-primary-soft",
+                ? "border-primary bg-primary-soft"
+                : "border-primary hover:bg-primary-soft",
           )}
         >
           <input
@@ -184,21 +205,36 @@ export function UploadZone({
               if (file) void send(file);
             }}
           />
-          <Upload aria-hidden="true" className="size-5 text-primary" />
-          <span className="text-body font-medium text-foreground">
-            {dragging ? "Drop to upload" : "Tap to upload"}
+          {error ? (
+            <CircleAlert
+              aria-hidden="true"
+              className="size-5 text-destructive"
+            />
+          ) : (
+            <Upload aria-hidden="true" className="size-5 text-primary" />
+          )}
+          <span
+            className={cn(
+              "text-body font-medium",
+              error ? "text-destructive" : "text-foreground",
+            )}
+          >
+            {error
+              ? error.title
+              : dragging
+                ? "Drop to upload"
+                : "Tap to upload"}
           </span>
           <span className="text-caption text-muted-foreground">
-            PDF, JPG or PNG · up to 10 MB
+            {error ? error.hint : "PDF, JPG or PNG · up to 10 MB"}
           </span>
           <span className="sr-only">{label}</span>
         </label>
       </div>
-      {error ? (
-        <p role="alert" className="mt-2 text-caption text-destructive">
-          {error}
-        </p>
-      ) : null}
+      {/* The zone itself carries the message; this is what announces it. */}
+      <p role="alert" className="sr-only">
+        {error ? `${error.title}. ${error.hint}` : ""}
+      </p>
     </div>
   );
 }

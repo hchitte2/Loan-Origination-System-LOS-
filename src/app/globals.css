@@ -233,9 +233,14 @@
   --text-wordmark-sm--font-weight: 600;
   --text-micro: 10px;
   --text-micro--line-height: 12px;
+  /* Body on the borrower page is a size up from staff body: 15/22. */
+  --text-public: 15px;
+  --text-public--line-height: 22px;
 
   /* Dialog and menu widths. */
   --container-login: 520px;
+  /* The borrower page is one column, read on a phone (design-system skill). */
+  --container-public: 640px;
   --container-dialog-confirm: 420px;
   --container-dialog-sm: 440px;
   --container-dialog-form: 560px;
@@ -247,7 +252,6 @@
   --spacing-tag: 20px;
   --spacing-touch: 44px;
   --spacing-banner: 40px;
-  --spacing-upload-zone: 72px;
 }
 
 @layer base {

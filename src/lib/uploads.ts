@@ -33,23 +33,42 @@ export function isAllowedContentType(
 }
 
 /**
- * Why a file was refused, in words the person reading it can act on, or null when it is
- * fine. The type is checked before the size, so an .exe is never called "too large".
+ * Why a file was refused, or null when it is fine. The type is checked before the size,
+ * so an .exe is never called "too large".
+ *
+ * Two parts, because the upload zone draws them as two lines — what happened, then what
+ * to do about it (design-system skill, "Upload zone"). A server action, which has one
+ * string to return, joins them with `rejectionSentence`.
  */
+export type FileRejection = { title: string; hint: string };
+
 export function fileRejection(
   contentType: string,
   sizeBytes: number,
-): string | null {
+): FileRejection | null {
   if (!isAllowedContentType(contentType)) {
-    return "That kind of file will not open on our side. Send a PDF, JPG or PNG.";
+    return {
+      title: "That kind of file will not open on our side",
+      hint: "Send a PDF, JPG or PNG.",
+    };
   }
   if (sizeBytes > MAX_FILE_BYTES) {
-    return `That file is too large. Keep it under ${MAX_FILE_BYTES / 1024 / 1024} MB and try again.`;
+    return {
+      title: "That file is too large",
+      hint: `Keep it under ${MAX_FILE_BYTES / 1024 / 1024} MB and try again.`,
+    };
   }
   if (sizeBytes <= 0) {
-    return "That file came through empty. Try sending it again.";
+    return {
+      title: "That file came through empty",
+      hint: "Try sending it again.",
+    };
   }
   return null;
+}
+
+export function rejectionSentence(rejection: FileRejection): string {
+  return `${rejection.title}. ${rejection.hint}`;
 }
 
 /** Where the fixture's specimen documents live. Never deleted by a reset. */

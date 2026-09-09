@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { fileRejection, isInLoanPrefix, safeFileName } from "@/lib/uploads";
+import {
+  fileRejection,
+  isInLoanPrefix,
+  rejectionSentence,
+  safeFileName,
+} from "@/lib/uploads";
 import { insertDocument, receiveCondition } from "../documents";
 import { CAP_REACHED, countUploadsToday, uploadCapReached } from "../limits";
 import { getPublicCondition, resolveUploadToken } from "../queries/public";
@@ -57,7 +62,7 @@ export async function registerPublicDocument(
     return { ok: false, error: "That file did not go through. Try again." };
   }
   const rejection = fileRejection(blob.contentType, blob.size);
-  if (rejection) return { ok: false, error: rejection };
+  if (rejection) return { ok: false, error: rejectionSentence(rejection) };
 
   if (uploadCapReached(await countUploadsToday(loan.id))) {
     return { ok: false, error: CAP_REACHED };

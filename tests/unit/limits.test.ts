@@ -3,6 +3,7 @@ import {
   ALLOWED_CONTENT_TYPES,
   fileRejection,
   MAX_FILE_BYTES,
+  rejectionSentence,
 } from "@/lib/uploads";
 import {
   CAP_REACHED,
@@ -74,6 +75,11 @@ describe("loanCapReached", () => {
 
 describe("fileRejection", () => {
   const ok = 2 * 1024 * 1024;
+  /** The joined sentence, as a Server Action returns it. */
+  const sentenceFor = (type: string, size: number) => {
+    const rejection = fileRejection(type, size);
+    return rejection ? rejectionSentence(rejection) : null;
+  };
 
   it("accepts the three types a mortgage file arrives as", () => {
     for (const type of ALLOWED_CONTENT_TYPES) {
@@ -89,7 +95,7 @@ describe("fileRejection", () => {
       "image/svg+xml",
       "",
     ]) {
-      expect(fileRejection(type, ok)).toBe(
+      expect(sentenceFor(type, ok)).toBe(
         "That kind of file will not open on our side. Send a PDF, JPG or PNG.",
       );
     }
@@ -100,9 +106,14 @@ describe("fileRejection", () => {
   });
 
   it("refuses one byte over, and names the limit", () => {
-    expect(fileRejection("application/pdf", MAX_FILE_BYTES + 1)).toBe(
+    expect(sentenceFor("application/pdf", MAX_FILE_BYTES + 1)).toBe(
       "That file is too large. Keep it under 10 MB and try again.",
     );
+    // The zone draws the two halves as two lines; a server action joins them.
+    expect(fileRejection("application/pdf", MAX_FILE_BYTES + 1)).toEqual({
+      title: "That file is too large",
+      hint: "Keep it under 10 MB and try again.",
+    });
   });
 
   it("refuses an empty file rather than storing nothing", () => {
@@ -110,7 +121,7 @@ describe("fileRejection", () => {
   });
 
   it("checks the type before the size, so an .exe is never called too large", () => {
-    expect(fileRejection("application/x-msdownload", MAX_FILE_BYTES * 3)).toBe(
+    expect(sentenceFor("application/x-msdownload", MAX_FILE_BYTES * 3)).toBe(
       "That kind of file will not open on our side. Send a PDF, JPG or PNG.",
     );
   });
