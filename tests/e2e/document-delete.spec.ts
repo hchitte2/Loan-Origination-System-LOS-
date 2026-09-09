@@ -77,6 +77,8 @@ async function openEmptyCondition(
 test("the uploader can take back a pending file, and the condition reopens", async ({
   page,
 }) => {
+  // An upload and a removal against a dev server the rest of the suite is compiling for.
+  test.slow();
   const { loan, title } = await openEmptyCondition(
     page,
     "alex",
@@ -92,13 +94,15 @@ test("the uploader can take back a pending file, and the condition reopens", asy
 
   await doc.getByRole("button", { name: `Remove ${FILE}` }).click();
   const dialog = page.getByRole("alertdialog");
-  await expect(dialog.getByRole("heading")).toHaveText(`Remove ${FILE}?`);
+  // Generic title, file name leading the description, and an outcome that names the
+  // condition and where it actually lands.
+  await expect(dialog.getByRole("heading")).toHaveText("Remove this document?");
   await expect(
     dialog.getByText(
-      "The file is deleted and the item goes back to being requested. This cannot be undone.",
+      `${FILE} is deleted. ${title} goes back to Requested. This cannot be undone.`,
     ),
   ).toBeVisible();
-  await dialog.getByRole("button", { name: "Remove file" }).click();
+  await dialog.getByRole("button", { name: "Remove document" }).click();
   await expect(page.getByText(`${FILE} removed.`)).toBeVisible();
 
   await page.reload();

@@ -94,7 +94,7 @@ export default async function NeedsListPage({
           conditions={conditions}
           documents={documents}
           permissions={permissions}
-          actorUserId={actor.userId}
+          viewerUserId={actor.userId}
           now={now.toISOString()}
         />
       )}

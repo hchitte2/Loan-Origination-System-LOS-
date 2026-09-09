@@ -2,7 +2,7 @@
 
 import { Download, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { ReviewPill } from "@/components/review-pill";
 import { buttonVariants } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export function ConditionPanel({
   condition,
   documents,
   permissions,
-  actorUserId,
+  viewerUserId,
   now,
 }: {
   id: string;
@@ -53,10 +53,15 @@ export function ConditionPanel({
     upload: boolean;
     delete: boolean;
   };
-  actorUserId: string;
+  /** The effective user, whose own uploads may be taken back. */
+  viewerUserId: string;
   now: Date;
 }) {
   const router = useRouter();
+  // Removing a document destroys the button that was focused, so focus would land on the
+  // body at the top of the page. The panel takes it instead, and the next Tab resumes
+  // where the person was (`.claude/rules/ui.md`: move focus to the updated element).
+  const panelRef = useRef<HTMLDivElement>(null);
   // After accepting the last outstanding file, the design asks whether the condition
   // itself is done. It is a separate decision, so it is a separate prompt.
   const [clearPrompt, setClearPrompt] = useState<string | null>(null);
@@ -70,7 +75,12 @@ export function ConditionPanel({
   const mayWaive = permissions.resolve && !settled;
 
   return (
-    <div id={id} className="bg-muted px-4 py-3 pl-12">
+    <div
+      id={id}
+      ref={panelRef}
+      tabIndex={-1}
+      className="bg-muted px-4 py-3 pl-12 outline-none"
+    >
       {condition.instructions ? (
         <p className="mb-3 text-body text-muted-foreground">
           {condition.instructions}
@@ -107,7 +117,7 @@ export function ConditionPanel({
                     </span>
                   </span>
                 </span>
-                <span className="flex shrink-0 flex-wrap items-center gap-2">
+                <span className="flex flex-wrap items-center gap-2">
                   <ReviewPill status={document.reviewStatus} />
                   {/* A real link, so it opens in a tab, can be middle-clicked, and
                       announces as a link. The route authorizes before a byte is sent. */}
@@ -124,12 +134,6 @@ export function ConditionPanel({
                     Download
                     <span className="sr-only"> {document.fileName}</span>
                   </a>
-                  {permissions.delete &&
-                  document.uploadedVia !== "public_link" &&
-                  document.uploadedById === actorUserId &&
-                  document.reviewStatus === "pending" ? (
-                    <DeleteDocumentButton loanId={loanId} document={document} />
-                  ) : null}
                   {permissions.review ? (
                     <DocumentReview
                       loanId={loanId}
@@ -143,6 +147,20 @@ export function ConditionPanel({
                         // already cleared item has nothing to prompt about.
                         if (!settled) setClearPrompt(document.fileName);
                       }}
+                    />
+                  ) : null}
+                  {/* Last in the group: the one thing here that cannot be undone, after
+                      the reversible decisions rather than between them. */}
+                  {permissions.delete &&
+                  document.uploadedVia !== "public_link" &&
+                  document.uploadedById === viewerUserId &&
+                  document.reviewStatus === "pending" ? (
+                    <DeleteDocumentButton
+                      loanId={loanId}
+                      document={document}
+                      condition={condition}
+                      onlyDocument={documents.length === 1}
+                      onRemoved={() => panelRef.current?.focus()}
                     />
                   ) : null}
                 </span>

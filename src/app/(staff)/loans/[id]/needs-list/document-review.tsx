@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { conditionStaffLabel } from "@/lib/conditions";
 import {
   acceptDocumentAction,
   type DeleteDocumentState,
@@ -14,6 +15,7 @@ import {
   type ReviewDocumentState,
   rejectDocumentAction,
 } from "@/server/actions/documents";
+import type { ConditionRow } from "@/server/queries/conditions";
 import type { LoanDocument } from "@/server/queries/documents";
 
 /**
@@ -191,10 +193,10 @@ export function RejectForm({
 /**
  * "Remove" on your own pending upload (the wrong file, caught before anyone reviewed it).
  *
- * A confirm rather than a bare button: the file goes from the store as well as the list,
- * and unlike everything else on this screen it cannot be undone. The word is "Remove"
- * rather than "Delete" because the sentence in the dialog is what carries the weight, and
- * because the borrower's copy never says "delete" either.
+ * A confirm rather than a bare button: this is the one thing on the screen that cannot be
+ * undone. The title is the generic question and the file name leads the description, as
+ * frame 03-loan-detail-confirm does and `condition-menu.tsx` explains — `safeFileName`
+ * allows 120 characters, which would wrap a title across four lines of a 420 px dialog.
  *
  * Rejecting is the other way a file leaves a condition, and it is the wrong one here: its
  * reason is borrower-facing, so using it on a staff slip tells someone to resend a file
@@ -203,11 +205,26 @@ export function RejectForm({
 export function DeleteDocumentButton({
   loanId,
   document,
+  condition,
+  onlyDocument,
+  onRemoved,
 }: {
   loanId: string;
   document: LoanDocument;
+  condition: ConditionRow;
+  /** Whether this is the last file on the condition, which decides where it lands. */
+  onlyDocument: boolean;
+  onRemoved: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+
+  // Say what will actually happen. The condition returns to Requested only when it is
+  // `received` and this is the last thing on it; a second file, or an item cleared off a
+  // different one, leaves the status where it is.
+  const revertsToRequested = condition.status === "received" && onlyDocument;
+  const outcome = revertsToRequested
+    ? `${condition.title} goes back to ${conditionStaffLabel("requested")}.`
+    : `${condition.title} stays ${conditionStaffLabel(condition.status)}.`;
 
   const [state, formAction] = useActionState<DeleteDocumentState, FormData>(
     async (previous, formData) => {
@@ -215,6 +232,7 @@ export function DeleteDocumentButton({
       if (result?.ok) {
         setConfirming(false);
         toast.success(`${result.fileName} removed.`);
+        onRemoved();
         return null;
       }
       return result;
@@ -226,7 +244,7 @@ export function DeleteDocumentButton({
     <>
       <Button
         type="button"
-        variant="outline"
+        variant="destructive"
         size="sm"
         onClick={() => setConfirming(true)}
       >
@@ -241,10 +259,10 @@ export function DeleteDocumentButton({
           onOpenChange={(open) => {
             if (!open) setConfirming(false);
           }}
-          title={`Remove ${document.fileName}?`}
-          description="The file is deleted and the item goes back to being requested. This cannot be undone."
-          cancelLabel="Keep the file"
-          confirmLabel="Remove file"
+          title="Remove this document?"
+          description={`${document.fileName} is deleted. ${outcome} This cannot be undone.`}
+          cancelLabel="Keep document"
+          confirmLabel="Remove document"
           pendingLabel="Removing…"
           action={formAction}
           fields={{ loanId, documentId: document.id }}
