@@ -1,4 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config as loadDotenv } from "dotenv";
+
+// Specs read the showcase token the same way the app does. `next dev` loads .env.local
+// for itself; the test process has to be told.
+loadDotenv({ path: ".env.local", quiet: true });
 
 const baseURL = "http://localhost:3000";
 

@@ -31,3 +31,18 @@ export async function openLoanFromPipeline(
   await page.waitForURL(/\/loans\/[0-9a-f-]{36}/);
   return new URL(page.url()).pathname;
 }
+
+/**
+ * The showcase loan's public token. Specs read it from the environment rather than the
+ * fixture, because the seed derives it from `DEMO_SHOWCASE_TOKEN` — the one place both
+ * the app and the tests agree on it.
+ */
+export function showcaseToken(): string {
+  const token = process.env.DEMO_SHOWCASE_TOKEN;
+  if (!token) {
+    throw new Error(
+      "DEMO_SHOWCASE_TOKEN is not set. Playwright reads it from .env.local.",
+    );
+  }
+  return token;
+}

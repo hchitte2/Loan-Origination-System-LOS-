@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { openLoanFromPipeline, SHOWCASE } from "./helpers/loans";
+import { openLoanFromPipeline, SHOWCASE, showcaseToken } from "./helpers/loans";
 import { enterAs } from "./helpers/personas";
 
 /**
@@ -92,6 +92,57 @@ for (const scheme of SCHEMES) {
       await expect(
         page.getByRole("heading", { level: 2, name: /^Activity/ }),
       ).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`/queue has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "sam");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Queue" }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`/u/[token] has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      // No session: the borrower's page is reached by token alone.
+      await page.goto(`/u/${showcaseToken()}`);
+      await expect(
+        page.getByRole("heading", {
+          level: 1,
+          name: /here's where your loan stands/,
+        }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`the dead-link page has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await page.goto("/u/thistokenisnotrealatall00");
+      await expect(
+        page.getByRole("heading", { name: "This link is no longer active." }),
+      ).toBeVisible();
+      await expectNoSeriousViolations(page);
+    });
+
+    test(`the needs list, expanded over a document, has no serious or critical axe violations`, async ({
+      page,
+    }) => {
+      await enterAs(page, "sam");
+      const row = page.getByRole("row").filter({ hasText: ".pdf" }).first();
+      await row.getByRole("link", { name: /^Open/ }).click();
+      await page.waitForURL(/\/loans\/[0-9a-f-]{36}\/needs-list/);
+      // The reject form is the densest state on this screen: a labelled field, an
+      // expanded control and two buttons inside a table cell.
+      await page
+        .getByRole("button", { name: /^Reject/ })
+        .first()
+        .click();
+      await expect(page.getByRole("textbox")).toBeVisible();
       await expectNoSeriousViolations(page);
     });
 

@@ -231,10 +231,13 @@ export function UploadZone({
           <span className="sr-only">{label}</span>
         </label>
       </div>
-      {/* The zone itself carries the message; this is what announces it. */}
-      <p role="alert" className="sr-only">
-        {error ? `${error.title}. ${error.hint}` : ""}
-      </p>
+      {/* The zone itself carries the message; this announces it. Rendered only when
+          there is one, so a page of zones is not a page of empty live regions. */}
+      {error ? (
+        <p role="alert" className="sr-only">
+          {`${error.title}. ${error.hint}`}
+        </p>
+      ) : null}
     </div>
   );
 }
