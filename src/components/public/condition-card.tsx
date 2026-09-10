@@ -108,6 +108,7 @@ export function ConditionCard({
         <UploadZone
           pathnamePrefix={uploadPrefix}
           disabled={!uploadsEnabled}
+          audience="borrower"
           clientPayload={{ token }}
           label={`Upload a file for ${condition.title}`}
           register={async (file) => {

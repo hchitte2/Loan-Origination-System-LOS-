@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { enterAs, type PersonaKey } from "./helpers/personas";
+import { sendFile } from "./helpers/uploads";
 
 /**
  * Taking back your own upload before anyone has reviewed it.
@@ -85,7 +86,7 @@ test("the uploader can take back a pending file, and the condition reopens", asy
     "640 Sunset Blvd",
   );
 
-  await page.locator('input[type="file"]').first().setInputFiles(SPECIMEN);
+  await sendFile(page, SPECIMEN);
   const doc = page.locator("li").filter({ hasText: FILE });
   await expect(doc.getByText("Pending")).toBeVisible();
   await expect(
@@ -134,7 +135,7 @@ test("a colleague sees no Remove on someone else's upload", async ({
     "alex",
     "640 Sunset Blvd",
   );
-  await alex.locator('input[type="file"]').first().setInputFiles(SPECIMEN);
+  await sendFile(alex, SPECIMEN);
   await expect(
     alex.locator("li").filter({ hasText: FILE }).getByText("Pending"),
   ).toBeVisible();

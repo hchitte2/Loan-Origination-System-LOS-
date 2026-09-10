@@ -1,8 +1,8 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import { CircleAlert, Upload } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { CircleAlert, FileText, Upload } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { formatFileSize } from "@/lib/format";
 import {
   ALLOWED_CONTENT_TYPES,
@@ -11,6 +11,7 @@ import {
   safeFileName,
 } from "@/lib/uploads";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 /**
  * The upload zone in all four drawn states (design-system skill, "Upload zone"; frames
@@ -34,6 +35,7 @@ export function UploadZone({
   clientPayload,
   register,
   label,
+  audience = "staff",
   disabled,
   onUploaded,
 }: {
@@ -52,6 +54,11 @@ export function UploadZone({
   }) => Promise<string | null>;
   /** What this zone is for, for screen readers: "Upload a file for Pay stubs". */
   label: string;
+  /**
+   * Whose screen this is. It decides the voice of the check-it step and its tap targets:
+   * the borrower's page wants 44 px (design-system skill, "Sizes and spacing").
+   */
+  audience?: "staff" | "borrower";
   disabled?: boolean;
   onUploaded?: () => void;
 }) {
@@ -65,8 +72,51 @@ export function UploadZone({
     sent: number;
     total: number;
   } | null>(null);
+  // Picked, not yet sent. Nothing reaches the network until the person says so.
+  const [chosen, setChosen] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const busy = progress !== null;
+
+  // The preview is a blob: URL over the local File — the bytes never leave the browser,
+  // which is what lets the borrower look at their own upload at all. The public page is
+  // forbidden from serving them back afterwards, so this is the only chance they get.
+  useEffect(() => {
+    if (!chosen?.type.startsWith("image/")) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(chosen);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [chosen]);
+
+  /**
+   * Take a file from the picker or a drop and hold it for checking.
+   *
+   * The type and size refusal happens here rather than after the confirm, so an .exe or
+   * an 11 MB photo is turned away in the same breath as choosing it — and a file that is
+   * never sent costs no upload slot and no `put` against the month's budget, which is the
+   * other half of why this step exists.
+   */
+  function choose(file: File): void {
+    const refusal = fileRejection(file.type, file.size);
+    if (refusal) {
+      setError(refusal);
+      setChosen(null);
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+    setError(null);
+    setChosen(file);
+  }
+
+  function discard(): void {
+    setChosen(null);
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
+    inputRef.current?.click();
+  }
 
   async function send(file: File): Promise<void> {
     setError(null);
@@ -117,6 +167,7 @@ export function UploadZone({
       });
     } finally {
       setProgress(null);
+      setChosen(null);
       if (inputRef.current) inputRef.current.value = "";
     }
   }
@@ -153,6 +204,70 @@ export function UploadZone({
     );
   }
 
+  /**
+   * Picked, not yet sent (an extension to the four states the handoff drew — proposed for
+   * the design-system skill). Solid border on `card` rather than the zone's dashed
+   * `primary`: this is no longer somewhere to drop a file, it is the file itself.
+   *
+   * An image shows; a PDF cannot without a renderer we do not ship, so it gets its name,
+   * size and type — which is roughly what the file picker already showed, and why this
+   * step earns its keep mostly for photographs.
+   */
+  if (chosen) {
+    const borrower = audience === "borrower";
+    return (
+      <div
+        role="status"
+        className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3"
+      >
+        <p className="text-body font-medium text-foreground">
+          {borrower ? "Does this look right?" : "Check this is the right file."}
+        </p>
+
+        {previewUrl ? (
+          // biome-ignore lint/performance/noImgElement: next/image cannot optimize a blob: URL over a local File, and there is nothing to optimize — the bytes are already in the browser and must not leave it.
+          <img
+            src={previewUrl}
+            alt=""
+            className="max-h-64 w-full rounded-lg border border-border object-contain"
+          />
+        ) : (
+          <span className="flex items-center gap-2 rounded-lg bg-muted px-3 py-4">
+            <FileText
+              aria-hidden="true"
+              className="size-5 shrink-0 text-muted-foreground"
+            />
+            <span className="min-w-0 truncate text-body text-foreground">
+              {chosen.name}
+            </span>
+          </span>
+        )}
+
+        <p className="text-caption text-muted-foreground tabular-nums">
+          {chosen.name} · {formatFileSize(chosen.size)}
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            onClick={() => void send(chosen)}
+            className={cn(borrower && "min-h-11 flex-1")}
+          >
+            {borrower ? "Send this file" : "Upload file"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={discard}
+            className={cn(borrower && "min-h-11 flex-1")}
+          >
+            {borrower ? "Choose a different one" : "Choose another"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: the label inside is the real control; these handlers only add dragging as an alternative way to reach it. */}
@@ -176,7 +291,7 @@ export function UploadZone({
           setDragging(false);
           if (disabled) return;
           const file = event.dataTransfer.files?.[0];
-          if (file) void send(file);
+          if (file) choose(file);
         }}
       >
         <label
@@ -202,7 +317,7 @@ export function UploadZone({
             disabled={disabled}
             onChange={(event) => {
               const file = event.target.files?.[0];
-              if (file) void send(file);
+              if (file) choose(file);
             }}
           />
           {error ? (

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { enterAs } from "./helpers/personas";
+import { sendFile } from "./helpers/uploads";
 
 /**
  * The demo script (PLAN.md §13), walked end to end in one test.
@@ -155,7 +156,7 @@ test("the demo script runs end to end", async ({ browser }) => {
     .getByRole("checkbox", { name: /receive loan updates electronically/ })
     .check();
   const stubs = maria.locator("section").filter({ hasText: PAY_STUBS });
-  await stubs.locator('input[type="file"]').setInputFiles(SPECIMEN);
+  await sendFile(stubs, SPECIMEN, "borrower");
   await expect(stubs.getByText("Received, under review")).toBeVisible();
 
   // ---------------------------------------------------------------------------------
@@ -194,7 +195,7 @@ test("the demo script runs end to end", async ({ browser }) => {
   await maria
     .getByRole("checkbox", { name: /receive loan updates electronically/ })
     .check();
-  await reopened.locator('input[type="file"]').setInputFiles(SPECIMEN);
+  await sendFile(reopened, SPECIMEN, "borrower");
   await expect(reopened.getByText("Received, under review")).toBeVisible();
 
   await page.reload();

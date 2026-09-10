@@ -2,6 +2,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { openLoanFromPipeline, SHOWCASE, showcaseToken } from "./helpers/loans";
 import { enterAs } from "./helpers/personas";
+import { sendFile } from "./helpers/uploads";
 
 /**
  * The journey PLAN.md §9 calls Phase 3's done-when: a borrower with no session uploads
@@ -116,7 +117,7 @@ test("upload, reject with a reason, send another, accept, clear", async ({
   await maria
     .getByRole("checkbox", { name: /receive loan updates electronically/ })
     .check();
-  await card.locator('input[type="file"]').setInputFiles(SPECIMEN);
+  await sendFile(card, SPECIMEN, "borrower");
 
   // The card turns over to "under review" once the server has the document.
   await expect(card.getByText("Received, under review")).toBeVisible();
@@ -157,7 +158,7 @@ test("upload, reject with a reason, send another, accept, clear", async ({
   await maria
     .getByRole("checkbox", { name: /receive loan updates electronically/ })
     .check();
-  await reopened.locator('input[type="file"]').setInputFiles(SPECIMEN);
+  await sendFile(reopened, SPECIMEN, "borrower");
   await expect(reopened.getByText("Received, under review")).toBeVisible();
 
   // Sam accepts it and is asked whether the condition itself is done.
